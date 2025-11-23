@@ -1,65 +1,107 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
+  const router = useRouter();
+  const [token, setToken] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const trimmed = token.trim();
+    if (!trimmed) {
+      setError('Please enter your access token.');
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error: supaError } = await supabase
+      .from('tokens')
+      .select('*')
+      .eq('token', trimmed)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    setLoading(false);
+
+    if (supaError || !data) {
+      setError('Invalid or expired access token.');
+      return;
+    }
+
+    // fire-and-forget update of last_used_at
+    supabase
+      .from('tokens')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', data.id);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pyp_token', trimmed);
+      localStorage.setItem('pyp_token_label', data.label ?? '');
+    }
+
+    router.push('/coins');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="h-20 w-20 rounded-full border border-slate-500 flex items-center justify-center text-xs">
+              PYP
+            </div>
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-[0.25em] uppercase">
+            PYP: Strategic Edge
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm text-slate-400">
+            Enter your access token to begin the pilot scenario.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wide">
+              Access Token
+            </label>
+            <input
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              placeholder="pypxxxxxx"
+              autoComplete="off"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-400">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 py-2 text-sm font-semibold tracking-wide uppercase transition-colors"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            {loading ? 'Validating…' : 'Enter'}
+          </button>
+        </form>
+
+        <p className="text-[10px] text-center text-slate-600 tracking-wide">
+          TRL-4 Pilot · Token-gated access · No personal data stored
+        </p>
+      </div>
+    </main>
   );
 }
