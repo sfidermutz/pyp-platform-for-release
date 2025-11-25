@@ -36,7 +36,7 @@ export default function Home() {
       return;
     }
 
-    // fire-and-forget update of last_used_at
+    // Fire-and-forget update of last_used_at
     supabase
       .from('tokens')
       .update({ last_used_at: new Date().toISOString() })
@@ -51,40 +51,35 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-full border border-slate-500 flex items-center justify-center text-xs">
-              PYP
-            </div>
-          </div>
+    <main className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="w-full max-w-md space-y-10">
 
-          <h1 className="text-2xl font-semibold tracking-[0.25em] uppercase">
-            PYP: Strategic Edge
-          </h1>
-          <p className="text-sm text-slate-400">
-            Enter your access token to begin the pilot scenario.
-          </p>
+        {/* LOGO – helmet + text baked into image */}
+        <div className="flex justify-center">
+          <img
+            src="/PYPStrategicEdge-icon.png"
+            alt="PYP: Strategic Edge Logo"
+            className="w-auto max-h-[60vh]"
+          />
         </div>
 
+        {/* TOKEN FORM */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wide">
-              Access Token
-            </label>
-            <input
-              type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-              placeholder="pypxxxxxx"
-              autoComplete="off"
-            />
-          </div>
+          <p className="text-xs font-medium text-zinc-300">
+            Enter your access token to begin.
+          </p>
+
+          <input
+            type="text"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            className="w-full rounded-md bg-zinc-900 border border-zinc-700 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-zinc-300"
+            placeholder="pypxxxxx"
+            autoComplete="off"
+          />
 
           {error && (
-            <p className="text-sm text-red-400">
+            <p className="text-sm text-red-400 text-center">
               {error}
             </p>
           )}
@@ -92,14 +87,15 @@ export default function Home() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 py-2 text-sm font-semibold tracking-wide uppercase transition-colors"
+            className="w-full rounded-md bg-zinc-200 hover:bg-zinc-300 disabled:bg-zinc-700 py-2 text-sm font-semibold tracking-wide uppercase transition-colors text-black"
           >
             {loading ? 'Validating…' : 'Enter'}
           </button>
         </form>
 
-        <p className="text-[10px] text-center text-slate-600 tracking-wide">
-          TRL-4 Pilot · Token-gated access · No personal data stored
+        {/* FOOTER */}
+        <p className="text-[10px] text-center text-zinc-500 tracking-wide">
+          Token-gated access · No personal identifying data stored
         </p>
       </div>
     </main>
