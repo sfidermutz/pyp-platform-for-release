@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
-type ModuleFamily = { name: string; code: string } | null;
+type ModuleFamilyItem = { name: string; code: string };
+type ModuleFamily = ModuleFamilyItem[];
 
 type ModuleRecord = {
   id: string;
@@ -12,8 +13,7 @@ type ModuleRecord = {
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
-  module_families: { name: string; code: string }[];
-
+  module_families: ModuleFamily;
 };
 
 export default function CoinsPage() {
@@ -30,7 +30,8 @@ export default function CoinsPage() {
     }
 
     fetchModules();
-    // log page view
+
+    // log page view if session exists
     const sessionId = localStorage.getItem('pyp_session_id');
     if (sessionId) {
       fetch('/api/log-event', {
@@ -43,7 +44,6 @@ export default function CoinsPage() {
 
   async function fetchModules() {
     setLoading(true);
-    // fetch modules including the family relation (Supabase returns relation as an array)
     const { data, error } = await supabase
       .from('modules')
       .select(`id, name, description, shelf_position, is_demo, module_families ( name, code )`)
@@ -56,36 +56,32 @@ export default function CoinsPage() {
       return;
     }
 
-    // NORMALIZE: Supabase returns module_families as an array; convert it to a single object or null
+    // Normalize module_families into an array of {name, code}
     const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
       const fam = m.module_families;
-      let familyObj: ModuleFamily = null;
+      let families: ModuleFamily = [];
+
       if (Array.isArray(fam)) {
-        familyObj = fam.length > 0 ? { name: fam[0].name, code: fam[0].code } : null;
+        // If Supabase already returned an array, map to items with desired shape (defensive)
+        families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
       } else if (fam && typeof fam === 'object') {
-        familyObj = { name: fam.name, code: fam.code };
+        // Single object — wrap in an array
+        families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
+      } else {
+        families = [];
       }
+
       return {
-        id: m.id,
-        name: m.name,
+        id: String(m.id),
+        name: String(m.name ?? ''),
         description: m.description ?? null,
         shelf_position: m.shelf_position ?? null,
-        is_demo: m.is_demo ?? false,
-        module_families: familyObj,
+        is_demo: Boolean(m.is_demo ?? false),
+        module_families: families,
       };
     });
 
-    const normalized = (data ?? []).map((m: any) => ({
-  ...m,
-  module_families: Array.isArray(m.module_families)
-    ? m.module_families
-    : m.module_families
-      ? [m.module_families]
-      : [],
-}));
-
-setModules(normalized);
-
+    setModules(normalized);
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
@@ -137,7 +133,7 @@ setModules(normalized);
         <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
           <div className="grid grid-cols-6 gap-8">
             {modules.map((m) => {
-              const ready = true; // keep simple for demo
+              const ready = true;
               return (
                 <div key={m.id} className="text-center">
                   <button
