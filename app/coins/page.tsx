@@ -122,6 +122,18 @@ export default function CoinsPage() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
+  //
+  // Group modules by family (use the first family if present)
+  //
+  const familyOrder = Array.from(new Set(modules.map(m => (m.module_families && m.module_families.length > 0) ? m.module_families[0].name : 'Uncategorized')));
+  const modulesByFamily: Record<string, ModuleRecord[]> = {};
+  for (const name of familyOrder) modulesByFamily[name] = [];
+  for (const mod of modules) {
+    const familyName = (mod.module_families && mod.module_families.length > 0) ? mod.module_families[0].name : 'Uncategorized';
+    if (!modulesByFamily[familyName]) modulesByFamily[familyName] = [];
+    modulesByFamily[familyName].push(mod);
+  }
+
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
@@ -130,40 +142,54 @@ export default function CoinsPage() {
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
-        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
-          <div className="grid grid-cols-6 gap-8">
-            {modules.map((m) => {
-              const ready = true;
-              return (
-                <div key={m.id} className="text-center">
-                  <button
-                    onClick={() => (ready ? onSelectModule(m) : undefined)}
-                    className={`w-36 h-36 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative`}
-                    aria-label={m.name}
-                  >
-                    {m.image_path ? (
-                      <img
-                        src={m.image_path}
-                        alt={m.name}
-                        className="w-full h-full object-cover"
-                        style={{ objectPosition: 'center' }}
-                      />
-                    ) : (
-                      <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
-                    )}
+        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner space-y-12">
+          {familyOrder.map((familyName) => {
+            const familyModules = modulesByFamily[familyName] ?? [];
+            // If a family ended up with zero modules, skip it
+            if (!familyModules.length) return null;
 
-                    {/* Optional small label overlay */}
-                    <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
-                      {m.shelf_position ?? ''}
-                    </span>
-                  </button>
+            return (
+              <div key={familyName} className="py-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-end justify-items-center">
+                  {familyModules.map((m) => {
+                    const ready = true;
+                    return (
+                      <div key={m.id} className="text-center">
+                        <button
+                          onClick={() => (ready ? onSelectModule(m) : undefined)}
+                          className={`w-44 h-44 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative`}
+                          aria-label={m.name}
+                        >
+                          {m.image_path ? (
+                            <img
+                              src={m.image_path}
+                              alt={m.name}
+                              className="w-full h-full object-cover"
+                              style={{ objectPosition: 'center' }}
+                            />
+                          ) : (
+                            <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
+                          )}
 
-                  <div className="mt-3 text-xs font-semibold tracking-wider">{m.name}</div>
-                  <div className={`mt-1 text-xs ${ready ? 'text-emerald-400' : 'text-slate-600'}`}>{ready ? 'READY' : 'LOCKED'}</div>
+                          {/* small shelf-position label */}
+                          <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
+                            {m.shelf_position ?? ''}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Family label centered under the group's coins */}
+                <div className="mt-6 text-center">
+                  <div className="inline-block px-4 py-1 bg-transparent text-sm font-semibold tracking-wider uppercase text-slate-200">
+                    {familyName}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {selected && (
