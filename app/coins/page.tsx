@@ -14,6 +14,7 @@ type ModuleRecord = {
   shelf_position: number | null;
   is_demo: boolean;
   module_families: ModuleFamily;
+  image_path?: string | null;
 };
 
 export default function CoinsPage() {
@@ -32,7 +33,7 @@ export default function CoinsPage() {
     fetchModules();
 
     // log page view if session exists
-    const sessionId = localStorage.getItem('pyp_session_id');
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
     if (sessionId) {
       fetch('/api/log-event', {
         method: 'POST',
@@ -46,7 +47,7 @@ export default function CoinsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
-      .select(`id, name, description, shelf_position, is_demo, module_families ( name, code )`)
+      .select(`id, name, description, shelf_position, is_demo, image_path, module_families ( name, code )`)
       .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
@@ -56,16 +57,14 @@ export default function CoinsPage() {
       return;
     }
 
-    // Normalize module_families into an array of {name, code}
+    // Normalize module_families into an array of {name, code} and ensure image_path is present
     const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
       const fam = m.module_families;
       let families: ModuleFamily = [];
 
       if (Array.isArray(fam)) {
-        // If Supabase already returned an array, map to items with desired shape (defensive)
         families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
       } else if (fam && typeof fam === 'object') {
-        // Single object — wrap in an array
         families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
       } else {
         families = [];
@@ -78,6 +77,7 @@ export default function CoinsPage() {
         shelf_position: m.shelf_position ?? null,
         is_demo: Boolean(m.is_demo ?? false),
         module_families: families,
+        image_path: m.image_path ?? null,
       };
     });
 
@@ -109,7 +109,7 @@ export default function CoinsPage() {
 
   async function onEnterModule() {
     if (!selected) return;
-    const sessionId = localStorage.getItem('pyp_session_id');
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
     if (sessionId) {
       await logEvent({ event_type: 'enter_module', payload: { module_id: selected.id }});
     } else {
@@ -137,11 +137,27 @@ export default function CoinsPage() {
               return (
                 <div key={m.id} className="text-center">
                   <button
-                    onClick={() => ready && onSelectModule(m)}
-                    className={`w-36 h-36 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent`}
+                    onClick={() => (ready ? onSelectModule(m) : undefined)}
+                    className={`w-36 h-36 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative`}
+                    aria-label={m.name}
                   >
-                    <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
+                    {m.image_path ? (
+                      <img
+                        src={m.image_path}
+                        alt={m.name}
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: 'center' }}
+                      />
+                    ) : (
+                      <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
+                    )}
+
+                    {/* Optional small label overlay */}
+                    <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
+                      {m.shelf_position ?? ''}
+                    </span>
                   </button>
+
                   <div className="mt-3 text-xs font-semibold tracking-wider">{m.name}</div>
                   <div className={`mt-1 text-xs ${ready ? 'text-emerald-400' : 'text-slate-600'}`}>{ready ? 'READY' : 'LOCKED'}</div>
                 </div>
