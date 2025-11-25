@@ -12,7 +12,8 @@ type ModuleRecord = {
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
-  module_families?: ModuleFamily;
+  module_families: { name: string; code: string }[];
+
 };
 
 export default function CoinsPage() {
@@ -74,7 +75,17 @@ export default function CoinsPage() {
       };
     });
 
-    setModules(normalized);
+    const normalized = (data ?? []).map((m: any) => ({
+  ...m,
+  module_families: Array.isArray(m.module_families)
+    ? m.module_families
+    : m.module_families
+      ? [m.module_families]
+      : [],
+}));
+
+setModules(normalized);
+
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
