@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
+type ModuleFamily = { name: string; code: string } | null;
+
 type ModuleRecord = {
   id: string;
   name: string;
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
-  module_families?: { name: string; code: string };
+  module_families?: ModuleFamily;
 };
 
 export default function CoinsPage() {
@@ -40,6 +42,7 @@ export default function CoinsPage() {
 
   async function fetchModules() {
     setLoading(true);
+    // fetch modules including the family relation (Supabase returns relation as an array)
     const { data, error } = await supabase
       .from('modules')
       .select(`id, name, description, shelf_position, is_demo, module_families ( name, code )`)
@@ -51,7 +54,27 @@ export default function CoinsPage() {
       console.error('fetch modules error', error);
       return;
     }
-    setModules(data ?? []);
+
+    // NORMALIZE: Supabase returns module_families as an array; convert it to a single object or null
+    const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
+      const fam = m.module_families;
+      let familyObj: ModuleFamily = null;
+      if (Array.isArray(fam)) {
+        familyObj = fam.length > 0 ? { name: fam[0].name, code: fam[0].code } : null;
+      } else if (fam && typeof fam === 'object') {
+        familyObj = { name: fam.name, code: fam.code };
+      }
+      return {
+        id: m.id,
+        name: m.name,
+        description: m.description ?? null,
+        shelf_position: m.shelf_position ?? null,
+        is_demo: m.is_demo ?? false,
+        module_families: familyObj,
+      };
+    });
+
+    setModules(normalized);
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
