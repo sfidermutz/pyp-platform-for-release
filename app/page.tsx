@@ -67,7 +67,7 @@ export default function Home() {
             payload: { page: 'landing', token_label: (data && data.label) ? data.label : null }
           })
         });
-      } catch (_) {}
+      } catch (_) { /* swallow */ }
 
       router.push('/coins');
     } catch (err) {
@@ -78,10 +78,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-start justify-center px-4 pt-14">
+    <main className="min-h-screen bg-black text-white flex items-start justify-center px-4 pt-12">
       <div className="w-full max-w-2xl text-center">
-        {/* Big centered logo (no decorative circle, large) */}
-        <div className="mx-auto w-56 h-56 mb-6">
+        {/* large logo, no decorative circle; selection disabled on title */}
+        <div className="mx-auto w-64 h-64 mb-6">
           <img
             src="/PYPStrategicEdge-icon.png"
             alt="PYP Strategic Edge"
@@ -90,7 +90,7 @@ export default function Home() {
           />
         </div>
 
-        <h1 className="text-6xl font-extrabold tracking-widest uppercase leading-tight mb-10">PYP: Strategic Edge</h1>
+        <h1 className="text-6xl font-extrabold tracking-widest uppercase leading-tight mb-10 select-none">PYP: Strategic Edge</h1>
 
         <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4">
           <div>
