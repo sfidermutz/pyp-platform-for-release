@@ -37,7 +37,6 @@ export default function Home() {
         return;
       }
 
-      // create session server-side
       const res = await fetch('/api/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,14 +51,12 @@ export default function Home() {
       }
       const session = json.session;
 
-      // store token + session id
       if (typeof window !== 'undefined') {
         localStorage.setItem('pyp_token', trimmed);
         localStorage.setItem('pyp_token_label', (data && data.label) ? data.label : '');
         localStorage.setItem('pyp_session_id', session.id);
       }
 
-      // minimal log
       try {
         await fetch('/api/log-event', {
           method: 'POST',
@@ -70,9 +67,7 @@ export default function Home() {
             payload: { page: 'landing', token_label: (data && data.label) ? data.label : null }
           })
         });
-      } catch (e) {
-        // noop
-      }
+      } catch (_) {}
 
       router.push('/coins');
     } catch (err) {
@@ -83,23 +78,21 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="max-w-lg w-full space-y-10">
-        <div className="text-center">
-          <div className="mx-auto w-48 h-48 overflow-hidden mb-6">
-            {/* Large logo, no decorative small circle */}
-            <img
-              src="/PYPStrategicEdge-icon.png"
-              alt="PYP Strategic Edge"
-              className="w-full h-full object-contain"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            />
-          </div>
-
-          <h1 className="text-5xl font-extrabold tracking-widest uppercase leading-tight">PYP: Strategic Edge</h1>
+    <main className="min-h-screen bg-black text-white flex items-start justify-center px-4 pt-14">
+      <div className="w-full max-w-2xl text-center">
+        {/* Big centered logo (no decorative circle, large) */}
+        <div className="mx-auto w-56 h-56 mb-6">
+          <img
+            src="/PYPStrategicEdge-icon.png"
+            alt="PYP Strategic Edge"
+            className="w-full h-full object-contain"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <h1 className="text-6xl font-extrabold tracking-widest uppercase leading-tight mb-10">PYP: Strategic Edge</h1>
+
+        <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Access Token</label>
             <input
@@ -123,7 +116,7 @@ export default function Home() {
           </button>
         </form>
 
-        <p className="text-[11px] text-center text-slate-500 tracking-wide">
+        <p className="text-[11px] text-center text-slate-500 tracking-wide mt-8">
           TRL-4 Pilot · Token-gated access · No personal data stored
         </p>
       </div>
