@@ -25,6 +25,79 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }));
   }
 
+  // Helper to build a DP object with .narrative .stem and .options array
+  function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
+    if (!dpRaw) return { narrative: '', stem: '', options: [] };
+    // If dpRaw already has options
+    if (Array.isArray(dpRaw.options)) return dpRaw;
+    // If dpRaw itself is an array (legacy)
+    if (Array.isArray(dpRaw)) return { narrative: '', stem: '', options: dpRaw };
+    // Otherwise dpRaw is an object that maps keys -> array (branching)
+    // We'll not include narrative/stem from each branch (they're usually on root),
+    return { narrative: dpRaw.narrative ?? '', stem: dpRaw.stem ?? '', options: [] };
+  }
+
+  // dpFor: returns the dp object for DP index i.
+  // Handles both flat and branching dp2/dp3 structures.
+  function dpFor(i: number) {
+    // DP1 is always simple
+    if (i === 1) return normalizeDP(scenario.dp1);
+
+    if (i === 2) {
+      const raw = scenario.dp2;
+      if (!raw) return { narrative: '', stem: '', options: [] };
+
+      // If dp2 is an array or object with options, normalize and return
+      if (Array.isArray(raw) || Array.isArray(raw?.options)) {
+        return normalizeDP(raw);
+      }
+
+      // dp2 is a branching map keyed by dp1 option ids
+      const prev1 = selections[1]?.optionId;
+      // If we have a branch that matches prev1, use it
+      if (prev1 && Array.isArray(raw[prev1])) {
+        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev1] };
+      }
+
+      // Fallback: if there is a default branch
+      if (raw.default && Array.isArray(raw.default)) {
+        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
+      }
+
+      // Final fallback: combine all branch options into a single list (keeps demo working)
+      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v) || v);
+      // If combined contains nested objects (not arrays), flatten those arrays too:
+      const opts = ([] as any[]).concat(...combined.map((c: any) => Array.isArray(c) ? c : []));
+      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: opts };
+    }
+
+    // DP3: similar logic keyed by DP2 selection
+    if (i === 3) {
+      const raw = scenario.dp3;
+      if (!raw) return { narrative: '', stem: '', options: [] };
+
+      if (Array.isArray(raw) || Array.isArray(raw?.options)) {
+        return normalizeDP(raw);
+      }
+
+      const prev2 = selections[2]?.optionId;
+      if (prev2 && Array.isArray(raw[prev2])) {
+        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev2] };
+      }
+
+      if (raw.default && Array.isArray(raw.default)) {
+        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
+      }
+
+      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v) || v);
+      const opts = ([] as any[]).concat(...combined.map((c: any) => Array.isArray(c) ? c : []));
+      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: opts };
+    }
+
+    return { narrative: '', stem: '', options: [] };
+  }
+
+  // Persist reflection to server (small helper)
   async function persistReflection(sessionId: string | null, scenario_id: string, phase: string, text: string) {
     try {
       await fetch('/api/reflections', {
@@ -96,10 +169,11 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           });
         } catch (e) { console.debug('decision post failed', e); }
 
-        // Persist the pre-reflection (if any) and post-reflection to server for demo
         const session_hint = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+
+        // Persist pre-reflection stub (if applicable) - optional
         try {
-          await persistReflection(session_hint, scenarioId, 'pre', ''); // if you have pre reflection, post that here
+          await persistReflection(session_hint, scenarioId, 'pre', '');
         } catch (e) { /* ignore */ }
 
         const res = await fetch('/api/compute-debrief', {
@@ -120,14 +194,14 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         } else {
           setDebrief(json);
 
-          // --- NEW: persist the reflection on server for retrieval by full debrief page ---
+          // persist the reflection on server
           try {
             await persistReflection(session_hint, scenarioId, 'post', reflection);
           } catch (e) {
             console.debug('persist post reflection failed', e);
           }
 
-          // --- NEW: persist the computed metrics server-side to scenario_metrics via an API ---
+          // persist metrics for dashboard
           try {
             await fetch('/api/store-scenario-metrics', {
               method: 'POST',
@@ -138,7 +212,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
             console.debug('store scenario metrics failed', e);
           }
 
-          // --- NEW: Save debrief JSON to localStorage to allow the Full Debrief page to read it ---
+          // Save debrief to localStorage for the full debrief page
           try {
             const sid = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
             if (sid) {
@@ -165,8 +239,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     optionSelected(dpIndex, selections[dpIndex]?.optionId ?? '', val);
   }
 
-  const dpFor = (i:number) => i === 1 ? scenario.dp1 : i === 2 ? scenario.dp2 : scenario.dp3;
-
   return (
     <div className="space-y-6">
       <div className="bg-[#071017] border border-[#202933] rounded-xl p-6">
@@ -186,8 +258,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     {isLocked ? <div className="text-[10px] text-slate-400 uppercase tracking-wider">Locked</div> : null}
                   </div>
 
-                  <p className="mt-3 text-sm text-slate-300">{dp.narrative ?? dpFor(i).narrative}</p>
-                  <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem ?? dpFor(i).stem}</p>
+                  <p className="mt-3 text-sm text-slate-300">{dp.narrative}</p>
+                  <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem}</p>
 
                   <div className="mt-4 grid gap-3">
                     {dp.options.map((opt: any) => {
