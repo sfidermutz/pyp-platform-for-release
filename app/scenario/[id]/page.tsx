@@ -1,45 +1,49 @@
 // app/scenario/[id]/page.tsx
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import path from 'path';
+import fs from 'fs';
 import ScenarioEngine from '@/components/ScenarioEngine';
-import { useRouter } from 'next/navigation';
 
-export default function ScenarioPage({ params }: { params: { id: string }}) {
-  const { id } = params;
-  const [scenario, setScenario] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+type Props = { params: { id: string } };
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/scenario/${encodeURIComponent(id)}`);
-        if (!res.ok) {
-          console.error('Failed to fetch scenario');
-          setScenario(null);
-        } else {
-          const json = await res.json();
-          setScenario(json.scenario);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [id]);
+export default async function ScenarioPage({ params }: Props) {
+  const id = params?.id;
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading scenario…</div>;
-  if (!scenario) return <div className="min-h-screen flex items-center justify-center text-white bg-black">Scenario not found.</div>;
-
-  return (
-    <main className="min-h-screen bg-black text-white px-6 py-12">
-      <div className="max-w-3xl mx-auto">
-        <ScenarioEngine scenario={scenario} scenarioId={id} />
+  if (!id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-black">
+        Scenario not found.
       </div>
-    </main>
-  );
+    );
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'scenarios', `${id}.json`);
+    if (!fs.existsSync(filePath)) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-white bg-black">
+          Scenario not found.
+        </div>
+      );
+    }
+
+    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+    // ScenarioEngine is a client component — passing the scenario as a prop is fine.
+    return (
+      <main className="min-h-screen bg-black text-white px-6 py-12">
+        <div className="max-w-3xl mx-auto">
+          {/* ScenarioEngine is client; scenario is serializable JSON */}
+          <ScenarioEngine scenario={content} scenarioId={id} />
+        </div>
+      </main>
+    );
+  } catch (err) {
+    console.error('Error reading scenario file', err);
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-black">
+        Scenario not found.
+      </div>
+    );
+  }
 }
