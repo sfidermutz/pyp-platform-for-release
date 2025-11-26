@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+// app/api/compute-debrief/route.ts
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { session_hint, scenario_id, selections = {}, reflection = '', scenario } = body;
