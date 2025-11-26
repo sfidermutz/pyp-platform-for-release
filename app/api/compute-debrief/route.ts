@@ -140,4 +140,13 @@ export async function POST(req: NextRequest) {
       cognitive_adaptability: Math.round(cognitive_adaptability),
       escalation_tendency: Math.round(escalation_tendency),
       CRI: Math.round(CRI),
-      confidence_alignment: Math.round(confidence_al
+      confidence_alignment: Math.round(confidence_alignment),
+      reflection_quality: Math.round(reflectionQuality)
+    };
+
+    return NextResponse.json({ ...metrics, short_feedback, metrics });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: 'server error' }, { status: 500 });
+  }
+}
