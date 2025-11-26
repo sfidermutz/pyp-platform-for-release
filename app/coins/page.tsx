@@ -4,13 +4,24 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+=======
+type ModuleFamilyItem = { name: string; code: string };
+type ModuleFamily = ModuleFamilyItem[];
+
+ main
 type ModuleRecord = {
   id: string;
   name: string;
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
+ codex/add-session-telemetry-and-api-routes-esaz5j
   module_families?: { name: string; code: string };
+=======
+  module_families: ModuleFamily;
+  image_path?: string | null;
+ main
 };
 
 export default function CoinsPage() {
@@ -27,8 +38,14 @@ export default function CoinsPage() {
     }
 
     fetchModules();
+ codex/add-session-telemetry-and-api-routes-esaz5j
     // log page view
     const sessionId = localStorage.getItem('pyp_session_id');
+=======
+
+    // log page view if session exists
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+ main
     if (sessionId) {
       fetch('/api/log-event', {
         method: 'POST',
@@ -42,7 +59,11 @@ export default function CoinsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
+ codex/add-session-telemetry-and-api-routes-esaz5j
       .select(`id, name, description, shelf_position, is_demo, module_families ( name, code )`)
+=======
+      .select(`id, name, description, shelf_position, is_demo, image_path, module_families ( name, code )`)
+ main
       .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
@@ -51,7 +72,36 @@ export default function CoinsPage() {
       console.error('fetch modules error', error);
       return;
     }
+ codex/add-session-telemetry-and-api-routes-esaz5j
     setModules(data ?? []);
+=======
+
+    // Normalize module_families into an array of {name, code} and ensure image_path is present
+    const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
+      const fam = m.module_families;
+      let families: ModuleFamily = [];
+
+      if (Array.isArray(fam)) {
+        families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
+      } else if (fam && typeof fam === 'object') {
+        families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
+      } else {
+        families = [];
+      }
+
+      return {
+        id: String(m.id),
+        name: String(m.name ?? ''),
+        description: m.description ?? null,
+        shelf_position: m.shelf_position ?? null,
+        is_demo: Boolean(m.is_demo ?? false),
+        module_families: families,
+        image_path: m.image_path ?? null,
+      };
+    });
+
+    setModules(normalized);
+ main
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
@@ -79,7 +129,11 @@ export default function CoinsPage() {
 
   async function onEnterModule() {
     if (!selected) return;
+ codex/add-session-telemetry-and-api-routes-esaz5j
     const sessionId = localStorage.getItem('pyp_session_id');
+=======
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+ main
     if (sessionId) {
       await logEvent({ event_type: 'enter_module', payload: { module_id: selected.id }});
     } else {
@@ -92,6 +146,21 @@ export default function CoinsPage() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+=======
+  //
+  // Group modules by family (use the first family if present)
+  //
+  const familyOrder = Array.from(new Set(modules.map(m => (m.module_families && m.module_families.length > 0) ? m.module_families[0].name : 'Uncategorized')));
+  const modulesByFamily: Record<string, ModuleRecord[]> = {};
+  for (const name of familyOrder) modulesByFamily[name] = [];
+  for (const mod of modules) {
+    const familyName = (mod.module_families && mod.module_families.length > 0) ? mod.module_families[0].name : 'Uncategorized';
+    if (!modulesByFamily[familyName]) modulesByFamily[familyName] = [];
+    modulesByFamily[familyName].push(mod);
+  }
+
+ main
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
@@ -100,6 +169,7 @@ export default function CoinsPage() {
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
         <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
           <div className="grid grid-cols-6 gap-8">
             {modules.map((m) => {
@@ -118,6 +188,56 @@ export default function CoinsPage() {
               );
             })}
           </div>
+=======
+        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner space-y-12">
+          {familyOrder.map((familyName) => {
+            const familyModules = modulesByFamily[familyName] ?? [];
+            // If a family ended up with zero modules, skip it
+            if (!familyModules.length) return null;
+
+            return (
+              <div key={familyName} className="py-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-end justify-items-center">
+                  {familyModules.map((m) => {
+                    const ready = true;
+                    return (
+                      <div key={m.id} className="text-center">
+                        <button
+                          onClick={() => (ready ? onSelectModule(m) : undefined)}
+                          className={`w-44 h-44 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative`}
+                          aria-label={m.name}
+                        >
+                          {m.image_path ? (
+                            <img
+                              src={m.image_path}
+                              alt={m.name}
+                              className="w-full h-full object-cover"
+                              style={{ objectPosition: 'center' }}
+                            />
+                          ) : (
+                            <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
+                          )}
+
+                          {/* small shelf-position label */}
+                          <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
+                            {m.shelf_position ?? ''}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Family label centered under the group's coins */}
+                <div className="mt-6 text-center">
+                  <div className="inline-block px-4 py-1 bg-transparent text-sm font-semibold tracking-wider uppercase text-slate-200">
+                    {familyName}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+ main
         </div>
 
         {selected && (
