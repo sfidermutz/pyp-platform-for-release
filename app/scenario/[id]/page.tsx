@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import ScenarioEngine from '@/components/ScenarioEngine';
 
-export const runtime = 'nodejs'; // ensure Node runtime so fs is allowed
+export const runtime = 'nodejs';
 
 type Props = { params: { id: string } };
 
@@ -21,7 +21,17 @@ export default async function ScenarioPage({ params }: Props) {
 
   try {
     const filePath = path.join(process.cwd(), 'data', 'scenarios', `${id}.json`);
-    if (!fs.existsSync(filePath)) {
+
+    // Diagnostic logging for Vercel runtime logs
+    const exists = fs.existsSync(filePath);
+    let raw = '';
+    if (exists) {
+      raw = fs.readFileSync(filePath, 'utf8');
+    }
+    // Log file diagnostic info so we can see what's happening on Vercel
+    console.log('Scenario debug: filePath=', filePath, 'exists=', exists, 'bytes=', raw.length, 'preview=', raw.slice(0, 300).replace(/\n/g, '\\n'));
+
+    if (!exists) {
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
@@ -29,9 +39,11 @@ export default async function ScenarioPage({ params }: Props) {
       );
     }
 
-    const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    // strip BOM if present
+    const cleaned = raw.replace(/^\uFEFF/, '');
 
-    // ScenarioEngine is a client component — passing the scenario as a prop is fine.
+    const content = JSON.parse(cleaned);
+
     return (
       <main className="min-h-screen bg-black text-white px-6 py-12">
         <div className="max-w-3xl mx-auto">
@@ -40,10 +52,9 @@ export default async function ScenarioPage({ params }: Props) {
       </main>
     );
   } catch (err) {
-    // Safe extraction of stack/message for unknown error types
+    // Safe error logging
     let errMsg: string;
     if (err && typeof err === 'object') {
-      // if it's an Error-like object, prefer stack
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const anyErr: any = err;
       errMsg = anyErr?.stack ?? JSON.stringify(anyErr);
