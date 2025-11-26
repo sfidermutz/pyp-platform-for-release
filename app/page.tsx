@@ -24,21 +24,21 @@ export default function Home() {
     setLoading(true);
 
     // quick client-side token check for UX
-    const { data, error: supaError } = await supabase
-      .from('tokens')
-      .select('*')
-      .eq('token', trimmed)
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (supaError || !data) {
-      setLoading(false);
-      setError('Invalid or expired access token.');
-      return;
-    }
-
     try {
-      // create session server-side (secure)
+      const { data, error: supaError } = await supabase
+        .from('tokens')
+        .select('*')
+        .eq('token', trimmed)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (supaError || !data) {
+        setLoading(false);
+        setError('Invalid or expired access token.');
+        return;
+      }
+
+      // create session server-side
       const res = await fetch('/api/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,7 +60,7 @@ export default function Home() {
         localStorage.setItem('pyp_session_id', session.id);
       }
 
-      // log initial page_view server-side
+      // log page_view
       try {
         await fetch('/api/log-event', {
           method: 'POST',
@@ -85,56 +85,46 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="h-28 w-28 rounded-full border border-slate-500 flex items-center justify-center text-xs overflow-hidden">
-              {/* If you add public/logo.png it will render automatically */}
-<img src="/PYPStrategicEdge-icon.png" alt="PYP logo" className="w-full h-full object-cover" onError={(e)=>{ (e.currentTarget as HTMLImageElement).style.display='none'; }} />
-              {/* fallback text, shown only if logo.png is missing because img will hide onError */}
-              <span className="absolute text-xs">PYP</span>
-            </div>
+      <div className="max-w-md w-full space-y-10">
+        <div className="text-center">
+          <div className="mx-auto w-36 h-36 rounded-full border border-slate-600 overflow-hidden flex items-center justify-center mb-6">
+            {/* Use the official icon you uploaded to public/ */}
+            <img
+              src="/PYPStrategicEdge-icon.png"
+              alt="PYP Strategic Edge"
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
           </div>
 
-          <h1 className="text-3xl font-semibold tracking-[0.25em] uppercase">
-            PYP: Strategic Edge
-          </h1>
-          <p className="text-sm text-slate-400">
-            Enter your access token to begin the pilot scenario.
-          </p>
+          <h1 className="text-4xl font-extrabold tracking-widest uppercase">PYP: Strategic Edge</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wide">
-              Access Token
-            </label>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Access Token</label>
             <input
               type="text"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-              placeholder="pypxxxxxx"
+              placeholder="Enter token"
               autoComplete="off"
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-400">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 py-2 text-sm font-semibold tracking-wide uppercase transition-colors"
+            className="w-full rounded-md bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 py-3 text-sm font-semibold uppercase tracking-wide"
           >
             {loading ? 'Validating…' : 'Enter'}
           </button>
         </form>
 
-        <p className="text-[10px] text-center text-slate-600 tracking-wide">
+        <p className="text-[11px] text-center text-slate-500 tracking-wide">
           TRL-4 Pilot · Token-gated access · No personal data stored
         </p>
       </div>
