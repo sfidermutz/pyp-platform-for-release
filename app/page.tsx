@@ -90,7 +90,7 @@ export default function Home() {
           <div className="flex justify-center">
             <div className="h-28 w-28 rounded-full border border-slate-500 flex items-center justify-center text-xs overflow-hidden">
               {/* If you add public/logo.png it will render automatically */}
-              <img src="/PYPStrategicEdge-icon.png" alt="PYP logo" className="w-full h-full object-cover" onError={(e)=>{ (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+<img src="/PYPStrategicEdge-icon.png" alt="PYP logo" className="w-full h-full object-cover" onError={(e)=>{ (e.currentTarget as HTMLImageElement).style.display='none'; }} />
               {/* fallback text, shown only if logo.png is missing because img will hide onError */}
               <span className="absolute text-xs">PYP</span>
             </div>
