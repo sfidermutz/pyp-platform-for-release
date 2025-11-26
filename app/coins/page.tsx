@@ -42,7 +42,6 @@ export default function CoinsPage() {
 
   async function fetchModules() {
     setLoading(true);
-    // Include default_scenario_id in query to navigate straight to scenario
     const { data, error } = await supabase
       .from('modules')
       .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code )`)
@@ -82,7 +81,6 @@ export default function CoinsPage() {
     setModules(normalized);
   }
 
-  // Start module -> if default_scenario_id found, navigate directly to that scenario
   async function startModuleImmediately(m: ModuleRecord) {
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
@@ -100,18 +98,15 @@ export default function CoinsPage() {
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
 
-      // Log enter_module
       await fetch('/api/log-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id }})
       }).catch(()=>{});
 
-      // If module has default_scenario_id, go directly to scenario
       if (m.default_scenario_id) {
         router.push(`/scenario/${encodeURIComponent(m.default_scenario_id)}`);
       } else {
-        // Fallback to module page if no default scenario
         router.push(`/module/${m.id}`);
       }
     } catch (e) {
@@ -124,7 +119,6 @@ export default function CoinsPage() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
-  // Group modules by first family
   const familyOrder = Array.from(new Set(modules.map(m => (m.module_families && m.module_families.length > 0) ? m.module_families[0].name : 'Uncategorized')));
   const modulesByFamily: Record<string, ModuleRecord[]> = {};
   for (const name of familyOrder) modulesByFamily[name] = [];
@@ -157,17 +151,16 @@ export default function CoinsPage() {
                         aria-label={m.name}
                         title={m.name}
                       >
-                        {/* Use a div background approach to avoid alt text showing if image fails */}
                         {m.image_path ? (
                           <img
                             src={m.image_path}
                             alt=""
                             role="presentation"
                             className="w-full h-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.png'; }}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
                           />
                         ) : (
-                          <img src="/coins/placeholder.png" alt="" role="presentation" className="w-full h-full object-cover" />
+                          <img src="/coins/placeholder.svg" alt="" role="presentation" className="w-full h-full object-cover" />
                         )}
 
                         <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
