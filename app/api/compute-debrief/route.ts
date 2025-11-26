@@ -8,83 +8,82 @@ export async function POST(req: NextRequest) {
 
     const sc = scenario;
 
-    // Helper to find an option by id within a dp structure (handles flat dp, dp.options, or branching maps)
-    function findOptionInCollection(collection: any): any | null {
-      if (!collection) return null;
-      // if it's an object with options
-      if (Array.isArray(collection.options)) {
-        return (collection.options || []).find((o: any) => o.id === optionIdBeingSearched) ?? null;
+    // Helper: normalize a dp object (which may be many forms) into a single options[] array
+    function getOptionsFromDp(dpRaw: any): any[] {
+      if (!dpRaw) return [];
+
+      // If dpRaw has .options as an array, return it
+      if (Array.isArray(dpRaw.options)) {
+        return dpRaw.options;
       }
-      // if collection is directly an array
-      if (Array.isArray(collection)) {
-        return collection.find((o: any) => o.id === optionIdBeingSearched) ?? null;
+
+      // If dpRaw itself is an array of options, return it
+      if (Array.isArray(dpRaw)) {
+        return dpRaw;
       }
-      // If it's a branching map, search through all arrays under it
-      if (typeof collection === 'object') {
-        for (const k of Object.keys(collection)) {
-          const v = collection[k];
+
+      // If dpRaw is an object that is a branching map (keys -> array of options),
+      // gather all arrays that are arrays into a combined options array.
+      if (typeof dpRaw === 'object') {
+        const combined: any[] = [];
+        for (const k of Object.keys(dpRaw)) {
+          // Skip common metadata keys if present
+          if (k === 'narrative' || k === 'stem' || k === 'options' || k === 'default') continue;
+          const v = dpRaw[k];
           if (Array.isArray(v)) {
-            const found = v.find((o: any) => o.id === optionIdBeingSearched);
+            combined.push(...v);
+          }
+        }
+        // If there is a default branch and it's an array, include it at the end
+        if (Array.isArray((dpRaw as any).default)) {
+          combined.push(...(dpRaw as any).default);
+        }
+        // If no arrays found, but dpRaw has some keys which are options objects (rare), attempt to coerce
+        // Otherwise combined could be empty — return as-is
+        return combined;
+      }
+
+      return [];
+    }
+
+    // Find option by id within DP index 1|2|3, supporting both flat and branching dp structures
+    function optionFor(dpIndex: number, optionId: string) {
+      if (!sc || !optionId) return null;
+
+      const dpRaw = dpIndex === 1 ? sc.dp1 : dpIndex === 2 ? sc.dp2 : sc.dp3;
+      // If dpRaw is absent return null
+      if (!dpRaw) return null;
+
+      // If dpRaw is a normal structure with .options or an array, search directly
+      if (Array.isArray(dpRaw) || Array.isArray(dpRaw?.options)) {
+        const arr = Array.isArray(dpRaw) ? dpRaw : dpRaw.options;
+        return arr.find((o: any) => o.id === optionId) ?? null;
+      }
+
+      // If dpRaw is an object (branching map or mixed), attempt direct matches in its branches
+      if (typeof dpRaw === 'object') {
+        // Directly search known keys that may contain arrays (branching or keyed by previous choices)
+        for (const key of Object.keys(dpRaw)) {
+          const candidate = (dpRaw as any)[key];
+          if (Array.isArray(candidate)) {
+            const found = candidate.find((o: any) => o.id === optionId);
             if (found) return found;
           }
         }
+
+        // As fallback, try combining arrays into one list and search
+        const combined = getOptionsFromDp(dpRaw);
+        if (combined && combined.length) {
+          const found = combined.find((o: any) => o.id === optionId);
+          if (found) return found;
+        }
       }
+
+      // If all else fails, return null
       return null;
     }
 
-    // We'll implement optionFor that searches dp1, dp2, dp3 respecting branching maps
-    function optionFor(dpIndex: number, optionId: string) {
-      if (!optionId) return null;
-
-      // Local helper uses closure variable for easy search
-      // dp1
-      if (dpIndex === 1) {
-        const arr = (sc.dp1?.options ?? sc.dp1 ?? []);
-        return (Array.isArray(arr) ? arr : (arr.options ?? [])).find((o: any) => o.id === optionId) ?? null;
-      }
-
-      // dp2
-      if (dpIndex === 2) {
-        // If dp2 is array-like
-        if (Array.isArray(sc.dp2) || Array.isArray(sc.dp2?.options)) {
-          const arr = Array.isArray(sc.dp2) ? sc.dp2 : sc.dp2.options;
-          return arr.find((o: any) => o.id === optionId) ?? null;
-        }
-        // If dp2 is branching map
-        if (sc.dp2 && typeof sc.dp2 === 'object') {
-          for (const key of Object.keys(sc.dp2)) {
-            const maybeArr = sc.dp2[key];
-            if (Array.isArray(maybeArr)) {
-              const found = maybeArr.find((o: any) => o.id === optionId);
-              if (found) return found;
-            }
-          }
-        }
-        return null;
-      }
-
-      // dp3
-      if (dpIndex === 3) {
-        if (Array.isArray(sc.dp3) || Array.isArray(sc.dp3?.options)) {
-          const arr = Array.isArray(sc.dp3) ? sc.dp3 : sc.dp3.options;
-          return arr.find((o: any) => o.id === optionId) ?? null;
-        }
-        if (sc.dp3 && typeof sc.dp3 === 'object') {
-          for (const key of Object.keys(sc.dp3)) {
-            const maybeArr = sc.dp3[key];
-            if (Array.isArray(maybeArr)) {
-              const found = maybeArr.find((o: any) => o.id === optionId);
-              if (found) return found;
-            }
-          }
-        }
-        return null;
-      }
-
-      return null;
-    }
-
-    // compute metrics same as before but use the robust optionFor
+    // compute metrics (original logic) using robust optionFor
     const dpIndices = [1,2,3];
     let decisionQualitySum = 0;
     let confidenceAlignmentSum = 0;
@@ -141,13 +140,4 @@ export async function POST(req: NextRequest) {
       cognitive_adaptability: Math.round(cognitive_adaptability),
       escalation_tendency: Math.round(escalation_tendency),
       CRI: Math.round(CRI),
-      confidence_alignment: Math.round(confidence_alignment),
-      reflection_quality: Math.round(reflectionQuality)
-    };
-
-    return NextResponse.json({ ...metrics, short_feedback, metrics });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
-  }
-}
+      confidence_alignment: Math.round(confidence_al
