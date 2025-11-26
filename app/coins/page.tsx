@@ -1,3 +1,4 @@
+// app/coins/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -206,4 +207,3 @@ export default function CoinsPage() {
     </main>
   );
 }
-EOF
