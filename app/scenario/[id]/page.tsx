@@ -1,3 +1,8 @@
+# ensure branch
+git checkout codex/add-session-telemetry-and-api-routes-esaz5j
+git pull origin codex/add-session-telemetry-and-api-routes-esaz5j
+
+cat > app/scenario/[id]/page.tsx <<'EOF'
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -42,3 +47,4 @@ export default function ScenarioPage({ params }: { params: { id: string }}) {
     </main>
   );
 }
+EOF
