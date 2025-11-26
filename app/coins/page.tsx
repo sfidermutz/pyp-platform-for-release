@@ -131,7 +131,6 @@ export default function CoinsPage() {
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <p className="text-xs text-slate-500">PYP: STRATEGIC EDGE · TRL-4 PILOT</p>
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
@@ -142,35 +141,37 @@ export default function CoinsPage() {
 
             return (
               <section key={familyName} className="py-8">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-10 items-start justify-items-center">
-                  {familyModules.map((m) => (
-                    <div key={m.id} className="text-center w-40">
-                      <button
-                        onClick={() => startModuleImmediately(m)}
-                        className="w-36 h-36 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm"
-                        aria-label={m.name}
-                        title={m.name}
-                      >
-                        {m.image_path ? (
-                          <img
-                            src={m.image_path}
-                            alt=""
-                            role="presentation"
-                            className="w-full h-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
-                          />
-                        ) : (
-                          <img src="/coins/placeholder.svg" alt="" role="presentation" className="w-full h-full object-cover" />
-                        )}
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-10 items-start justify-items-center">
+                    {familyModules.map((m) => (
+                      <div key={m.id} className="text-center w-44">
+                        <button
+                          onClick={() => startModuleImmediately(m)}
+                          className="w-40 h-40 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm"
+                          aria-label={m.name}
+                          title={m.name}
+                        >
+                          {m.image_path ? (
+                            <img
+                              src={m.image_path}
+                              alt=""
+                              role="presentation"
+                              className="w-full h-full object-cover"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
+                            />
+                          ) : (
+                            <img src="/coins/placeholder.svg" alt="" role="presentation" className="w-full h-full object-cover" />
+                          )}
 
-                        <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
-                          {m.shelf_position ?? ''}
-                        </span>
-                      </button>
+                          <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
+                            {m.shelf_position ?? ''}
+                          </span>
+                        </button>
 
-                      <div className="mt-3 text-sm font-semibold">{m.name}</div>
-                    </div>
-                  ))}
+                        <div className="mt-3 text-sm font-semibold break-words">{m.name}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="mt-8 text-center">
