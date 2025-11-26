@@ -1,17 +1,15 @@
 // app/scenario/[id]/page.tsx
 import React from 'react';
 import ScenarioEngine from '@/components/ScenarioEngine';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-export const runtime = 'nodejs'; // explicit Node runtime (safe)
+export const runtime = 'nodejs';
 
 type Props = { params: { id: string } };
 
-// Raw GitHub base for the repo's main branch
-const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
-
 export default async function ScenarioPage({ params }: Props) {
   const id = params?.id;
-
   if (!id) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black">
@@ -21,14 +19,43 @@ export default async function ScenarioPage({ params }: Props) {
   }
 
   try {
-    const rawUrl = `${RAW_BASE}/data/scenarios/${encodeURIComponent(id)}.json`;
+    // Read scenario from local repo filesystem at /data/scenarios/{id}.json
+    const repoRoot = process.cwd();
+    const filePath = path.join(repoRoot, 'data', 'scenarios', `${id}.json`);
 
-    // fetch from raw GitHub URL on the server (avoids local fs issues)
-    const res = await fetch(rawUrl, { method: 'GET' });
+    let raw = '';
+    try {
+      raw = await fs.readFile(filePath, 'utf8');
+    } catch (fsErr) {
+      // Not found locally — fallback to raw GitHub (keeps earlier behavior if needed)
+      try {
+        const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
+        const rawUrl = `${RAW_BASE}/data/scenarios/${encodeURIComponent(id)}.json`;
+        const res = await fetch(rawUrl);
+        if (res.ok) raw = await res.text();
+        else {
+          console.error('Scenario not found locally and remote fetch failed', { id, status: res.status });
+          return (
+            <div className="min-h-screen flex items-center justify-center text-white bg-black">
+              Scenario not found.
+            </div>
+          );
+        }
+      } catch (e) {
+        console.error('Scenario fetch fallback failed', e);
+        return (
+          <div className="min-h-screen flex items-center justify-center text-white bg-black">
+            Scenario not found.
+          </div>
+        );
+      }
+    }
 
-    // Diagnostic logging in runtime logs if anything odd happens
-    if (!res.ok) {
-      console.error('Scenario fetch failed', { id, url: rawUrl, status: res.status });
+    let content: any = null;
+    try {
+      content = JSON.parse(raw);
+    } catch (parseErr) {
+      console.error('Scenario JSON parse error', { id, parseErr: String(parseErr) });
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
@@ -36,12 +63,8 @@ export default async function ScenarioPage({ params }: Props) {
       );
     }
 
-    // parse JSON
-    const content = await res.json();
-
-    // Basic validation
     if (!content || !content.scenario_id) {
-      console.error('Scenario JSON invalid', { id, url: rawUrl, preview: JSON.stringify(content).slice(0, 300) });
+      console.error('Scenario JSON invalid', { id });
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
@@ -57,20 +80,7 @@ export default async function ScenarioPage({ params }: Props) {
       </main>
     );
   } catch (err) {
-    // safe logging of unknown error types
-    let errMsg: string;
-    if (err && typeof err === 'object') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyErr: any = err;
-      errMsg = anyErr?.stack ?? JSON.stringify(anyErr);
-    } else {
-      try {
-        errMsg = JSON.stringify(err);
-      } catch {
-        errMsg = String(err);
-      }
-    }
-    console.error('Error fetching/parsing scenario', { id, err: errMsg });
+    console.error('Error preparing scenario', err);
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black">
         Scenario not found.
