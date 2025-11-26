@@ -5,13 +5,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
+type Family = { name: string; code: string };
 type ModuleRecord = {
   id: string;
   name: string;
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
-  module_families: { name: string; code: string }[];
+  module_families: Family[];
   image_path?: string | null;
 };
 
@@ -54,9 +55,16 @@ export default function CoinsPage() {
 
     const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
       const fam = m.module_families;
-      let families = [];
-      if (Array.isArray(fam)) families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
-      else if (fam && typeof fam === 'object') families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
+      let families: Family[] = [];
+
+      if (Array.isArray(fam)) {
+        families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
+      } else if (fam && typeof fam === 'object') {
+        families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
+      } else {
+        families = [];
+      }
+
       return {
         id: String(m.id),
         name: String(m.name ?? ''),
