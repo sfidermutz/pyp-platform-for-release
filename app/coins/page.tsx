@@ -1,18 +1,25 @@
+cat > app/coins/page.tsx <<'EOF'
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+
 type ModuleFamilyItem = { name: string; code: string };
 type ModuleFamily = ModuleFamilyItem[];
 
+ main
 type ModuleRecord = {
   id: string;
   name: string;
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
+ codex/add-session-telemetry-and-api-routes-esaz5j
+  module_families?: { name: string; code: string };
+
   module_families: ModuleFamily;
   image_path?: string | null;
 };
@@ -55,7 +62,11 @@ export default function CoinsPage() {
       console.error('fetch modules error', error);
       return;
     }
+ codex/add-session-telemetry-and-api-routes-esaz5j
+    setModules(data ?? []);
 
+
+    // Normalize module_families into an array of {name, code} and ensure image_path is present
     // Normalize module_families into an array of {name, code} and ensure image_path is present
     const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
       const fam = m.module_families;
@@ -77,10 +88,12 @@ export default function CoinsPage() {
         is_demo: Boolean(m.is_demo ?? false),
         module_families: families,
         image_path: m.image_path ?? null,
+        image_path: m.image_path ?? null,
       };
     });
 
     setModules(normalized);
+ main
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
@@ -206,3 +219,4 @@ export default function CoinsPage() {
     </main>
   );
 }
+EOF
