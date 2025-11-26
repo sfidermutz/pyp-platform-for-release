@@ -135,19 +135,19 @@ export default function CoinsPage() {
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
-        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner space-y-12">
+        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
           {familyOrder.map((familyName) => {
             const familyModules = modulesByFamily[familyName] ?? [];
             if (!familyModules.length) return null;
 
             return (
-              <div key={familyName} className="py-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-6 items-end justify-items-center">
+              <section key={familyName} className="py-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-10 items-start justify-items-center">
                   {familyModules.map((m) => (
-                    <div key={m.id} className="text-center">
+                    <div key={m.id} className="text-center w-40">
                       <button
                         onClick={() => startModuleImmediately(m)}
-                        className="w-36 h-36 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm transform-none"
+                        className="w-36 h-36 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm"
                         aria-label={m.name}
                         title={m.name}
                       >
@@ -168,17 +168,17 @@ export default function CoinsPage() {
                         </span>
                       </button>
 
-                      <div className="mt-2 text-sm font-semibold">{m.name}</div>
+                      <div className="mt-3 text-sm font-semibold">{m.name}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-6 text-center">
+                <div className="mt-8 text-center">
                   <div className="inline-block px-4 py-1 bg-transparent text-sm font-semibold tracking-wider uppercase text-slate-200">
                     {familyName}
                   </div>
                 </div>
-              </div>
+              </section>
             );
           })}
         </div>
