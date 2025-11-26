@@ -23,7 +23,6 @@ export default function Home() {
 
     setLoading(true);
 
-    // quick client-side token check for UX
     try {
       const { data, error: supaError } = await supabase
         .from('tokens')
@@ -56,11 +55,11 @@ export default function Home() {
       // store token + session id
       if (typeof window !== 'undefined') {
         localStorage.setItem('pyp_token', trimmed);
-        localStorage.setItem('pyp_token_label', data.label ?? '');
+        localStorage.setItem('pyp_token_label', (data && data.label) ? data.label : '');
         localStorage.setItem('pyp_session_id', session.id);
       }
 
-      // log page_view
+      // minimal log
       try {
         await fetch('/api/log-event', {
           method: 'POST',
@@ -68,11 +67,11 @@ export default function Home() {
           body: JSON.stringify({
             session_id: session.id,
             event_type: 'page_view',
-            payload: { page: 'landing', token_label: data.label ?? null }
+            payload: { page: 'landing', token_label: (data && data.label) ? data.label : null }
           })
         });
       } catch (e) {
-        console.debug('page_view log failed', e);
+        // noop
       }
 
       router.push('/coins');
@@ -85,19 +84,19 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-10">
+      <div className="max-w-lg w-full space-y-10">
         <div className="text-center">
-          <div className="mx-auto w-36 h-36 rounded-full border border-slate-600 overflow-hidden flex items-center justify-center mb-6">
-            {/* Use the official icon you uploaded to public/ */}
+          <div className="mx-auto w-48 h-48 overflow-hidden mb-6">
+            {/* Large logo, no decorative small circle */}
             <img
               src="/PYPStrategicEdge-icon.png"
               alt="PYP Strategic Edge"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
             />
           </div>
 
-          <h1 className="text-4xl font-extrabold tracking-widest uppercase">PYP: Strategic Edge</h1>
+          <h1 className="text-5xl font-extrabold tracking-widest uppercase leading-tight">PYP: Strategic Edge</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
