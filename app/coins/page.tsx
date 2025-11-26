@@ -14,6 +14,7 @@ type ModuleRecord = {
   is_demo: boolean;
   module_families: Family[];
   image_path?: string | null;
+  default_scenario_id?: string | null;
 };
 
 export default function CoinsPage() {
@@ -41,9 +42,10 @@ export default function CoinsPage() {
 
   async function fetchModules() {
     setLoading(true);
+    // Include default_scenario_id in query to navigate straight to scenario
     const { data, error } = await supabase
       .from('modules')
-      .select(`id, name, description, shelf_position, is_demo, image_path, module_families ( name, code )`)
+      .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code )`)
       .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
@@ -73,12 +75,14 @@ export default function CoinsPage() {
         is_demo: Boolean(m.is_demo ?? false),
         module_families: families,
         image_path: m.image_path ?? null,
+        default_scenario_id: m.default_scenario_id ?? null
       };
     });
 
     setModules(normalized);
   }
 
+  // Start module -> if default_scenario_id found, navigate directly to that scenario
   async function startModuleImmediately(m: ModuleRecord) {
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
@@ -96,16 +100,23 @@ export default function CoinsPage() {
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
 
-      // Log and navigate
+      // Log enter_module
       await fetch('/api/log-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id }})
       }).catch(()=>{});
-      router.push(`/module/${m.id}`);
+
+      // If module has default_scenario_id, go directly to scenario
+      if (m.default_scenario_id) {
+        router.push(`/scenario/${encodeURIComponent(m.default_scenario_id)}`);
+      } else {
+        // Fallback to module page if no default scenario
+        router.push(`/module/${m.id}`);
+      }
     } catch (e) {
       console.error('startModuleImmediately failed', e);
-      router.push('/');
+      router.push(`/module/${m.id}`);
     }
   }
 
@@ -146,15 +157,17 @@ export default function CoinsPage() {
                         aria-label={m.name}
                         title={m.name}
                       >
+                        {/* Use a div background approach to avoid alt text showing if image fails */}
                         {m.image_path ? (
                           <img
                             src={m.image_path}
-                            alt={m.name}
+                            alt=""
+                            role="presentation"
                             className="w-full h-full object-cover"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.png'; }}
                           />
                         ) : (
-                          <img src="/coins/placeholder.png" alt="placeholder" className="w-full h-full object-cover" />
+                          <img src="/coins/placeholder.png" alt="" role="presentation" className="w-full h-full object-cover" />
                         )}
 
                         <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
