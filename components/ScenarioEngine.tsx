@@ -13,7 +13,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // annotate prev to avoid implicit any under noImplicitAny
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
@@ -24,6 +23,23 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       ...prev,
       [dpIndex]: { optionId, confidence: confidence ?? prev?.[dpIndex]?.confidence ?? 50, timeMs: timeOnPage }
     }));
+  }
+
+  async function persistReflection(sessionId: string | null, scenario_id: string, phase: string, text: string) {
+    try {
+      await fetch('/api/reflections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          scenario_id,
+          reflection_phase: phase,
+          reflection_text: text
+        })
+      });
+    } catch (e) {
+      console.debug('persistReflection failed', e);
+    }
   }
 
   async function goNext() {
@@ -52,7 +68,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
       const next = screen + 1;
       setScreen(next);
-      // annotate prev here as well
       setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
       return;
     }
@@ -81,11 +96,17 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           });
         } catch (e) { console.debug('decision post failed', e); }
 
+        // Persist the pre-reflection (if any) and post-reflection to server for demo
+        const session_hint = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+        try {
+          await persistReflection(session_hint, scenarioId, 'pre', ''); // if you have pre reflection, post that here
+        } catch (e) { /* ignore */ }
+
         const res = await fetch('/api/compute-debrief', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
+            session_hint: session_hint,
             scenario_id: scenarioId,
             selections,
             reflection,
@@ -98,6 +119,34 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           setDebrief(null);
         } else {
           setDebrief(json);
+
+          // --- NEW: persist the reflection on server for retrieval by full debrief page ---
+          try {
+            await persistReflection(session_hint, scenarioId, 'post', reflection);
+          } catch (e) {
+            console.debug('persist post reflection failed', e);
+          }
+
+          // --- NEW: persist the computed metrics server-side to scenario_metrics via an API ---
+          try {
+            await fetch('/api/store-scenario-metrics', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session_id: session_hint, scenario_id: scenarioId, metrics: json })
+            });
+          } catch (e) {
+            console.debug('store scenario metrics failed', e);
+          }
+
+          // --- NEW: Save debrief JSON to localStorage to allow the Full Debrief page to read it ---
+          try {
+            const sid = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+            if (sid) {
+              localStorage.setItem(`pyp_debrief_${sid}_${scenarioId}`, JSON.stringify(json));
+            }
+          } catch (e) {
+            console.debug('saving debrief to localStorage failed', e);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -137,8 +186,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     {isLocked ? <div className="text-[10px] text-slate-400 uppercase tracking-wider">Locked</div> : null}
                   </div>
 
-                  <p className="mt-3 text-sm text-slate-300">{dp.narrative}</p>
-                  <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem}</p>
+                  <p className="mt-3 text-sm text-slate-300">{dp.narrative ?? dpFor(i).narrative}</p>
+                  <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem ?? dpFor(i).stem}</p>
 
                   <div className="mt-4 grid gap-3">
                     {dp.options.map((opt: any) => {
@@ -183,7 +232,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         {screen === 3 && (
           <div className="mt-6">
             <label className="block text-sm font-semibold">Reflection</label>
-            <p className="text-sm text-slate-300 mt-2">{scenario.reflection1_prompt}</p>
+            <p className="text-sm text-slate-300 mt-2">{scenario.reflections?.pre?.prompt ?? scenario.reflection1_prompt}</p>
             <textarea
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
