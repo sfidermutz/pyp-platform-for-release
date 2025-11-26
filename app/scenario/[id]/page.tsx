@@ -1,12 +1,13 @@
 // app/scenario/[id]/page.tsx
 import React from 'react';
-import path from 'path';
-import fs from 'fs';
 import ScenarioEngine from '@/components/ScenarioEngine';
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // explicit Node runtime (safe)
 
 type Props = { params: { id: string } };
+
+// Raw GitHub base for the repo's main branch
+const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
 
 export default async function ScenarioPage({ params }: Props) {
   const id = params?.id;
@@ -20,18 +21,14 @@ export default async function ScenarioPage({ params }: Props) {
   }
 
   try {
-    const filePath = path.join(process.cwd(), 'data', 'scenarios', `${id}.json`);
+    const rawUrl = `${RAW_BASE}/data/scenarios/${encodeURIComponent(id)}.json`;
 
-    // Diagnostic logging for Vercel runtime logs
-    const exists = fs.existsSync(filePath);
-    let raw = '';
-    if (exists) {
-      raw = fs.readFileSync(filePath, 'utf8');
-    }
-    // Log file diagnostic info so we can see what's happening on Vercel
-    console.log('Scenario debug: filePath=', filePath, 'exists=', exists, 'bytes=', raw.length, 'preview=', raw.slice(0, 300).replace(/\n/g, '\\n'));
+    // fetch from raw GitHub URL on the server (avoids local fs issues)
+    const res = await fetch(rawUrl, { method: 'GET' });
 
-    if (!exists) {
+    // Diagnostic logging in runtime logs if anything odd happens
+    if (!res.ok) {
+      console.error('Scenario fetch failed', { id, url: rawUrl, status: res.status });
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
@@ -39,10 +36,18 @@ export default async function ScenarioPage({ params }: Props) {
       );
     }
 
-    // strip BOM if present
-    const cleaned = raw.replace(/^\uFEFF/, '');
+    // parse JSON
+    const content = await res.json();
 
-    const content = JSON.parse(cleaned);
+    // Basic validation
+    if (!content || !content.scenario_id) {
+      console.error('Scenario JSON invalid', { id, url: rawUrl, preview: JSON.stringify(content).slice(0, 300) });
+      return (
+        <div className="min-h-screen flex items-center justify-center text-white bg-black">
+          Scenario not found.
+        </div>
+      );
+    }
 
     return (
       <main className="min-h-screen bg-black text-white px-6 py-12">
@@ -52,7 +57,7 @@ export default async function ScenarioPage({ params }: Props) {
       </main>
     );
   } catch (err) {
-    // Safe error logging
+    // safe logging of unknown error types
     let errMsg: string;
     if (err && typeof err === 'object') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +70,7 @@ export default async function ScenarioPage({ params }: Props) {
         errMsg = String(err);
       }
     }
-    console.error('Error reading scenario file', errMsg);
+    console.error('Error fetching/parsing scenario', { id, err: errMsg });
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black">
         Scenario not found.
