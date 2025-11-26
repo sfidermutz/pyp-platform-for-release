@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coin placeholder">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#6e7880" stop-opacity="0.22"/>
+      <stop offset="50%" stop-color="#3a4045" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#232529" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0%" x2="100%">
+      <stop offset="0%" stop-color="#2f4b5f"/>
+      <stop offset="50%" stop-color="#1f313d"/>
+      <stop offset="100%" stop-color="#2b3f4f"/>
+    </linearGradient>
+    <filter id="sh" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feOffset dx="0" dy="6" result="o"/>
+      <feMerge>
+        <feMergeNode in="o"/>
+        <feMergeNode in="b"/>
+      </feMerge>
+    </filter>
+    <clipPath id="circleClip">
+      <circle cx="200" cy="200" r="160" />
+    </clipPath>
+  </defs>
+
+  <!-- background fill (transparent to blend into dark UI) -->
+  <rect width="100%" height="100%" fill="rgba(0,0,0,0)" />
+
+  <!-- outer rim drop-shadow -->
+  <g filter="url(#sh)">
+    <circle cx="200" cy="200" r="182" fill="none" />
+  </g>
+
+  <!-- rim -->
+  <circle cx="200" cy="200" r="176" fill="url(#rim)" stroke="#0f1720" stroke-width="6"/>
+
+  <!-- coin face -->
+  <circle cx="200" cy="200" r="160" fill="url(#g1)" />
+
+  <!-- inner ring -->
+  <circle cx="200" cy="200" r="120" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+
+  <!-- small emblem: shield and star (simple, high-contrast) -->
+  <g clip-path="url(#circleClip)" transform="translate(0,0)">
+    <!-- shield body -->
+    <path d="M200 135 L220 155 L220 190 C200 210 180 190 180 155 Z" fill="rgba(255,255,255,0.12)" transform="translate(-10,0)"/>
+    <!-- inner shield highlight -->
+    <path d="M200 145 L215 162 L215 187 C200 202 185 187 185 162 Z" fill="rgba(255,255,255,0.06)" transform="translate(-10,0)"/>
+    <!-- star -->
+    <polygon points="200,110 204,122 217,122 207,130 211,143 200,135 189,143 193,130 183,122 196,122" fill="rgba(255,255,255,0.18)"/>
+    <!-- small laurel -->
+    <path d="M150 230 C160 215 175 210 185 225" stroke="rgba(255,255,255,0.07)" stroke-width="4" fill="none"/>
+    <path d="M250 230 C240 215 225 210 215 225" stroke="rgba(255,255,255,0.07)" stroke-width="4" fill="none"/>
+  </g>
+
+  <!-- subtle top highlight -->
+  <ellipse cx="200" cy="120" rx="120" ry="36" fill="rgba(255,255,255,0.03)"/>
+
+  <!-- small engraved text around bottom arc -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.07)" text-anchor="middle">
+    <text x="200" y="300">PYP · STRATEGIC EDGE</text>
+  </g>
+</svg>
