@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import ScenarioEngine from '@/components/ScenarioEngine';
 
+export const runtime = 'nodejs'; // <<-- ensure Node runtime so fs is available
+
 type Props = { params: { id: string } };
 
 export default async function ScenarioPage({ params }: Props) {
@@ -39,7 +41,8 @@ export default async function ScenarioPage({ params }: Props) {
       </main>
     );
   } catch (err) {
-    console.error('Error reading scenario file', err);
+    // improved logging so we can see stack / reason in Vercel runtime logs
+    console.error('Error reading scenario file', err && (err.stack || JSON.stringify(err)));
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black">
         Scenario not found.
