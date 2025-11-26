@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -71,7 +72,6 @@ export default function Home() {
           })
         });
       } catch (e) {
-        // ignore logging errors for UX
         console.debug('page_view log failed', e);
       }
 
@@ -88,9 +88,11 @@ export default function Home() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="h-28 w-28 rounded-full border border-slate-500 flex items-center justify-center text-xs">
-              {/* Replace PYP text with logo image if you have it: <img src="/path/to/logo.png" /> */}
-              PYP
+            <div className="h-28 w-28 rounded-full border border-slate-500 flex items-center justify-center text-xs overflow-hidden">
+              {/* If you add public/logo.png it will render automatically */}
+              <img src="/logo.png" alt="PYP logo" className="w-full h-full object-cover" onError={(e)=>{ (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+              {/* fallback text, shown only if logo.png is missing because img will hide onError */}
+              <span className="absolute text-xs">PYP</span>
             </div>
           </div>
 
