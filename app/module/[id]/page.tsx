@@ -1,7 +1,9 @@
-// app/module/[id]/page.tsx  — server component
+// app/module/[id]/page.tsx
 import React from 'react';
+import ModuleClient from '@/components/ModuleClient';
 import { createClient } from '@supabase/supabase-js';
-import ModuleClient from '@/components/ModuleClient'; // small client wrapper (see note)
+
+export const runtime = 'nodejs';
 
 type Props = { params: { id: string } };
 
@@ -24,25 +26,26 @@ export default async function ModulePage({ params }: Props) {
       .maybeSingle();
 
     if (error || !data) {
+      console.error('Module fetch failed', { id, error });
       return <div className="min-h-screen flex items-center justify-center text-white bg-black">Module not found.</div>;
     }
 
-    // ModuleClient is a small client component that handles "Start Scenario" UI.
+    // ensure module structure ok
     return (
       <main className="min-h-screen bg-black text-white p-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold">{data.name}</h1>
           <p className="mt-4 text-slate-300">{data.description}</p>
           <div className="mt-6">
-            {/* Pass module as prop to client component */}
-            {/* ModuleClient would contain the Start Scenario button and client interactions */}
             <ModuleClient module={data} />
           </div>
         </div>
       </main>
     );
   } catch (err) {
-    console.error(err);
+    // safe logging
+    let errMsg = typeof err === 'object' ? JSON.stringify(err) : String(err);
+    console.error('Module server error', { id, err: errMsg });
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Module not found.</div>;
   }
 }
