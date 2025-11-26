@@ -22,6 +22,7 @@ export default function Home() {
 
     setLoading(true);
 
+    // quick client-side token check for UX
     const { data, error: supaError } = await supabase
       .from('tokens')
       .select('*')
@@ -29,25 +30,57 @@ export default function Home() {
       .eq('is_active', true)
       .maybeSingle();
 
-    setLoading(false);
-
     if (supaError || !data) {
+      setLoading(false);
       setError('Invalid or expired access token.');
       return;
     }
 
-    // fire-and-forget update of last_used_at
-    supabase
-      .from('tokens')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', data.id);
+    try {
+      // create session server-side (secure)
+      const res = await fetch('/api/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: trimmed })
+      });
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pyp_token', trimmed);
-      localStorage.setItem('pyp_token_label', data.label ?? '');
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || 'Failed to create session');
+        setLoading(false);
+        return;
+      }
+      const session = json.session;
+
+      // store token + session id
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pyp_token', trimmed);
+        localStorage.setItem('pyp_token_label', data.label ?? '');
+        localStorage.setItem('pyp_session_id', session.id);
+      }
+
+      // log initial page_view server-side
+      try {
+        await fetch('/api/log-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: session.id,
+            event_type: 'page_view',
+            payload: { page: 'landing', token_label: data.label ?? null }
+          })
+        });
+      } catch (e) {
+        // ignore logging errors for UX
+        console.debug('page_view log failed', e);
+      }
+
+      router.push('/coins');
+    } catch (err) {
+      console.error('session create err', err);
+      setError('Server error creating session');
+      setLoading(false);
     }
-
-    router.push('/coins');
   };
 
   return (
@@ -55,12 +88,13 @@ export default function Home() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="h-20 w-20 rounded-full border border-slate-500 flex items-center justify-center text-xs">
+            <div className="h-28 w-28 rounded-full border border-slate-500 flex items-center justify-center text-xs">
+              {/* Replace PYP text with logo image if you have it: <img src="/path/to/logo.png" /> */}
               PYP
             </div>
           </div>
 
-          <h1 className="text-2xl font-semibold tracking-[0.25em] uppercase">
+          <h1 className="text-3xl font-semibold tracking-[0.25em] uppercase">
             PYP: Strategic Edge
           </h1>
           <p className="text-sm text-slate-400">
@@ -77,7 +111,7 @@ export default function Home() {
               type="text"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
               placeholder="pypxxxxxx"
               autoComplete="off"
             />
