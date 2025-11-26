@@ -67,7 +67,7 @@ export default function Home() {
             payload: { page: 'landing', token_label: (data && data.label) ? data.label : null }
           })
         });
-      } catch (_) { /* swallow */ }
+      } catch (_) { /* ignore logging errors */ }
 
       router.push('/coins');
     } catch (err) {
@@ -78,10 +78,10 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-start justify-center px-4 pt-12">
+    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-start pt-12 px-4">
       <div className="w-full max-w-2xl text-center">
-        {/* large logo, no decorative circle; selection disabled on title */}
-        <div className="mx-auto w-64 h-64 mb-6">
+        {/* Bigger logo, no repeated title text */}
+        <div className="mx-auto mb-8" style={{ width: 300, height: 300 }}>
           <img
             src="/PYPStrategicEdge-icon.png"
             alt="PYP Strategic Edge"
@@ -90,8 +90,7 @@ export default function Home() {
           />
         </div>
 
-        <h1 className="text-6xl font-extrabold tracking-widest uppercase leading-tight mb-10 select-none">PYP: Strategic Edge</h1>
-
+        {/* Token form centered beneath the logo */}
         <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Access Token</label>
