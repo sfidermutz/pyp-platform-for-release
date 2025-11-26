@@ -1,3 +1,4 @@
+// components/ScenarioEngine.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import DebriefPopup from './DebriefPopup';
@@ -12,7 +13,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setStartTimes(prev => ({ ...prev, [1]: Date.now() }));
+    // annotate prev to avoid implicit any under noImplicitAny
+    setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
   function optionSelected(dpIndex: number, optionId: string, confidence?: number) {
@@ -50,7 +52,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
       const next = screen + 1;
       setScreen(next);
-      setStartTimes(prev => ({ ...prev, [next]: Date.now() }));
+      // annotate prev here as well
+      setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
       return;
     }
 
