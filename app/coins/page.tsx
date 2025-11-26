@@ -4,17 +4,24 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+=======
 type ModuleFamilyItem = { name: string; code: string };
 type ModuleFamily = ModuleFamilyItem[];
 
+ main
 type ModuleRecord = {
   id: string;
   name: string;
   description: string | null;
   shelf_position: number | null;
   is_demo: boolean;
+ codex/add-session-telemetry-and-api-routes-esaz5j
+  module_families?: { name: string; code: string };
+=======
   module_families: ModuleFamily;
   image_path?: string | null;
+ main
 };
 
 export default function CoinsPage() {
@@ -31,9 +38,14 @@ export default function CoinsPage() {
     }
 
     fetchModules();
+ codex/add-session-telemetry-and-api-routes-esaz5j
+    // log page view
+    const sessionId = localStorage.getItem('pyp_session_id');
+=======
 
     // log page view if session exists
     const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+ main
     if (sessionId) {
       fetch('/api/log-event', {
         method: 'POST',
@@ -47,7 +59,11 @@ export default function CoinsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
+ codex/add-session-telemetry-and-api-routes-esaz5j
+      .select(`id, name, description, shelf_position, is_demo, module_families ( name, code )`)
+=======
       .select(`id, name, description, shelf_position, is_demo, image_path, module_families ( name, code )`)
+ main
       .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
@@ -56,6 +72,9 @@ export default function CoinsPage() {
       console.error('fetch modules error', error);
       return;
     }
+ codex/add-session-telemetry-and-api-routes-esaz5j
+    setModules(data ?? []);
+=======
 
     // Normalize module_families into an array of {name, code} and ensure image_path is present
     const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
@@ -82,6 +101,7 @@ export default function CoinsPage() {
     });
 
     setModules(normalized);
+ main
   }
 
   async function logEvent(evt: { event_type: string; payload?: any }) {
@@ -109,7 +129,11 @@ export default function CoinsPage() {
 
   async function onEnterModule() {
     if (!selected) return;
+ codex/add-session-telemetry-and-api-routes-esaz5j
+    const sessionId = localStorage.getItem('pyp_session_id');
+=======
     const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+ main
     if (sessionId) {
       await logEvent({ event_type: 'enter_module', payload: { module_id: selected.id }});
     } else {
@@ -122,6 +146,8 @@ export default function CoinsPage() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+=======
   //
   // Group modules by family (use the first family if present)
   //
@@ -134,6 +160,7 @@ export default function CoinsPage() {
     modulesByFamily[familyName].push(mod);
   }
 
+ main
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
@@ -142,6 +169,26 @@ export default function CoinsPage() {
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
+ codex/add-session-telemetry-and-api-routes-esaz5j
+        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
+          <div className="grid grid-cols-6 gap-8">
+            {modules.map((m) => {
+              const ready = true; // keep simple for demo
+              return (
+                <div key={m.id} className="text-center">
+                  <button
+                    onClick={() => ready && onSelectModule(m)}
+                    className={`w-36 h-36 rounded-full mx-auto border-2 ${selected?.id === m.id ? 'ring-4 ring-sky-500' : 'border-slate-700'} flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent`}
+                  >
+                    <span className="text-xl font-semibold">{m.shelf_position ?? '?'}</span>
+                  </button>
+                  <div className="mt-3 text-xs font-semibold tracking-wider">{m.name}</div>
+                  <div className={`mt-1 text-xs ${ready ? 'text-emerald-400' : 'text-slate-600'}`}>{ready ? 'READY' : 'LOCKED'}</div>
+                </div>
+              );
+            })}
+          </div>
+=======
         <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner space-y-12">
           {familyOrder.map((familyName) => {
             const familyModules = modulesByFamily[familyName] ?? [];
@@ -190,6 +237,7 @@ export default function CoinsPage() {
               </div>
             );
           })}
+ main
         </div>
 
         {selected && (
