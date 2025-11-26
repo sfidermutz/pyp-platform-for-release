@@ -1,0 +1,47 @@
+﻿{
+  "scenario_id": "HYB-02",
+  "title": "Hybrid Disruption on Maritime Lines",
+  "role": "Task Force Commander",
+  "year": "2026",
+  "narrative": "A merchant vessel transiting a contested strait reports sustained GPS interference and anomalous AIS tracks. Local authorities accuse a non-state proxy; coalition partners report cyber intrusions at nearby ports. You must orchestrate maritime surveillance, synchronize information with partners, and preserve freedom of navigation while attributing effects to an actor.",
+  "dp1": {
+    "stem": "Initial detection: how do you prioritize immediate action?",
+    "narrative": "You receive the first alert: vessel reports degraded navigation. Neighbouring states post conflicting open-source claims. Time is short and public attention is rising.",
+    "options": [
+      { "id": "dp1a", "text": "Divert vessel to nearest port for inspection and safety.", "score": 55, "ideal_confidence": 65 },
+      { "id": "dp1b", "text": "Maintain track and escalate to maritime patrols while notifying partners.", "score": 80, "ideal_confidence": 75 },
+      { "id": "dp1c", "text": "Issue a public statement attributing GPS interference to hostile actors.", "score": 35, "ideal_confidence": 50 }
+    ]
+  },
+  "dp2": {
+    "stem": "Attribution and partner coordination — what is your approach?",
+    "narrative": "Evidence is fragmentary: cyber indicators point to a proxy group, while physical indicators are inconclusive. A coalition partner demands a public attribution.",
+    "options": [
+      { "id": "dp2a", "text": "Share intelligence privately and coordinate a synchronized response plan.", "score": 85, "ideal_confidence": 75 },
+      { "id": "dp2b", "text": "Provide a public, conditional attribution citing preliminary indicators.", "score": 50, "ideal_confidence": 60 },
+      { "id": "dp2c", "text": "Delay any attribution until technical forensics conclude.", "score": 65, "ideal_confidence": 70 }
+    ]
+  },
+  "dp3": {
+    "stem": "Escalation control — how do you manage tempo and coalition trust?",
+    "narrative": "Partners favor a decisive show of force, but local political leaders warn that escalation could close sea lanes. Your decision affects coalition trust and mission tempo.",
+    "options": [
+      { "id": "dp3a", "text": "Conduct a coalition maritime exercise nearby to demonstrate resolve.", "score": 75, "ideal_confidence": 70 },
+      { "id": "dp3b", "text": "Issue economic and diplomatic penalties while avoiding military demonstrations.", "score": 60, "ideal_confidence": 65 },
+      { "id": "dp3c", "text": "Order a targeted interdiction of proxy logistics nodes.", "score": 40, "ideal_confidence": 50 }
+    ]
+  },
+  "reflection1_prompt": "In at least 50 words, explain how your choices balanced attribution, coalition trust, and freedom of navigation. Reflect on any biases that influenced your confidence gaps.",
+  "reflection2_prompt": "After reviewing debrief feedback, reflect on how you would adjust decisions to improve information advantage and trust calibration.",
+  "scenario_LO": "Orchestrate coalition maritime actions to preserve information integrity and freedom of navigation under hybrid disruption.",
+  "scenario_LO_tags": {
+    "primary_domain": "cognitive",
+    "secondary_domain": "affective",
+    "bloom_level": "Apply",
+    "krathwohl_level": "Valuing",
+    "domains": ["maritime","cyber","information"],
+    "effects": ["physical","virtual","cognitive"],
+    "operational_altitude": "tactical",
+    "role_alignment": "Task Force Commander"
+  }
+}
