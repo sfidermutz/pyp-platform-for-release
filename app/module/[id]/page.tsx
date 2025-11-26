@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -8,7 +9,13 @@ export default function ModulePage({ params }: { params: { id: string }}) {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('modules').select('*, module_families(name)').eq('id', id).maybeSingle();
+      // Guard: do not call Supabase if id is falsy (avoid id=undefined)
+      if (!id) return;
+      const { data } = await supabase
+        .from('modules')
+        .select('*, module_families(name)')
+        .eq('id', id)
+        .maybeSingle();
       setMod(data);
     }
     load();
