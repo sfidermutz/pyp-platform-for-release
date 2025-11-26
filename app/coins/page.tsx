@@ -27,6 +27,7 @@ export default function CoinsPage() {
       return;
     }
     fetchModules();
+
     const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
     if (sessionId) {
       fetch('/api/log-event', {
@@ -71,7 +72,6 @@ export default function CoinsPage() {
   }
 
   async function startModuleImmediately(m: ModuleRecord) {
-    // Ensure session exists, create if necessary, then navigate
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
       if (!sessionId) {
@@ -129,13 +129,14 @@ export default function CoinsPage() {
 
             return (
               <div key={familyName} className="py-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-end justify-items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-6 items-end justify-items-center">
                   {familyModules.map((m) => (
                     <div key={m.id} className="text-center">
                       <button
                         onClick={() => startModuleImmediately(m)}
-                        className="w-44 h-44 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative"
+                        className="w-36 h-36 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm transform-none"
                         aria-label={m.name}
+                        title={m.name}
                       >
                         {m.image_path ? (
                           <img
@@ -152,6 +153,7 @@ export default function CoinsPage() {
                           {m.shelf_position ?? ''}
                         </span>
                       </button>
+
                       <div className="mt-2 text-sm font-semibold">{m.name}</div>
                     </div>
                   ))}
