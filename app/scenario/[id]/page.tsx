@@ -8,6 +8,48 @@ export const runtime = 'nodejs';
 
 type Props = { params: { id: string } };
 
+async function findScenarioById(id: string) {
+  const repoRoot = process.cwd();
+  const scenariosDir = path.join(repoRoot, 'data', 'scenarios');
+
+  try {
+    const files = await fs.readdir(scenariosDir);
+    // First try exact filename matches (case-sensitive and -insensitive)
+    const exact = files.find(f => f === `${id}.json`);
+    if (exact) {
+      const raw = await fs.readFile(path.join(scenariosDir, exact), 'utf8');
+      return { raw, source: exact };
+    }
+    const caseInsensitive = files.find(f => f.toLowerCase() === `${id.toLowerCase()}.json`);
+    if (caseInsensitive) {
+      const raw = await fs.readFile(path.join(scenariosDir, caseInsensitive), 'utf8');
+      return { raw, source: caseInsensitive };
+    }
+
+    // If not found by filename, scan each scenario and look for scenario_id or scenarioId
+    for (const f of files) {
+      if (!f.endsWith('.json')) continue;
+      try {
+        const raw = await fs.readFile(path.join(scenariosDir, f), 'utf8');
+        const parsed = JSON.parse(raw);
+        const sid = parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null;
+        if (sid && String(sid).toLowerCase() === id.toLowerCase()) {
+          return { raw, source: f };
+        }
+      } catch (e) {
+        // ignore parse errors for a single file and continue
+        console.warn('skipping scenario file due to parse error', f, String(e));
+      }
+    }
+
+    // Not found
+    return null;
+  } catch (e) {
+    console.error('error reading scenarios dir', e);
+    return null;
+  }
+}
+
 export default async function ScenarioPage({ params }: Props) {
   const id = params?.id;
   if (!id) {
@@ -18,50 +60,22 @@ export default async function ScenarioPage({ params }: Props) {
     );
   }
 
-  // local file path
-  const repoRoot = process.cwd();
-  const fileA = path.join(repoRoot, 'data', 'scenarios', `${id}.json`);
-  const fileB = path.join(repoRoot, 'data', 'scenarios', `${id.toUpperCase()}.json`); // fallback capitalization
-  let raw = '';
-
   try {
-    // try fileA then fileB
-    try {
-      raw = await fs.readFile(fileA, 'utf8');
-    } catch (errA) {
-      try {
-        raw = await fs.readFile(fileB, 'utf8');
-      } catch (errB) {
-        // fallback to raw GitHub fetch (best-effort)
-        try {
-          const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
-          const rawUrl = `${RAW_BASE}/data/scenarios/${encodeURIComponent(id)}.json`;
-          const res = await fetch(rawUrl);
-          if (res.ok) raw = await res.text();
-          else {
-            console.error('Scenario not found locally and remote fetch failed', { id, status: res.status });
-            return (
-              <div className="min-h-screen flex items-center justify-center text-white bg-black">
-                Scenario not found.
-              </div>
-            );
-          }
-        } catch (e) {
-          console.error('Scenario fetch fallback failed', e);
-          return (
-            <div className="min-h-screen flex items-center justify-center text-white bg-black">
-              Scenario not found.
-            </div>
-          );
-        }
-      }
+    const found = await findScenarioById(id);
+    if (!found) {
+      console.error('Scenario not found', { id });
+      return (
+        <div className="min-h-screen flex items-center justify-center text-white bg-black">
+          Scenario not found.
+        </div>
+      );
     }
 
     let content: any = null;
     try {
-      content = JSON.parse(raw);
-    } catch (parseErr) {
-      console.error('Scenario JSON parse error', { id, parseErr: String(parseErr) });
+      content = JSON.parse(found.raw);
+    } catch (e) {
+      console.error('Failed to parse scenario JSON', { file: found.source, err: String(e) });
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
@@ -69,18 +83,15 @@ export default async function ScenarioPage({ params }: Props) {
       );
     }
 
-    // Accept either scenario_id or scenarioId
+    // Basic validation
     if (!content || !(content.scenario_id || content.scenarioId || content.id)) {
-      console.error('Scenario JSON invalid or missing id', { id, keys: Object.keys(content || {}) });
+      console.error('Scenario JSON missing id', { file: found.source });
       return (
         <div className="min-h-screen flex items-center justify-center text-white bg-black">
           Scenario not found.
         </div>
       );
     }
-
-    // Normalize some fields so ScenarioEngine expects scenario.* (unchanged)
-    // No mutation needed — ScenarioEngine will use content fields directly.
 
     return (
       <main className="min-h-screen bg-black text-white px-6 py-12">
