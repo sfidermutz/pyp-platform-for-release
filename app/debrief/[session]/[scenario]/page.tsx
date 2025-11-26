@@ -2,7 +2,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 function metricLabel(key: string) {
   const mapping: Record<string,string> = {
@@ -34,8 +34,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
       if (raw) {
         setDebrief(JSON.parse(raw));
       } else {
-        // fallback - server can provide debrief if we implement server storage
-        // For demo we just show a message
         setDebrief(null);
       }
 
@@ -48,7 +46,7 @@ export default function FullDebriefPage({ params }: { params: { session: string,
             const content = await r.json();
             setScenarioData(content);
           } else {
-            // try GitHub raw url as fallback
+            // fallback - raw GitHub URL
             const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
             const r2 = await fetch(`${RAW_BASE}/data/scenarios/${encodeURIComponent(scenario)}.json`);
             if (r2.ok) {
@@ -172,7 +170,7 @@ export default function FullDebriefPage({ params }: { params: { session: string,
 
             <div className="mt-6 flex gap-3">
               <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-slate-700 rounded">Back to Coins</button>
-              <a href="/public/demo_certificate.pdf" className="px-4 py-2 bg-green-500 rounded text-black">Download Placeholder Cert</a>
+              <a href="/demo_certificate.pdf" className="px-4 py-2 bg-green-500 rounded text-black" target="_blank" rel="noopener noreferrer">Download Placeholder Cert</a>
             </div>
           </div>
         </div>
