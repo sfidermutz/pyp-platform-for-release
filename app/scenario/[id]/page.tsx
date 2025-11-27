@@ -133,10 +133,10 @@ export default function ScenarioClientPage() {
         return;
       }
 
-      // Try api fallback for known module HYB as last resort
+      // Try API fallback for known module(s) as last resort (best-effort)
       try {
         log('Trying /api/module-scenarios fallback to find scenario by module association (best-effort)');
-        const modules = ['HYB'];
+        const modules = ['HYB']; // extend as needed
         for (const m of modules) {
           try {
             const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(m)}`);
