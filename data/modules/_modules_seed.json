@@ -1,0 +1,14 @@
+[
+  { "id": "3b415e0e-0720-4f5e-8227-09cc813095de", "family_code": "FAM_STRATEGIC_EDGE", "code": "MOD_METACOGNITION", "name": "Metacognition" },
+  { "id": "b2d33610-0f2e-4934-861f-43c5d67fdd1e", "family_code": "FAM_TECH_DATA_ADVANTAGE", "code": "MOD_CYBER_RESILIENCE", "name": "Cyber Resilience" },
+  { "id": "e2241184-216b-4122-a358-1418035ecc90", "family_code": "FAM_MISSION_AGILITY", "code": "MOD_HYBRID_GRAY_ZONE_CONFLICT", "name": "Hybrid & Gray Zone Conflict" },
+  { "id": "f4f79b9c-73a0-495a-a1b2-a428172dd0d3", "family_code": "FAM_OPERATIONAL_RESILIENCE", "code": "MOD_INFO_WARFARE", "name": "Information Warfare" },
+  { "id": "aa859567-f87f-4001-b394-57d23cfd6e86", "family_code": "FAM_COGNITIVE_READINESS", "code": "MOD_RISK_ANTICIPATION", "name": "Risk Anticipation" },
+  { "id": "1cda239d-722a-4451-8b75-9c97e3535470", "family_code": "FAM_STRATEGIC_EDGE", "code": "MOD_BELOW_THRESHOLD_AIR_MARITIME", "name": "Below-Threshold Air & Maritime Incursions" },
+  { "id": "38e87714-88f4-4afb-a675-b13b94daeb9c", "family_code": "FAM_TECH_DATA_ADVANTAGE", "code": "MOD_ETHICAL_JUDGMENTS", "name": "Ethical Judgments Under Pressure" },
+  { "id": "46c71b87-aa32-4b57-8668-fbc1f2065bb9", "family_code": "FAM_MISSION_AGILITY", "code": "MOD_MISSION_COMMAND", "name": "Mission Command" },
+  { "id": "52f1806b-cca1-41c6-9784-eae9eeb4ffe8", "family_code": "FAM_MISSION_AGILITY", "code": "MOD_AI_AUTONOMY", "name": "AI & Autonomy" },
+  { "id": "a232f9a8-887d-47c4-a8ea-3ce554097e23", "family_code": "FAM_OPERATIONAL_RESILIENCE", "code": "MOD_C2_COMPLEXITY", "name": "Command & Control (C2) Complexity" },
+  { "id": "c816debb-ccc4-4cec-bdcc-562e84d7ef94", "family_code": "FAM_MISSION_AGILITY", "code": "MOD_COGNITIVE_FRICTION_BIAS", "name": "Cognitive Friction & Bias" },
+  { "id": "cb825f5b-0387-45f5-b962-d9afdc76a22d", "family_code": "FAM_STRATEGIC_EDGE", "code": "MOD_OPERATIONAL_RESILIENCE", "name": "Operational Resilience" }
+]
