@@ -267,167 +267,94 @@
         }
       }
     ],
-  "reflections": {
-    "pre": {
-      "phase": "pre",
-      "minWords": 75,
-      "maxWords": 250,
-      "prompt": "Before seeing the debrief, explain your rationale for the final approach you selected. What operational factors did you prioritize across physical, virtual, and cognitive effects, and what trade-offs did you accept?",
-      "rubricCriteria": ["OperationalRelevance", "CausalReasoning", "DoctrinalAwareness", "Adaptability", "ClaritySpecificity"],
-      "rubricScale": [1, 2, 3, 4, 5],
-      "contributesToScore": true,
-      "weightInOverallScore": 0.15
-    },
-    "post": {
-      "phase": "post",
-      "minWords": 75,
-      "maxWords": 250,
-      "prompt": "Considering the mission objectives for this scenario, how did your decisions account for physical, virtual, and cognitive effects, and what specific adjustments would you make before a similar operation?",
-      "rubricCriteria": ["OperationalRelevance", "CausalReasoning", "DoctrinalAwareness", "Adaptability", "ClaritySpecificity"],
-      "rubricScale": [1, 2, 3, 4, 5],
-      "contributesToScore": false
-    }
-  },
-  "outcomes": {
-    "1A-2A1-3A1": {
-      "score": 78,
-      "qualifier": "measured reassurance",
-      "narrative": "You stabilized virtual effects and reduced uncertainty, enabling partners to verify key aids-to-navigation while avoiding escalation."
-    },
-    "1A-2A1-3A2": {
-      "score": 72,
-      "qualifier": "cautious progress",
-      "narrative": "Your cyber–maritime coordination improved information fidelity but lacked narrative reinforcement, leaving public sentiment unsettled."
-    },
-    "1A-2A1-3A3": {
-      "score": 81,
-      "qualifier": "effective integration",
-      "narrative": "The fusion cell synchronized physical, virtual, and cognitive effects, restoring task group confidence and reducing ambiguity."
-    },
-    "1A-2A2-3A1": {
-      "score": 69,
-      "qualifier": "partial visibility",
-      "narrative": "Narrative shielding reduced pressure but slowed attribution-building under continued sensor drift."
-    },
-    "1A-2A2-3A2": {
-      "score": 64,
-      "qualifier": "mixed effects",
-      "narrative": "Messaging calmed partners but heightened adversary attention, creating ambiguity in cognitive space."
-    },
-    "1A-2A2-3A3": {
-      "score": 75,
-      "qualifier": "balanced posture",
-      "narrative": "You balanced narrative control with discrete virtual reconnaissance, limiting risk and improving trust alignment."
-    },
-    "1A-2A3-3A1": {
-      "score": 56,
-      "qualifier": "risk accepted",
-      "narrative": "Partner-led inspection reassured locals but risked escalation due to unclear legal basis."
-    },
-    "1A-2A3-3A2": {
-      "score": 61,
-      "qualifier": "stabilizing move",
-      "narrative": "Information fidelity improved but cognitive ambiguity persisted across coalition channels."
-    },
-    "1A-2A3-3A3": {
-      "score": 66,
-      "qualifier": "limited success",
-      "narrative": "Joint fusion helped unify perspectives but under-addressed virtual interference indicators."
-    },
-    "1B-2B1-3B1": {
-      "score": 70,
-      "qualifier": "controlled posture",
-      "narrative": "Resolve signaling deterred further probing but strained interagency tempo."
-    },
-    "1B-2B1-3B2": {
-      "score": 63,
-      "qualifier": "mixed signals",
-      "narrative": "Some partners perceived actions as escalatory amid ambiguous physical indicators."
-    },
-    "1B-2B1-3B3": {
-      "score": 77,
-      "qualifier": "coherent integration",
-      "narrative": "Legal sync with coalition partners reduced narrative vulnerability and stabilized messaging."
-    },
-    "1B-2B2-3B1": {
-      "score": 58,
-      "qualifier": "narrative strain",
-      "narrative": "Rebuttals outpaced verification, creating late friction in validation cycles."
-    },
-    "1B-2B2-3B2": {
-      "score": 67,
-      "qualifier": "corrective effort",
-      "narrative": "Combined open-source messaging with verification steps stabilized public sentiment."
-    },
-    "1B-2B2-3B3": {
-      "score": 73,
-      "qualifier": "effective realignment",
-      "narrative": "Narrative stabilization paired with legal sync produced aligned cognitive effects."
-    },
-    "1B-2B3-3B1": {
-      "score": 68,
-      "qualifier": "measured integration",
-      "narrative": "Legal framing improved but slowed decision tempo under hybrid pressure."
-    },
-    "1B-2B3-3B2": {
-      "score": 62,
-      "qualifier": "partial alignment",
-      "narrative": "Coalition friction emerged when legal and operational narratives diverged."
-    },
-    "1B-2B3-3B3": {
-      "score": 82,
-      "qualifier": "strong coherence",
-      "narrative": "You synchronized legal, narrative, and cyber elements, improving trust and reducing ambiguity."
-    },
-    "1C-2C1-3C1": {
-      "score": 79,
-      "qualifier": "strong attribution",
-      "narrative": "Silent ISR expansion produced high-fidelity indicators with minimal escalation risk."
-    },
-    "1C-2C1-3C2": {
-      "score": 72,
-      "qualifier": "partial attribution",
-      "narrative": "Fidelity improved but public uncertainty remained due to mixed narrative pressure."
-    },
-    "1C-2C1-3C3": {
-      "score": 84,
-      "qualifier": "integrated clarity",
-      "narrative": "Cross-domain fusion strengthened coalition alignment and clarified ambiguous virtual effects."
-    },
-    "1C-2C2-3C1": {
-      "score": 63,
-      "qualifier": "civil strain",
-      "narrative": "Warnings steadied civilian traffic but reduced partner confidence as attribution lagged."
-    },
-    "1C-2C2-3C2": {
-      "score": 65,
-      "qualifier": "incremental stability",
-      "narrative": "Steady messaging reduced insurance spikes and improved civil-military confidence."
-    },
-    "1C-2C2-3C3": {
-      "score": 76,
-      "qualifier": "balanced awareness",
-      "narrative": "Advisory signals complemented fusion-cell integration, strengthening cross-domain coherence."
-    },
-    "1C-2C3-3C1": {
-      "score": 59,
-      "qualifier": "narrow margin",
-      "narrative": "Risk signaling constrained adversary probing but increased local narrative scrutiny."
-    },
-    "1C-2C3-3C2": {
-      "score": 71,
-      "qualifier": "stabilizing influence",
-      "narrative": "Selective signaling paired with virtual countermeasures produced mixed but stabilizing effects."
-    },
-    "1C-2C3-3C3": {
-      "score": 80,
-      "qualifier": "coherent deterrence",
-      "narrative": "You balanced physical posture, virtual monitoring, and cognitive messaging effectively."
-    }
-  },
-  "scoring": {
-    "overallFormula": "0.75*pathScore + 0.15*preReflectionAvg(1-5)*20 + 0.10*confidenceAccuracyGauge + biasAdjustment",
-    "biasAdjustmentRange": [-5, 5],
-    "defaultBiasAdjustment": 0
-  }
-}
+    "2A3": [
+      {
+        "id": "3A1",
+        "text": "EMS watch and maritime deconfliction: provide technical support to partner-led inspections while quietly monitoring EMS for escalation indicators.",
+        "insightTags": ["EscalationRisk", "CoalitionSynchronization"],
+        "biasTags": ["OptimismBias"],
+        "effects": {
+          "intendedEffect": "Virtual",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "ambiguous"
+        }
+      },
+      {
+        "id": "3A2",
+        "text": "Port advisory and virtual countermeasures: help host nation issue refined navigation guidance informed by your technical analysis.",
+        "insightTags": ["InformationAdvantage", "TrustCalibration"],
+        "biasTags": ["AuthorityBias"],
+        "effects": {
+          "intendedEffect": "Physical",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "stabilizing"
+        }
+      },
+      {
+        "id": "3A3",
+        "text": "Joint fusion cell activation: connect partner inspection reports with your multi-sensor picture to reduce divergent interpretations.",
+        "insightTags": ["CoalitionSynchronization", "BiasAwareness"],
+        "biasTags": ["CulturalBias"],
+        "effects": {
+          "intendedEffect": "Cognitive",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "stabilizing"
+        }
+      }
+    ],
+    "2B1": [
+      {
+        "id": "3B1",
+        "text": "Controlled resolve posture: slightly reduce visible presence while maintaining clear rules for rapid re-escalation if indicators worsen.",
+        "insightTags": ["EscalationRisk", "RiskAnticipation"],
+        "biasTags": ["AnchoringBias"],
+        "effects": {
+          "intendedEffect": "Physical",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "stabilizing"
+        }
+      },
+      {
+        "id": "3B2",
+        "text": "Maintain high-visibility patrols: keep full posture in place despite mixed signals to avoid any perception of Alliance hesitancy.",
+        "insightTags": ["CognitiveAdaptability"],
+        "biasTags": ["StatusQuoBias", "OverconfidenceBias"],
+        "effects": {
+          "intendedEffect": "Physical",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "escalatory"
+        }
+      },
+      {
+        "id": "3B3",
+        "text": "Synchronize with partners: adjust presence in concert with key allies to avoid unilateral escalation or de-escalation.",
+        "insightTags": ["CoalitionSynchronization", "TrustCalibration"],
+        "biasTags": ["Groupthink"],
+        "effects": {
+          "intendedEffect": "Physical",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "stabilizing"
+        }
+      }
+    ],
+    "2B2": [
+      {
+        "id": "3B1",
+        "text": "Restrain narrative volume: scale back public messaging tempo while you firm up attribution and technical understanding.",
+        "insightTags": ["NarrativeResilience", "RiskAnticipation"],
+        "biasTags": ["AvailabilityBias"],
+        "effects": {
+          "intendedEffect": "Cognitive",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "stabilizing"
+        }
+      },
+      {
+        "id": "3B2",
+        "text": "Double down on messaging: intensify messaging campaigns to overmatch hostile narratives even as data remains incomplete.",
+        "insightTags": ["CognitiveAdaptability"],
+        "biasTags": ["OverconfidenceBias"],
+        "effects": {
+          "intendedEffect": "Cognitive",
+          "likelyEffect": "Cognitive",
+          "effectDirection": "escala...
