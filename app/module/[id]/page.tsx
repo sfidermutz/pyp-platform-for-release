@@ -8,11 +8,9 @@ import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Client-side module page.
- * - uses useParams() to get the id (avoids server params issues)
- * - queries Supabase anon (NEXT_PUBLIC_SUPABASE_ANON_KEY) to fetch module record
+ * - uses useParams() to get the id
+ * - queries Supabase anon to fetch module record, explicitly including module_code
  * - renders ModuleClient with the module object
- *
- * Note: modules table appears Unrestricted in your Supabase, so anon read is fine.
  */
 
 export default function ModulePageClient() {
@@ -37,9 +35,10 @@ export default function ModulePageClient() {
 
     (async () => {
       try {
+        // IMPORTANT: explicitly select module_code so the client sees it
         const { data, error } = await supabase
           .from('modules')
-          .select('*, module_families(name), default_scenario_id')
+          .select('id, name, description, module_code, image_path, default_scenario_id, module_families(name)')
           .eq('id', id)
           .maybeSingle();
 
