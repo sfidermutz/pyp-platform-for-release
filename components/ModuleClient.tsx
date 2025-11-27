@@ -25,15 +25,6 @@ type ScenarioMeta = {
   narrative?: string;
 };
 
-/**
- * ModuleClient (enhanced)
- *
- * - Displays module header, description, and image
- * - Fetches scenario list from server using /api/module-scenarios?module=<code>
- * - Renders a tidy list/grid of scenarios (title + short narrative + LO)
- * - Each scenario has a "Start" button that creates/ensures session and navigates to /scenario/{id}
- * - Keeps the original single "Start Scenario" button (starts default scenario) for quick path
- */
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -41,7 +32,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
   const [scLoading, setScLoading] = useState<boolean>(true);
   const [scError, setScError] = useState<string | null>(null);
 
-  // Resolve module code to call the API. Prefer explicit fields that may exist.
   const moduleCode = (module?.module_code || (module?.module_families && module.module_families[0]?.name) || module?.id || '').toString();
 
   useEffect(() => {
@@ -50,6 +40,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
       setScLoading(true);
       setScError(null);
       try {
+        console.log('[ModuleClient] moduleCode ->', moduleCode, 'module id', module?.id);
         if (!moduleCode) {
           setScenarios([]);
           setScLoading(false);
@@ -57,6 +48,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         }
         const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(moduleCode)}`);
         const json = await res.json();
+        console.log('[ModuleClient] module-scenarios returned', json);
         if (!res.ok) {
           setScError(json?.error || 'Failed to load scenarios');
           setScenarios([]);
@@ -64,7 +56,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           if (active) setScenarios(json.scenarios ?? []);
         }
       } catch (e) {
-        console.error('module scenarios fetch error', e);
+        console.error('[ModuleClient] module scenarios fetch error', e);
         if (active) {
           setScError(String(e));
           setScenarios([]);
@@ -75,13 +67,11 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     }
     loadScenarios();
     return () => { active = false; };
-  }, [moduleCode]);
+  }, [moduleCode, module?.id]);
 
-  // Ensure session exists and then navigate to scenario
-  // Accept a possibly undefined scenarioId, and handle gracefully
   async function ensureSessionAndNavigate(scenarioId?: string) {
     if (!scenarioId) {
-      console.warn('No scenario id provided to ensureSessionAndNavigate');
+      console.warn('[ModuleClient] No scenario id provided to ensureSessionAndNavigate');
       return;
     }
 
@@ -108,7 +98,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         sessionId = json?.session?.id || json?.session_id || json?.data?.id;
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
-      // optional log
       try {
         await fetch('/api/log-event', {
           method: 'POST',
@@ -125,7 +114,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     }
   }
 
-  // quick start default scenario (existing behavior)
   async function startDefaultScenario() {
     const scenarioToStart = (module?.default_scenario_id || module?.scenario_id || 'HYB-01');
     await ensureSessionAndNavigate(scenarioToStart);
@@ -170,7 +158,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         </div>
       </div>
 
-      {/* Module dashboard: scenario list */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Scenarios</h2>
         {scLoading ? (
