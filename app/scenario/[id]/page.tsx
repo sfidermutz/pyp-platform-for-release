@@ -1,242 +1,229 @@
 // app/scenario/[id]/page.tsx
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import ScenarioEngine from '@/components/ScenarioEngine';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { useParams, useRouter } from 'next/navigation';
 
-export const runtime = 'nodejs';
-type Props = { params: { id: string } };
+type ScenarioContent = any;
 
-// Diagnostic helpers
-async function readLocalFileIfExists(filePath: string) {
-  try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    console.log('[diag] readLocalFileIfExists ok', filePath, 'len=', raw.length);
-    return raw;
-  } catch (e) {
-    console.warn('[diag] readLocalFileIfExists failed', filePath, String(e));
-    return null;
-  }
+function log(...args: any[]) {
+  // helper for consistent client logs
+  // eslint-disable-next-line no-console
+  console.log('[ScenarioClient]', ...args);
 }
 
-async function tryGithubRawFile(id: string) {
+async function fetchRawGithub(id: string) {
   try {
     const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
     const rawUrl = `${RAW_BASE}/data/scenarios/${encodeURIComponent(id)}.json`;
-    console.log('[diag] tryGithubRawFile fetching', rawUrl);
+    log('fetchRawGithub url', rawUrl);
     const res = await fetch(rawUrl);
-    console.log('[diag] tryGithubRawFile status', res.status, rawUrl);
+    log('fetchRawGithub status', res.status);
     if (!res.ok) return null;
     const text = await res.text();
-    console.log('[diag] tryGithubRawFile got length', text.length, rawUrl);
-    return { raw: text, source: rawUrl };
+    try {
+      const parsed = JSON.parse(text);
+      return { parsed, source: rawUrl };
+    } catch (e) {
+      log('fetchRawGithub parse error', e);
+      return null;
+    }
   } catch (e) {
-    console.warn('[diag] tryGithubRawFile error', String(e));
+    log('fetchRawGithub error', e);
     return null;
   }
 }
 
-async function tryGithubScanForScenario(id: string) {
+async function fetchGithubScan(id: string) {
   try {
     const apiUrl = 'https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios';
-    console.log('[diag] tryGithubScanForScenario listing', apiUrl);
+    log('fetchGithubScan listing', apiUrl);
     const res = await fetch(apiUrl);
-    console.log('[diag] github api listing status', res.status);
-    if (!res.ok) {
-      console.warn('[diag] github api listing failed', res.status);
-      return null;
-    }
+    log('fetchGithubScan listing status', res.status);
+    if (!res.ok) return null;
     const listing = await res.json();
     if (!Array.isArray(listing)) {
-      console.warn('[diag] github listing not array', typeof listing);
+      log('fetchGithubScan listing invalid');
       return null;
     }
-    console.log('[diag] github listing count', listing.length);
 
-    for (const item of listing) {
-      if (!item || !item.name || !item.download_url) continue;
-      if (!item.name.toLowerCase().endsWith('.json')) continue;
-      try {
-        console.log('[diag] try remote file', item.name, item.download_url);
-        const r = await fetch(item.download_url);
-        console.log('[diag] remote file status', item.name, r.status);
-        if (!r.ok) { console.warn('[diag] remote file fetch failed', r.status, item.download_url); continue; }
-        const raw = await r.text();
-        try {
-          const parsed = JSON.parse(raw);
-          const sid = parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null;
-          if (sid && String(sid).toLowerCase() === id.toLowerCase()) {
-            console.log('[diag] remote scenario matched', item.name, 'sid=', sid);
-            return { raw, source: item.download_url };
-          }
-        } catch (pe) {
-          console.warn('[diag] remote parse error', item.name, String(pe));
-          continue;
-        }
-      } catch (e) {
-        console.warn('[diag] remote fetch exception', item.name, String(e));
-      }
-    }
-    return null;
-  } catch (e) {
-    console.warn('[diag] tryGithubScanForScenario error', String(e));
-    return null;
-  }
-}
+    // limit concurrency to avoid hitting rate limits
+    const concurrency = 6;
+    const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
 
-async function findScenarioById(id: string) {
-  try {
-    console.log('[diag] findScenarioById start', id);
-    const repoRoot = process.cwd();
-    console.log('[diag] process.cwd()', repoRoot);
-
-    const scenarioDirs = [
-      path.join(repoRoot, 'data', 'scenarios'),
-      path.join(repoRoot, 'public', 'data', 'scenarios')
-    ];
-
-    for (const scenariosDir of scenarioDirs) {
-      try {
-        const stat = await fs.stat(scenariosDir);
-        console.log('[diag] scenariosDir exists', scenariosDir, 'isDirectory=', stat.isDirectory());
-      } catch (statErr) {
-        console.warn('[diag] scenariosDir missing', scenariosDir, String(statErr));
-        continue;
-      }
-
-      let files: string[] = [];
-      try {
-        files = await fs.readdir(scenariosDir);
-        console.log('[diag] files in', scenariosDir, 'count=', files.length);
-      } catch (e) {
-        console.warn('[diag] readdir failed', scenariosDir, String(e));
-        continue;
-      }
-
-      // exact filename
-      const exact = files.find(f => f === `${id}.json`);
-      if (exact) {
-        const target = path.join(scenariosDir, exact);
-        console.log('[diag] exact filename found', target);
-        const raw = await readLocalFileIfExists(target);
-        if (raw) return { raw, source: target };
-      }
-
-      const caseInsensitive = files.find(f => f.toLowerCase() === `${id.toLowerCase()}.json`);
-      if (caseInsensitive) {
-        const target = path.join(scenariosDir, caseInsensitive);
-        console.log('[diag] case-insensitive filename found', target);
-        const raw = await readLocalFileIfExists(target);
-        if (raw) return { raw, source: target };
-      }
-
-      // scan internal ids
-      for (const f of files) {
-        if (!f.endsWith('.json')) continue;
-        const target = path.join(scenariosDir, f);
-        try {
-          const raw = await readLocalFileIfExists(target);
-          if (!raw) continue;
-          try {
-            const parsed = JSON.parse(raw);
-            const sid = parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null;
-            if (sid && String(sid).toLowerCase() === id.toLowerCase()) {
-              console.log('[diag] matched by internal id in file', target, 'sid=', sid);
-              return { raw, source: target };
+    for (let i = 0; i < jsonFiles.length; i += concurrency) {
+      const batch = jsonFiles.slice(i, i + concurrency);
+      const batchFetches = batch.map((item: any) =>
+        fetch(item.download_url)
+          .then(r => (r.ok ? r.text() : Promise.reject(new Error('fetch status ' + r.status))))
+          .then(text => {
+            try {
+              const parsed = JSON.parse(text);
+              const sid = parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null;
+              if (sid && String(sid).toLowerCase() === id.toLowerCase()) {
+                return { parsed, source: item.download_url };
+              }
+              return null;
+            } catch (pe) {
+              log('fetchGithubScan parse fail for', item.name, pe);
+              return null;
             }
-          } catch (pe) {
-            console.warn('[diag] parse error for file', target, String(pe));
-            continue;
-          }
-        } catch (e) {
-          console.warn('[diag] read/parse exception', target, String(e));
-        }
+          })
+          .catch(e => {
+            log('fetchGithubScan fetch fail', item.name, e);
+            return null;
+          })
+      );
+
+      const results = await Promise.all(batchFetches);
+      for (const r of results) {
+        if (r) return r;
       }
+      // slight delay to be friendly
+      await new Promise((r) => setTimeout(r, 80));
     }
 
-    // try raw file
-    console.log('[diag] trying raw github file fallback');
-    const rawAttempt = await tryGithubRawFile(id);
-    if (rawAttempt) {
-      console.log('[diag] raw github fallback success', rawAttempt.source);
-      return rawAttempt;
-    } else {
-      console.log('[diag] raw github fallback not found');
-    }
-
-    // last resort: scan GitHub
-    console.log('[diag] trying github scan fallback');
-    const scanAttempt = await tryGithubScanForScenario(id);
-    if (scanAttempt) {
-      console.log('[diag] github scan fallback success', scanAttempt.source);
-      return scanAttempt;
-    }
-
-    console.error('[diag] findScenarioById: NOT FOUND for id', id);
     return null;
   } catch (e) {
-    console.error('[diag] findScenarioById failure', String(e));
+    log('fetchGithubScan error', e);
     return null;
   }
 }
 
-export default async function ScenarioPage({ params }: Props) {
+export default function ScenarioClientPage() {
+  const params = useParams();
+  const router = useRouter();
   const id = params?.id;
-  if (!id) {
+  const [loading, setLoading] = useState(true);
+  const [scenario, setScenario] = useState<ScenarioContent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      setScenario(null);
+
+      if (!id) {
+        setError('No scenario id');
+        setLoading(false);
+        return;
+      }
+
+      log('Attempting to load scenario', id);
+      // Try raw github first
+      let found = await fetchRawGithub(id);
+      if (found && found.parsed) {
+        log('Loaded scenario from raw github', found.source);
+        if (mounted) {
+          setScenario(found.parsed);
+          setLoading(false);
+        }
+        return;
+      }
+
+      log('Raw github did not return scenario, trying github scan');
+      found = await fetchGithubScan(id);
+      if (found && found.parsed) {
+        log('Loaded scenario from github scan', found.source);
+        if (mounted) {
+          setScenario(found.parsed);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // If still not found, try query the application's module-scenarios API as last resort
+      try {
+        log('Trying /api/module-scenarios fallback to find scenario by module association (best-effort)');
+        // We'll attempt to find any module that might contain the scenario, but this is heuristic
+        // Not ideal, but can help in weird repo layouts. We'll just call module-scenarios for HYB (since we know)
+        const modules = ['HYB']; // expand if needed
+        for (const m of modules) {
+          try {
+            const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(m)}`);
+            const json = await res.json();
+            if (json && Array.isArray(json.scenarios)) {
+              const match = json.scenarios.find((s: any) => {
+                const sid = s.scenario_id ?? s.filename ?? null;
+                return sid && String(sid).toLowerCase() === id.toLowerCase();
+              });
+              if (match) {
+                // attempt to fetch the raw filename if available
+                const filename = match.filename;
+                if (filename) {
+                  const rawUrl = `https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main/data/scenarios/${filename}`;
+                  const r = await fetch(rawUrl);
+                  if (r.ok) {
+                    const t = await r.text();
+                    const parsed = JSON.parse(t);
+                    if (mounted) {
+                      setScenario(parsed);
+                      setLoading(false);
+                      log('Loaded scenario via api fallback from', rawUrl);
+                      return;
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            log('module-scenarios fallback error for module', m, e);
+          }
+        }
+      } catch (e) {
+        log('module-scenarios fallback outer error', e);
+      }
+
+      // nothing worked
+      if (mounted) {
+        setError('Scenario not found after trying github/raw and API fallbacks.');
+        setLoading(false);
+      }
+    }
+
+    load();
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black">
-        Scenario not found.
-      </div>
-    );
-  }
-
-  try {
-    console.log('[diag] ScenarioPage invoked for id', id);
-    const found = await findScenarioById(id);
-    if (!found) {
-      console.error('[diag] Scenario not found after all attempts', { id });
-      return (
-        <div className="min-h-screen flex items-center justify-center text-white bg-black">
-          Scenario not found.
-        </div>
-      );
-    }
-
-    let content: any = null;
-    try {
-      content = JSON.parse(found.raw);
-      console.log('[diag] Parsed scenario from', found.source, 'first200=', (found.raw || '').slice(0, 200).replace(/\n/g, ' '));
-    } catch (e) {
-      console.error('[diag] Failed to parse scenario JSON', { file: found.source, err: String(e) });
-      return (
-        <div className="min-h-screen flex items-center justify-center text-white bg-black">
-          Scenario not found.
-        </div>
-      );
-    }
-
-    if (!content || !(content.scenario_id || content.scenarioId || content.id)) {
-      console.error('[diag] Scenario JSON missing id', { file: found.source, keys: Object.keys(content || {}) });
-      return (
-        <div className="min-h-screen flex items-center justify-center text-white bg-black">
-          Scenario not found.
-        </div>
-      );
-    }
-
-    return (
-      <main className="min-h-screen bg-black text-white px-6 py-12">
-        <div className="max-w-3xl mx-auto">
-          <ScenarioEngine scenario={content} scenarioId={id} />
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4">Loading scenario…</div>
+          <div className="text-sm text-slate-400">If this takes too long, check the browser console for diagnostics.</div>
         </div>
       </main>
     );
-  } catch (err) {
-    console.error('[diag] Error preparing scenario', err);
+  }
+
+  if (error || !scenario) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black">
-        Scenario not found.
-      </div>
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg mb-4">Scenario not found.</div>
+          <div className="text-sm text-slate-400">{error ?? 'No scenario data'}</div>
+          <div className="mt-4">
+            <button
+              onClick={() => router.push('/coins')}
+              className="px-4 py-2 bg-sky-500 text-black rounded-md font-semibold"
+            >
+              Back to Coins
+            </button>
+          </div>
+        </div>
+      </main>
     );
   }
+
+  // Render scenario engine with loaded scenario JSON
+  return (
+    <main className="min-h-screen bg-black text-white px-6 py-12">
+      <div className="max-w-3xl mx-auto">
+        <ScenarioEngine scenario={scenario} scenarioId={id} />
+      </div>
+    </main>
+  );
 }
