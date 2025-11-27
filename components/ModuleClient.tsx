@@ -13,7 +13,6 @@ type ModuleType = {
   default_scenario_id?: string;
   scenario_id?: string;
   module_families?: Family[];
-  // optional module code like "HYB" which some DBs may store
   module_code?: string | null;
 };
 
@@ -62,7 +61,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           setScError(json?.error || 'Failed to load scenarios');
           setScenarios([]);
         } else {
-          // json.scenarios is array
           if (active) setScenarios(json.scenarios ?? []);
         }
       } catch (e) {
@@ -80,7 +78,13 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
   }, [moduleCode]);
 
   // Ensure session exists and then navigate to scenario
-  async function ensureSessionAndNavigate(scenarioId: string) {
+  // Accept a possibly undefined scenarioId, and handle gracefully
+  async function ensureSessionAndNavigate(scenarioId?: string) {
+    if (!scenarioId) {
+      console.warn('No scenario id provided to ensureSessionAndNavigate');
+      return;
+    }
+
     setLoading(true);
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
@@ -177,26 +181,31 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           <div className="mt-4 text-slate-400">No scenarios found for this module.</div>
         ) : (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-            {scenarios.map((s) => (
-              <div key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-md p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold">{s.title ?? s.scenario_id}</div>
-                    {s.role ? <div className="text-xs text-slate-400 mt-1">{s.role}</div> : null}
-                    {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic">{s.learningOutcome}</div> : null}
-                    {s.narrative ? <div className="text-sm text-slate-300 mt-3 line-clamp-3">{s.narrative}</div> : null}
-                  </div>
-                  <div className="flex-shrink-0 ml-4">
-                    <button
-                      onClick={() => ensureSessionAndNavigate(s.scenario_id || s.filename)}
-                      className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
-                    >
-                      Start
-                    </button>
+            {scenarios.map((s) => {
+              const idForStart = s.scenario_id ?? s.filename ?? undefined;
+              return (
+                <div key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-md p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold">{s.title ?? s.scenario_id}</div>
+                      {s.role ? <div className="text-xs text-slate-400 mt-1">{s.role}</div> : null}
+                      {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic">{s.learningOutcome}</div> : null}
+                      {s.narrative ? <div className="text-sm text-slate-300 mt-3 line-clamp-3">{s.narrative}</div> : null}
+                    </div>
+                    <div className="flex-shrink-0 ml-4">
+                      <button
+                        onClick={() => ensureSessionAndNavigate(idForStart)}
+                        className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
+                        disabled={!idForStart || loading}
+                        title={!idForStart ? 'No scenario id available' : `Start ${s.title ?? idForStart}`}
+                      >
+                        Start
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
