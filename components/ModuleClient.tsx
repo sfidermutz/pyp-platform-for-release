@@ -1,9 +1,10 @@
 // components/ModuleClient.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+type Family = { name?: string };
 type ModuleType = {
   id?: string;
   name?: string;
@@ -11,66 +12,119 @@ type ModuleType = {
   image_path?: string | null;
   default_scenario_id?: string;
   scenario_id?: string;
-  module_families?: { name?: string }[];
+  module_families?: Family[];
+  // optional module code like "HYB" which some DBs may store
+  module_code?: string | null;
 };
 
+type ScenarioMeta = {
+  filename?: string;
+  scenario_id?: string;
+  title?: string;
+  role?: string;
+  learningOutcome?: string;
+  narrative?: string;
+};
+
+/**
+ * ModuleClient (enhanced)
+ *
+ * - Displays module header, description, and image
+ * - Fetches scenario list from server using /api/module-scenarios?module=<code>
+ * - Renders a tidy list/grid of scenarios (title + short narrative + LO)
+ * - Each scenario has a "Start" button that creates/ensures session and navigates to /scenario/{id}
+ * - Keeps the original single "Start Scenario" button (starts default scenario) for quick path
+ */
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [scenarios, setScenarios] = useState<ScenarioMeta[]>([]);
+  const [scLoading, setScLoading] = useState<boolean>(true);
+  const [scError, setScError] = useState<string | null>(null);
 
-  // resolve the scenario id to start: prefer explicit fields, fall back
-  const scenarioToStart = ((): string => {
-    return (module?.default_scenario_id || module?.scenario_id || 'HYB-01');
-  })();
+  // Resolve module code to call the API. Prefer explicit fields that may exist.
+  const moduleCode = (module?.module_code || (module?.module_families && module.module_families[0]?.name) || module?.id || '').toString();
 
-  async function ensureSessionAndStart() {
+  useEffect(() => {
+    let active = true;
+    async function loadScenarios() {
+      setScLoading(true);
+      setScError(null);
+      try {
+        if (!moduleCode) {
+          setScenarios([]);
+          setScLoading(false);
+          return;
+        }
+        const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(moduleCode)}`);
+        const json = await res.json();
+        if (!res.ok) {
+          setScError(json?.error || 'Failed to load scenarios');
+          setScenarios([]);
+        } else {
+          // json.scenarios is array
+          if (active) setScenarios(json.scenarios ?? []);
+        }
+      } catch (e) {
+        console.error('module scenarios fetch error', e);
+        if (active) {
+          setScError(String(e));
+          setScenarios([]);
+        }
+      } finally {
+        if (active) setScLoading(false);
+      }
+    }
+    loadScenarios();
+    return () => { active = false; };
+  }, [moduleCode]);
+
+  // Ensure session exists and then navigate to scenario
+  async function ensureSessionAndNavigate(scenarioId: string) {
     setLoading(true);
     try {
-      // If a session already exists, continue to scenario
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-
       if (!sessionId) {
-        // Attempt to create a session automatically if a token is present
         const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
         if (!token) {
-          // No token: send user to landing page to enter a token
           router.push('/');
           return;
         }
-
         const res = await fetch('/api/create-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token })
         });
-
         if (!res.ok) {
-          // If create-session failed, redirect to landing page so user can re-enter token
           console.error('create-session failed', await res.text());
           router.push('/');
           return;
         }
-
         const json = await res.json();
-        // API returns { session } or similar - try to read session id
-        sessionId = json?.session?.id || json?.data?.id || json?.session_id;
-        if (sessionId) {
-          localStorage.setItem('pyp_session_id', sessionId);
-        } else {
-          // fallback: still try but let the page redirect if server requires session
-          console.warn('create-session returned no session id', json);
-        }
+        sessionId = json?.session?.id || json?.session_id || json?.data?.id;
+        if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
-
-      // Navigate to the scenario. Use encodeURIComponent for safety.
-      router.push(`/scenario/${encodeURIComponent(scenarioToStart)}`);
-    } catch (err) {
-      console.error('Failed to start module', err);
-      // On failure, navigate to landing as recovery
+      // optional log
+      try {
+        await fetch('/api/log-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, event_type: 'enter_scenario', payload: { scenario_id: scenarioId }})
+        });
+      } catch (_) {}
+      router.push(`/scenario/${encodeURIComponent(scenarioId)}`);
+    } catch (e) {
+      console.error('ensure session and navigate error', e);
       router.push('/');
     } finally {
       setLoading(false);
     }
+  }
+
+  // quick start default scenario (existing behavior)
+  async function startDefaultScenario() {
+    const scenarioToStart = (module?.default_scenario_id || module?.scenario_id || 'HYB-01');
+    await ensureSessionAndNavigate(scenarioToStart);
   }
 
   return (
@@ -95,24 +149,56 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
           <div className="mt-6 flex items-center gap-3">
             <button
-              onClick={ensureSessionAndStart}
+              onClick={startDefaultScenario}
               disabled={loading}
               className={`px-5 py-2 rounded-md font-semibold ${loading ? 'bg-slate-600 cursor-wait' : 'bg-sky-500 text-black'}`}
             >
-              {loading ? 'Starting…' : 'Start Scenario'}
+              {loading ? 'Starting…' : 'Start Default Scenario'}
             </button>
 
             <button
-              onClick={() => {
-                // simple action: show details or route to coins
-                router.push('/coins');
-              }}
+              onClick={() => { router.push('/coins'); }}
               className="px-4 py-2 rounded-md border border-slate-700 text-sm text-slate-200"
             >
               Back to Coins
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Module dashboard: scenario list */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold">Scenarios</h2>
+        {scLoading ? (
+          <div className="mt-4 text-slate-300">Loading scenarios…</div>
+        ) : scError ? (
+          <div className="mt-4 text-rose-400">Failed to load scenarios: {scError}</div>
+        ) : scenarios.length === 0 ? (
+          <div className="mt-4 text-slate-400">No scenarios found for this module.</div>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            {scenarios.map((s) => (
+              <div key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-md p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{s.title ?? s.scenario_id}</div>
+                    {s.role ? <div className="text-xs text-slate-400 mt-1">{s.role}</div> : null}
+                    {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic">{s.learningOutcome}</div> : null}
+                    {s.narrative ? <div className="text-sm text-slate-300 mt-3 line-clamp-3">{s.narrative}</div> : null}
+                  </div>
+                  <div className="flex-shrink-0 ml-4">
+                    <button
+                      onClick={() => ensureSessionAndNavigate(s.scenario_id || s.filename)}
+                      className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
+                    >
+                      Start
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
