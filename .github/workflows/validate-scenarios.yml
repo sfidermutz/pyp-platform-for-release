@@ -1,0 +1,29 @@
+name: Validate scenarios
+
+on:
+  push:
+    paths:
+      - 'data/scenarios/**'
+      - 'scripts/validate-scenarios.js'
+  pull_request:
+    paths:
+      - 'data/scenarios/**'
+      - 'scripts/validate-scenarios.js'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies (if package.json exists)
+        run: |
+          if [ -f package.json ]; then npm ci || npm install; fi
+      - name: Run scenario validator
+        run: |
+          node scripts/validate-scenarios.js
