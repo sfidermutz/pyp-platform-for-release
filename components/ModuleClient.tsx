@@ -25,16 +25,6 @@ type ScenarioMeta = {
   narrative?: string;
 };
 
-/**
- * ModuleClient with browser-side GitHub fallback
- *
- * If /api/module-scenarios returns no scenarios, we will
- * fetch the GitHub listing and download JSON files client-side
- * to find any scenario where moduleId/module_id/module/moduleCode matches.
- *
- * This is a demo-friendly fallback that avoids depending on specific
- * server filesystem behavior.
- */
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -48,7 +38,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     let active = true;
 
     async function fetchRemoteScenariosFromGitHub(code: string) {
-      // Browser-side fallback: scan the GitHub repo and parse remote files
       try {
         console.log('[ModuleClient] FALLBACK: listing github scenarios for', code);
         const listRes = await fetch('https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios');
@@ -62,12 +51,10 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           return [];
         }
 
-        // Limit parallel fetches to avoid overwhelming GitHub / hitting rate limits
         const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
-
         const results: ScenarioMeta[] = [];
-        // sequential or limited concurrency to be safe
         const concurrency = 6;
+
         for (let i = 0; i < jsonFiles.length; i += concurrency) {
           const batch = jsonFiles.slice(i, i + concurrency);
           const downloads = batch.map((item: any) =>
@@ -103,7 +90,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           for (const got of batchRes) {
             if (got) results.push(got);
           }
-          // slight throttle
           await new Promise((r) => setTimeout(r, 100));
         }
 
@@ -127,7 +113,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           return;
         }
 
-        // primary: query the server API
         const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(moduleCode)}`);
         const json = await res.json();
         console.log('[ModuleClient] module-scenarios returned', json);
@@ -138,7 +123,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         if (serverScenarios.length > 0) {
           if (active) setScenarios(serverScenarios);
         } else {
-          // fallback: try GitHub client-side
           console.log('[ModuleClient] server returned no scenarios, trying client-side GitHub fallback');
           const remote = await fetchRemoteScenariosFromGitHub(moduleCode);
           if (active) setScenarios(remote);
@@ -163,12 +147,16 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     }
 
     setLoading(true);
+    console.log('[navigate] beginning navigation for scenario', scenarioId);
+
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
       if (!sessionId) {
+        console.log('[navigate] no sessionId in storage, creating session via /api/create-session');
         const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
         if (!token) {
-          router.push('/');
+          console.warn('[navigate] no token present, redirecting to root');
+          window.location.href = '/';
           return;
         }
         const res = await fetch('/api/create-session', {
@@ -176,26 +164,55 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token })
         });
+
         if (!res.ok) {
-          console.error('create-session failed', await res.text());
-          router.push('/');
+          console.warn('[navigate] create-session failed, status=', res.status);
+          // fallback: navigate to scenario anyway
+          const target = `/scenario/${encodeURIComponent(scenarioId)}`;
+          console.warn('[navigate] falling back to hard navigation to', target);
+          window.location.href = target;
           return;
         }
+
         const json = await res.json();
         sessionId = json?.session?.id || json?.session_id || json?.data?.id;
+        console.log('[navigate] created session id', sessionId);
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+      } else {
+        console.log('[navigate] found existing session id', sessionId);
       }
+
       try {
         await fetch('/api/log-event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId, event_type: 'enter_scenario', payload: { scenario_id: scenarioId }})
         });
-      } catch (_) {}
-      router.push(`/scenario/${encodeURIComponent(scenarioId)}`);
+        console.log('[navigate] logged enter_scenario for', scenarioId);
+      } catch (logErr) {
+        console.warn('[navigate] log-event failed', logErr);
+      }
+
+      // Try client router first, fallback to hard navigation if router push fails
+      try {
+        console.log('[navigate] trying router.push to scenario');
+        router.push(`/scenario/${encodeURIComponent(scenarioId)}`);
+        // also set a short timeout to hard navigate if nothing happens
+        setTimeout(() => {
+          // If we're still on the module page after 1s, do a hard reload to ensure navigation occurs
+          if (window.location.pathname.indexOf('/scenario/') !== 0) {
+            console.warn('[navigate] router.push did not navigate, falling back to hard navigation');
+            window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
+          }
+        }, 1000);
+      } catch (rpErr) {
+        console.warn('[navigate] router.push threw error, doing hard navigation', rpErr);
+        window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
+      }
     } catch (e) {
-      console.error('ensure session and navigate error', e);
-      router.push('/');
+      console.error('[navigate] ensureSessionAndNavigate unexpected error', e);
+      // last resort: hard navigate
+      window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
     } finally {
       setLoading(false);
     }
@@ -236,7 +253,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
             </button>
 
             <button
-              onClick={() => { router.push('/coins'); }}
+              onClick={() => { window.location.href = '/coins'; }}
               className="px-4 py-2 rounded-md border border-slate-700 text-sm text-slate-200"
             >
               Back to Coins
