@@ -8,7 +8,6 @@ import { useParams, useRouter } from 'next/navigation';
 type ScenarioContent = any;
 
 function log(...args: any[]) {
-  // helper for consistent client logs
   // eslint-disable-next-line no-console
   console.log('[ScenarioClient]', ...args);
 }
@@ -48,7 +47,6 @@ async function fetchGithubScan(id: string) {
       return null;
     }
 
-    // limit concurrency to avoid hitting rate limits
     const concurrency = 6;
     const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
 
@@ -80,7 +78,6 @@ async function fetchGithubScan(id: string) {
       for (const r of results) {
         if (r) return r;
       }
-      // slight delay to be friendly
       await new Promise((r) => setTimeout(r, 80));
     }
 
@@ -91,10 +88,12 @@ async function fetchGithubScan(id: string) {
   }
 }
 
-export default function ScenarioClientPage() {
-  const params = useParams();
+export default function ScenarioClientPage(): JSX.Element {
+  const params = useParams() as { id?: string | string[] | undefined };
   const router = useRouter();
-  const id = params?.id;
+  const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const id = typeof rawId === 'string' ? rawId : undefined;
+
   const [loading, setLoading] = useState(true);
   const [scenario, setScenario] = useState<ScenarioContent | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +112,6 @@ export default function ScenarioClientPage() {
       }
 
       log('Attempting to load scenario', id);
-      // Try raw github first
       let found = await fetchRawGithub(id);
       if (found && found.parsed) {
         log('Loaded scenario from raw github', found.source);
@@ -135,12 +133,10 @@ export default function ScenarioClientPage() {
         return;
       }
 
-      // If still not found, try query the application's module-scenarios API as last resort
+      // Try api fallback for known module HYB as last resort
       try {
         log('Trying /api/module-scenarios fallback to find scenario by module association (best-effort)');
-        // We'll attempt to find any module that might contain the scenario, but this is heuristic
-        // Not ideal, but can help in weird repo layouts. We'll just call module-scenarios for HYB (since we know)
-        const modules = ['HYB']; // expand if needed
+        const modules = ['HYB'];
         for (const m of modules) {
           try {
             const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(m)}`);
@@ -151,7 +147,6 @@ export default function ScenarioClientPage() {
                 return sid && String(sid).toLowerCase() === id.toLowerCase();
               });
               if (match) {
-                // attempt to fetch the raw filename if available
                 const filename = match.filename;
                 if (filename) {
                   const rawUrl = `https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main/data/scenarios/${filename}`;
@@ -177,7 +172,6 @@ export default function ScenarioClientPage() {
         log('module-scenarios fallback outer error', e);
       }
 
-      // nothing worked
       if (mounted) {
         setError('Scenario not found after trying github/raw and API fallbacks.');
         setLoading(false);
@@ -218,7 +212,6 @@ export default function ScenarioClientPage() {
     );
   }
 
-  // Render scenario engine with loaded scenario JSON
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-3xl mx-auto">
