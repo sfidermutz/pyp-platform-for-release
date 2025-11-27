@@ -15,6 +15,7 @@ type ModuleRecord = {
   module_families: Family[];
   image_path?: string | null;
   default_scenario_id?: string | null;
+  module_code?: string | null;
 };
 
 export default function CoinsPage() {
@@ -44,7 +45,7 @@ export default function CoinsPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('modules')
-      .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code )`)
+      .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
       .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
@@ -74,14 +75,16 @@ export default function CoinsPage() {
         is_demo: Boolean(m.is_demo ?? false),
         module_families: families,
         image_path: m.image_path ?? null,
-        default_scenario_id: m.default_scenario_id ?? null
+        default_scenario_id: m.default_scenario_id ?? null,
+        module_code: m.module_code ?? null
       };
     });
 
     setModules(normalized);
   }
 
-  async function startModuleImmediately(m: ModuleRecord) {
+  // ALWAYS navigate to module dashboard. ModuleClient handles scenario starts.
+  async function openModuleDashboard(m: ModuleRecord) {
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
       if (!sessionId) {
@@ -98,19 +101,17 @@ export default function CoinsPage() {
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
 
+      // Log module enter, then navigate to module dashboard page
       await fetch('/api/log-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id }})
+        body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
       }).catch(()=>{});
 
-      if (m.default_scenario_id) {
-        router.push(`/scenario/${encodeURIComponent(m.default_scenario_id)}`);
-      } else {
-        router.push(`/module/${m.id}`);
-      }
+      // Always go to the module page (dashboard), not directly to scenario
+      router.push(`/module/${m.id}`);
     } catch (e) {
-      console.error('startModuleImmediately failed', e);
+      console.error('openModuleDashboard failed', e);
       router.push(`/module/${m.id}`);
     }
   }
@@ -146,7 +147,7 @@ export default function CoinsPage() {
                     {familyModules.map((m) => (
                       <div key={m.id} className="text-center w-44">
                         <button
-                          onClick={() => startModuleImmediately(m)}
+                          onClick={() => openModuleDashboard(m)}
                           className="w-40 h-40 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm"
                           aria-label={m.name}
                           title={m.name}
