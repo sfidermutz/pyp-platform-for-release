@@ -215,7 +215,7 @@ export default function ScenarioClientPage() {
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
       <div className="max-w-3xl mx-auto">
-        <ScenarioEngine scenario={scenario} scenarioId={id} />
+        <ScenarioEngine scenario={scenario} scenarioId={String(id)} />
       </div>
     </main>
   );
