@@ -88,7 +88,7 @@ async function fetchGithubScan(id: string) {
   }
 }
 
-export default function ScenarioClientPage(): JSX.Element {
+export default function ScenarioClientPage() {
   const params = useParams() as { id?: string | string[] | undefined };
   const router = useRouter();
   const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
