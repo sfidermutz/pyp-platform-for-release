@@ -25,6 +25,16 @@ type ScenarioMeta = {
   narrative?: string;
 };
 
+/**
+ * ModuleClient with browser-side GitHub fallback
+ *
+ * If /api/module-scenarios returns no scenarios, we will
+ * fetch the GitHub listing and download JSON files client-side
+ * to find any scenario where moduleId/module_id/module/moduleCode matches.
+ *
+ * This is a demo-friendly fallback that avoids depending on specific
+ * server filesystem behavior.
+ */
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -36,9 +46,79 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
   useEffect(() => {
     let active = true;
+
+    async function fetchRemoteScenariosFromGitHub(code: string) {
+      // Browser-side fallback: scan the GitHub repo and parse remote files
+      try {
+        console.log('[ModuleClient] FALLBACK: listing github scenarios for', code);
+        const listRes = await fetch('https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios');
+        if (!listRes.ok) {
+          console.warn('[ModuleClient] github listing failed', listRes.status);
+          return [];
+        }
+        const listing = await listRes.json();
+        if (!Array.isArray(listing)) {
+          console.warn('[ModuleClient] github listing not an array', typeof listing);
+          return [];
+        }
+
+        // Limit parallel fetches to avoid overwhelming GitHub / hitting rate limits
+        const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
+
+        const results: ScenarioMeta[] = [];
+        // sequential or limited concurrency to be safe
+        const concurrency = 6;
+        for (let i = 0; i < jsonFiles.length; i += concurrency) {
+          const batch = jsonFiles.slice(i, i + concurrency);
+          const downloads = batch.map((item: any) =>
+            fetch(item.download_url)
+              .then(r => (r.ok ? r.text() : Promise.reject(new Error(`fetch ${item.name} ${r.status}`))))
+              .then(text => {
+                try {
+                  const parsed = JSON.parse(text);
+                  const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.moduleCode;
+                  if (mid && String(mid).toLowerCase() === String(code).toLowerCase()) {
+                    return {
+                      filename: item.name,
+                      scenario_id: parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null,
+                      title: parsed?.title ?? parsed?.name ?? '',
+                      role: parsed?.role ?? '',
+                      learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? parsed?.scenarioLO ?? '',
+                      narrative: parsed?.narrative ?? parsed?.situation ?? ''
+                    } as ScenarioMeta;
+                  }
+                  return null;
+                } catch (e) {
+                  console.warn('[ModuleClient] parse error for', item.name, e);
+                  return null;
+                }
+              })
+              .catch(e => {
+                console.warn('[ModuleClient] download error for', item.name, e);
+                return null;
+              })
+          );
+
+          const batchRes = await Promise.all(downloads);
+          for (const got of batchRes) {
+            if (got) results.push(got);
+          }
+          // slight throttle
+          await new Promise((r) => setTimeout(r, 100));
+        }
+
+        console.log('[ModuleClient] FALLBACK found', results.length, 'scenarios');
+        return results;
+      } catch (e) {
+        console.error('[ModuleClient] FALLBACK github error', e);
+        return [];
+      }
+    }
+
     async function loadScenarios() {
       setScLoading(true);
       setScError(null);
+
       try {
         console.log('[ModuleClient] moduleCode ->', moduleCode, 'module id', module?.id);
         if (!moduleCode) {
@@ -46,25 +126,32 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           setScLoading(false);
           return;
         }
+
+        // primary: query the server API
         const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(moduleCode)}`);
         const json = await res.json();
         console.log('[ModuleClient] module-scenarios returned', json);
-        if (!res.ok) {
-          setScError(json?.error || 'Failed to load scenarios');
-          setScenarios([]);
+
+        let serverScenarios = (json && json.scenarios) ? json.scenarios : [];
+        if (!Array.isArray(serverScenarios)) serverScenarios = [];
+
+        if (serverScenarios.length > 0) {
+          if (active) setScenarios(serverScenarios);
         } else {
-          if (active) setScenarios(json.scenarios ?? []);
+          // fallback: try GitHub client-side
+          console.log('[ModuleClient] server returned no scenarios, trying client-side GitHub fallback');
+          const remote = await fetchRemoteScenariosFromGitHub(moduleCode);
+          if (active) setScenarios(remote);
         }
       } catch (e) {
         console.error('[ModuleClient] module scenarios fetch error', e);
-        if (active) {
-          setScError(String(e));
-          setScenarios([]);
-        }
+        setScError(String(e));
+        setScenarios([]);
       } finally {
         if (active) setScLoading(false);
       }
     }
+
     loadScenarios();
     return () => { active = false; };
   }, [moduleCode, module?.id]);
