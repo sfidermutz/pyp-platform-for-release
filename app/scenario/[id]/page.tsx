@@ -333,15 +333,21 @@ export default function ScenarioClientPage() {
             </div>
           )}
 
-          {/* Optional brief narrative / situation preview */}
-          {scenario?.situation || scenario?.narrative ? (
-            <div className="mt-6 text-sm text-slate-300 bg-[#071016] p-4 rounded-md border border-slate-700">
-              <div className="font-medium text-slate-200 mb-2">Situation</div>
-              <div className="text-sm text-slate-300">
-                {scenario.situation ?? scenario.narrative}
-              </div>
+          {/* DEBUG: hidden scenario dump (remove after debugging) */}
+          <pre data-scenario-debug style={{display:'none'}}>{JSON.stringify(scenario, null, 2)}</pre>
+
+          {/* DEBUG: forced visible Situation block (remove after debugging) */}
+          {(scenario?.situation || scenario?.narrative) ? (
+            <div style={{background:'#06232a', color:'#e6fffb', padding:16, borderRadius:8, border:'1px solid #0ea5a4'}}>
+              <div style={{fontWeight:700, marginBottom:8, letterSpacing:1}}>SITUATION (DEBUG)</div>
+              <div style={{whiteSpace:'pre-wrap'}}>{scenario.situation ?? scenario.narrative}</div>
             </div>
-          ) : null}
+          ) : (
+            <div style={{background:'#5b1620', color:'#ffdede', padding:12, borderRadius:6}}>
+              <div>No situation/narrative found in scenario object</div>
+            </div>
+          )}
+
         </div>
 
         {/* Scenario Engine: keeps existing behavior */}
