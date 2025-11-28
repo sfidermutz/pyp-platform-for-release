@@ -71,6 +71,7 @@ async function fetchGithubScan(id: string) {
               // tolerate various ID forms
               const sid = parsed?.scenarioId ?? parsed?.scenario_id ?? parsed?.id ?? null;
               if (sid && String(sid).toLowerCase() === id.toLowerCase()) {
+                // include filename in the returned object so callers can show it
                 return { parsed, source: item.download_url, filename: item.name };
               }
               return null;
@@ -129,20 +130,19 @@ export default function ScenarioClientPage() {
 
       log('Attempting to load scenario', id);
 
-      // 1) Straight raw file fetch for the canonical filename
-      let found = await fetchRawGithub(id);
+      // Use `any` for found so TypeScript won't complain about optional filename
+      let found: any = await fetchRawGithub(id);
       if (found && found.parsed) {
         log('Loaded scenario from raw github', found.source);
         if (mounted) {
           setScenario(found.parsed);
           setSourceUrl(found.source);
-          setSourceFilename(`${id}.json`);
+          setSourceFilename(found.filename ?? null);
           setLoading(false);
         }
         return;
       }
 
-      // 2) Repo scan to find a file with a matching id field inside
       log('Raw github did not return scenario, trying github scan');
       found = await fetchGithubScan(id);
       if (found && found.parsed) {
@@ -288,12 +288,12 @@ export default function ScenarioClientPage() {
                 <span className="inline-block">ID: <strong className="text-slate-100">{scenarioId}</strong></span>
               </div>
 
-              {learningOutcome ? (
-                <div className="mt-4 p-3 rounded-md bg-[#071820] border border-slate-700">
-                  <div className="text-sm text-slate-300 font-medium">Learning Outcome</div>
-                  <div className="mt-1 text-sm text-sky-300">{learningOutcome}</div>
-                </div>
-              ) : null}
+          {learningOutcome ? (
+            <div className="mt-4 p-3 rounded-md bg-[#071820] border border-slate-700">
+              <div className="text-sm text-slate-300 font-medium">Learning Outcome</div>
+              <div className="mt-1 text-sm text-sky-300">{learningOutcome}</div>
+            </div>
+          ) : null}
             </div>
 
             <div className="flex flex-col items-end gap-3">
