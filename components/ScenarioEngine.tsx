@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import DebriefPopup from './DebriefPopup';
 
+function makeLocalSessionId() {
+  if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+    return (crypto as any).randomUUID();
+  }
+  // fallback
+  return 's_' + Math.random().toString(36).slice(2,10);
+}
+
 export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any, scenarioId: string }) {
   const [screen, setScreen] = useState<number>(1);
   const [selections, setSelections] = useState<any>({});
@@ -13,6 +21,17 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // ensure session id exists in localStorage
+    if (typeof window !== 'undefined') {
+      let sid = localStorage.getItem('pyp_session_id');
+      if (!sid) {
+        sid = makeLocalSessionId();
+        localStorage.setItem('pyp_session_id', sid);
+        console.log('[ScenarioEngine] created new session id', sid);
+      } else {
+        console.log('[ScenarioEngine] found existing session id', sid);
+      }
+    }
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
@@ -25,79 +44,46 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }));
   }
 
-  // Helper to build a DP object with .narrative .stem and .options array
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
-    // If dpRaw already has options
     if (Array.isArray(dpRaw.options)) return dpRaw;
-    // If dpRaw itself is an array (legacy)
     if (Array.isArray(dpRaw)) return { narrative: '', stem: '', options: dpRaw };
-    // Otherwise dpRaw is an object that maps keys -> array (branching)
-    // We'll not include narrative/stem from each branch (they're usually on root),
     return { narrative: dpRaw.narrative ?? '', stem: dpRaw.stem ?? '', options: [] };
   }
 
-  // dpFor: returns the dp object for DP index i.
-  // Handles both flat and branching dp2/dp3 structures.
   function dpFor(i: number) {
-    // DP1 is always simple
     if (i === 1) return normalizeDP(scenario.dp1);
-
     if (i === 2) {
       const raw = scenario.dp2;
       if (!raw) return { narrative: '', stem: '', options: [] };
-
-      // If dp2 is an array or object with options, normalize and return
-      if (Array.isArray(raw) || Array.isArray(raw?.options)) {
-        return normalizeDP(raw);
-      }
-
-      // dp2 is a branching map keyed by dp1 option ids
+      if (Array.isArray(raw) || Array.isArray(raw?.options)) return normalizeDP(raw);
       const prev1 = selections[1]?.optionId;
-      // If we have a branch that matches prev1, use it
       if (prev1 && Array.isArray(raw[prev1])) {
         return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev1] };
       }
-
-      // Fallback: if there is a default branch
       if (raw.default && Array.isArray(raw.default)) {
         return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
       }
-
-      // Final fallback: combine all branch options into a single list (keeps demo working)
-      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v) || v);
-      // If combined contains nested objects (not arrays), flatten those arrays too:
-      const opts = ([] as any[]).concat(...combined.map((c: any) => Array.isArray(c) ? c : []));
-      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: opts };
+      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v)).flat();
+      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: combined };
     }
-
-    // DP3: similar logic keyed by DP2 selection
     if (i === 3) {
       const raw = scenario.dp3;
       if (!raw) return { narrative: '', stem: '', options: [] };
-
-      if (Array.isArray(raw) || Array.isArray(raw?.options)) {
-        return normalizeDP(raw);
-      }
-
+      if (Array.isArray(raw) || Array.isArray(raw?.options)) return normalizeDP(raw);
       const prev2 = selections[2]?.optionId;
       if (prev2 && Array.isArray(raw[prev2])) {
         return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev2] };
       }
-
       if (raw.default && Array.isArray(raw.default)) {
         return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
       }
-
-      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v) || v);
-      const opts = ([] as any[]).concat(...combined.map((c: any) => Array.isArray(c) ? c : []));
-      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: opts };
+      const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v)).flat();
+      return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: combined };
     }
-
     return { narrative: '', stem: '', options: [] };
   }
 
-  // Persist reflection to server (small helper)
   async function persistReflection(sessionId: string | null, scenario_id: string, phase: string, text: string) {
     try {
       await fetch('/api/reflections', {
@@ -115,7 +101,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
-  // existing goNext behavior retained (used by bottom NEXT or reflection submit)
   async function goNext() {
     setError(null);
     if (screen === 1 || screen === 2) {
@@ -170,7 +155,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
         const session_hint = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
 
-        // Persist pre-reflection stub (if applicable) - optional
         try {
           await persistReflection(session_hint, scenarioId, 'pre', '');
         } catch (e) { /* ignore */ }
@@ -193,14 +177,14 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         } else {
           setDebrief(json);
 
-          // persist the reflection on server
+          // persist reflection
           try {
             await persistReflection(session_hint, scenarioId, 'post', reflection);
           } catch (e) {
             console.debug('persist post reflection failed', e);
           }
 
-          // persist metrics for dashboard
+          // persist metrics for dashboard - best-effort
           try {
             await fetch('/api/store-scenario-metrics', {
               method: 'POST',
@@ -211,11 +195,17 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
             console.debug('store scenario metrics failed', e);
           }
 
-          // Save debrief to localStorage for the full debrief page
+          // Save debrief to localStorage for the full debrief page (create session id if missing)
           try {
-            const sid = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+            let sid = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+            if (!sid && typeof window !== 'undefined') {
+              sid = makeLocalSessionId();
+              localStorage.setItem('pyp_session_id', sid);
+            }
             if (sid) {
               localStorage.setItem(`pyp_debrief_${sid}_${scenarioId}`, JSON.stringify(json));
+            } else {
+              console.warn('No session id available to save debrief');
             }
           } catch (e) {
             console.debug('saving debrief to localStorage failed', e);
@@ -231,20 +221,16 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
-  // New onSelectOption: record selection and auto-advance for DP1 & DP2
   function onSelectOption(dpIndex: number, optionId: string) {
-    // compute time on page
     const now = Date.now();
     const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
     const confidence = selections[dpIndex]?.confidence ?? 50;
 
-    // Update selection state immediately
     setSelections((prev: any) => ({
       ...prev,
       [dpIndex]: { optionId, confidence, timeMs: timeOnPage }
     }));
 
-    // Send decision to server (best-effort)
     (async () => {
       try {
         await fetch('/api/decisions', {
@@ -264,7 +250,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         console.debug('decision post failed', e);
       }
 
-      // Auto-advance for DP1 and DP2; DP3 remains manual (reflection required)
       if (dpIndex < 3) {
         const next = dpIndex + 1;
         setScreen(next);
