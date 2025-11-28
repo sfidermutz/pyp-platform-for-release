@@ -31,11 +31,12 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabaseAdmin.from('scenario_metrics').insert([row]).select('*').single();
     if (error) {
       console.error('store scenario metrics error', error);
-      return NextResponse.json({ error: 'db error' }, { status: 500 });
+      // DEBUG: return full supabase error for diagnosis
+      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
     }
     return NextResponse.json({ inserted: data });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
+    console.error('store-scenario-metrics catch', e);
+    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
   }
 }
