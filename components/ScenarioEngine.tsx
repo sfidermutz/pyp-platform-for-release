@@ -115,6 +115,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  // existing goNext behavior retained (used by bottom NEXT or reflection submit)
   async function goNext() {
     setError(null);
     if (screen === 1 || screen === 2) {
@@ -135,9 +136,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
             details: { step: screen }
           })
         });
-      } catch (e) {
-        console.debug('decision post failed', e);
-      }
+      } catch (e) { console.debug('decision post failed', e); }
 
       const next = screen + 1;
       setScreen(next);
@@ -232,9 +231,48 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  // New onSelectOption: record selection and auto-advance for DP1 & DP2
   function onSelectOption(dpIndex: number, optionId: string) {
-    optionSelected(dpIndex, optionId, selections[dpIndex]?.confidence ?? 50);
+    // compute time on page
+    const now = Date.now();
+    const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
+    const confidence = selections[dpIndex]?.confidence ?? 50;
+
+    // Update selection state immediately
+    setSelections((prev: any) => ({
+      ...prev,
+      [dpIndex]: { optionId, confidence, timeMs: timeOnPage }
+    }));
+
+    // Send decision to server (best-effort)
+    (async () => {
+      try {
+        await fetch('/api/decisions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
+            scenario_id: scenarioId,
+            decision_point: dpIndex,
+            selected_option_id: optionId,
+            confidence,
+            time_on_page_ms: timeOnPage,
+            details: { step: dpIndex }
+          })
+        });
+      } catch (e) {
+        console.debug('decision post failed', e);
+      }
+
+      // Auto-advance for DP1 and DP2; DP3 remains manual (reflection required)
+      if (dpIndex < 3) {
+        const next = dpIndex + 1;
+        setScreen(next);
+        setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
+      }
+    })();
   }
+
   function onConfidenceChange(dpIndex:number, val:number) {
     optionSelected(dpIndex, selections[dpIndex]?.optionId ?? '', val);
   }
