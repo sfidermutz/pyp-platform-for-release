@@ -7,6 +7,11 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+/**
+ * POST /api/store-scenario-metrics
+ * Accepts metrics computed from the debrief engine and persists them for the dashboard.
+ * Returns general errors on failure (no DB internals returned).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -31,12 +36,11 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabaseAdmin.from('scenario_metrics').insert([row]).select('*').single();
     if (error) {
       console.error('store scenario metrics error', error);
-      // DEBUG: return full supabase error for diagnosis
-      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
+      return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
     return NextResponse.json({ inserted: data });
   } catch (e) {
     console.error('store-scenario-metrics catch', e);
-    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
+    return NextResponse.json({ error: 'server error' }, { status: 500 });
   }
 }
