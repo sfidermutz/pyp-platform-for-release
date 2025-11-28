@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     const valid_until = new Date();
     valid_until.setFullYear(valid_until.getFullYear() + 2); // 24 months
 
-    const moduleLO = 'Module LO placeholder';
+    // If you have a real module LO to put here, supply it via body or fetch from DB.
+    const moduleLO = body.module_LO ?? 'Module LO placeholder';
 
     const { data, error } = await supabaseAdmin.from('certificates').insert([{
       session_id,
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('certificate insert error', error);
-      // DEBUG: return supabase error object for diagnosis
-      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
+      return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
 
     const demoPath = path.join(process.cwd(), 'public', 'demo_certificate.pdf');
@@ -55,6 +55,6 @@ export async function POST(req: NextRequest) {
     return new NextResponse(pdfBuffer, { status: 200, headers: { 'Content-Type': 'application/pdf', 'x-verification-code': verification_code }});
   } catch (e) {
     console.error('generate-certificate error', e);
-    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
+    return NextResponse.json({ error: 'server error' }, { status: 500 });
   }
 }
