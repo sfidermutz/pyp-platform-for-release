@@ -24,12 +24,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'session_id & module_id required' }, { status: 400 });
     }
 
-    // create verification code and insert into certificates table
     const verification_code = makeVerificationCode();
     const valid_until = new Date();
     valid_until.setFullYear(valid_until.getFullYear() + 2); // 24 months
 
-    const moduleLO = 'Module LO placeholder'; // optionally fetch real LO from modules table
+    const moduleLO = 'Module LO placeholder';
 
     const { data, error } = await supabaseAdmin.from('certificates').insert([{
       session_id,
@@ -43,21 +42,19 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('certificate insert error', error);
-      return NextResponse.json({ error: 'db error' }, { status: 500 });
+      // DEBUG: return supabase error object for diagnosis
+      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
     }
 
-    // For demo: return the placeholder PDF file from public/demo_certificate.pdf
     const demoPath = path.join(process.cwd(), 'public', 'demo_certificate.pdf');
     if (!fs.existsSync(demoPath)) {
-      // If demo file missing, return a tiny generated PDF-ish response as fallback
       const fallback = Buffer.from(`%PDF-1.4\n%Demo placeholder certificate for code ${verification_code}\n`);
       return new NextResponse(fallback, { status: 200, headers: { 'Content-Type': 'application/pdf', 'x-verification-code': verification_code }});
     }
     const pdfBuffer = fs.readFileSync(demoPath);
     return new NextResponse(pdfBuffer, { status: 200, headers: { 'Content-Type': 'application/pdf', 'x-verification-code': verification_code }});
-
   } catch (e) {
     console.error('generate-certificate error', e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
+    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
   }
 }
