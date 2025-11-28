@@ -6,12 +6,21 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+/**
+ * POST /api/decisions
+ * Accepts a decision post from the client. The client currently sends a scenario
+ * identifier string (scenario code, e.g., "HYB-01") as `scenario_id`. Because the
+ * decisions table's `scenario_id` column is a UUID, we write NULL there to avoid
+ * UUID parsing errors and store the human-readable code in `scenario_code` text.
+ *
+ * Server returns a minimal error on DB failure (no DB internals exposed).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
       session_hint,
-      scenario_id,          // currently used as scenario code like "HYB-01"
+      scenario_id,          // usually a scenario code like "HYB-01"
       decision_point,
       selected_option_id,
       confidence,
@@ -20,18 +29,12 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const session_id = session_hint ?? null;
-
-    // We expect `scenario_id` from the client to be the scenario CODE ("HYB-01"),
-    // but the decisions table stores scenario_id as a UUID. Insert NULL into
-    // scenario_id (or map to a real scenario uuid if available) and save the
-    // code in `scenario_code` (text). The DB must have a scenario_code column;
-    // below SQL will add it if missing.
-    const scenario_code = scenario_id ?? null;
+    const scenario_code = typeof scenario_id === 'string' ? scenario_id : null;
 
     const { data, error } = await supabaseAdmin.from('decisions').insert([{
       session_id,
-      scenario_id: null,           // keep as null to avoid uuid parse error
-      scenario_code,               // text column for human-readable id (HYB-01)
+      scenario_id: null,      // keep null to avoid uuid parse issues
+      scenario_code,
       decision_point,
       selected_option_id,
       confidence,
@@ -41,11 +44,11 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('insert decision err', error);
-      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
+      return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
     return NextResponse.json({ decision: data });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
+    console.error('decisions route catch', e);
+    return NextResponse.json({ error: 'server error' }, { status: 500 });
   }
 }
