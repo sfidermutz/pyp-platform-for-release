@@ -33,11 +33,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('insert decision err', error);
-      return NextResponse.json({ error: 'db error' }, { status: 500 });
+      // DEBUG: return full supabase error in response for diagnosis (temporary)
+      return NextResponse.json({ error: 'db error', details: error }, { status: 500 });
     }
     return NextResponse.json({ decision: data });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
+    console.error('decisions route catch', e);
+    return NextResponse.json({ error: 'server error', details: String(e) }, { status: 500 });
   }
 }
