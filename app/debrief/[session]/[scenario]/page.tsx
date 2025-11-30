@@ -25,16 +25,28 @@ export default function FullDebriefPage({ params }: { params: { session: string,
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // defensive: treat string "undefined" as invalid (this happens when params are not set properly)
+  const invalidParams = !session || session === 'undefined' || !scenario || scenario === 'undefined';
+
   useEffect(() => {
     setLoading(true);
     try {
-      const key = `pyp_debrief_${session}_${scenario}`;
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-      if (raw) {
+      if (typeof window !== 'undefined') {
+        // try localStorage first
         try {
-          setDebrief(JSON.parse(raw));
+          const key = `pyp_debrief_${session}_${scenario}`;
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              setDebrief(JSON.parse(raw));
+            } catch (e) {
+              setDebrief(null);
+            }
+          } else {
+            setDebrief(null);
+          }
         } catch (e) {
-          // ignore parse error
+          // localStorage might be locked in some contexts
           setDebrief(null);
         }
       } else {
@@ -43,7 +55,13 @@ export default function FullDebriefPage({ params }: { params: { session: string,
 
       (async () => {
         try {
-          // Load scenario JSON (same fallback as before)
+          if (invalidParams) {
+            setScenarioData(null);
+            setLoading(false);
+            return;
+          }
+
+          // Load scenario JSON (local, then raw github fallback)
           const rawUrl = `/data/scenarios/${encodeURIComponent(scenario)}.json`;
           const r = await fetch(rawUrl);
           if (r.ok) {
@@ -68,11 +86,12 @@ export default function FullDebriefPage({ params }: { params: { session: string,
     } catch (e) {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, scenario]);
 
   useEffect(() => {
     // If no local debrief found, try to fetch persisted debrief from server
-    if (!debrief) {
+    if (!debrief && !invalidParams) {
       (async () => {
         try {
           const res = await fetch(`/api/debrief?session_id=${encodeURIComponent(session)}&scenario_id=${encodeURIComponent(scenario)}`);
@@ -80,32 +99,29 @@ export default function FullDebriefPage({ params }: { params: { session: string,
             const json = await res.json();
             const serverDebrief = json?.debrief ?? null;
             if (serverDebrief) {
-              // Compose a debrief object that matches the client expectations:
-              // serverDebrief.metrics contains metrics; short_feedback similarly; selections/reflection
               const composed = {
                 ...serverDebrief.metrics,
                 short_feedback: serverDebrief.short_feedback,
                 selections: serverDebrief.selections,
-                reflection: serverDebrief.reflection
+                reflection: serverDebrief.reflection,
               };
               setDebrief(composed);
-
-              // also save to localStorage for future convenience
               try {
                 const key = `pyp_debrief_${session}_${scenario}`;
                 localStorage.setItem(key, JSON.stringify(composed));
               } catch (e) {
-                // ignore storage error
+                // ignore localStorage write failures
               }
             }
           } else {
-            // no persisted debrief or server error
+            // no persisted debrief or server error — handled by UI
           }
         } catch (e) {
           // ignore fetch errors
         }
       })();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debrief, session, scenario]);
 
   useEffect(() => {
@@ -117,6 +133,21 @@ export default function FullDebriefPage({ params }: { params: { session: string,
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white">Loading debrief…</div>;
+  }
+
+  // If params were invalid, show a clear message (avoids fetches for undefined.json)
+  if (invalidParams) {
+    return (
+      <main className="min-h-screen bg-black text-white p-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl font-bold">Invalid Debrief URL</h1>
+          <p className="mt-4 text-slate-400">This debrief URL is missing a session or scenario identifier. Please start the scenario from the Coins or Module page.</p>
+          <div className="mt-6">
+            <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-sky-500 rounded text-black">Back to Coins</button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   if (!debrief) {
