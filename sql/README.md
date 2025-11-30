@@ -1,18 +1,26 @@
-# SQL migrations
+# SQL migrations & schema snapshots
 
-This directory contains SQL migration snippets used by the project.
+This folder stores SQL migrations and (optionally) committed schema snapshots.
 
-Run order:
-1. `sql/step2_core_tables.sql`  -- creates tokens, module_families, modules, reflections, scenario_metrics, certificates
-2. `sql/step3.sql`             -- creates sessions, events, decisions and seeds modules (already present)
+## Schema snapshot
+To produce a current schema snapshot and commit it for review:
 
-To apply (locally / dev Postgres / Supabase):
-- Use psql, supabase CLI, or your DB management tool.
+1. Run locally:
+   DATABASE_URL="postgres://<user>:<pass>@<host>:<port>/<db>" ./scripts/dump_schema.sh
 
-Example with psql (local Postgres):
-  psql -h <host> -U <user> -d <db> -f sql/step2_core_tables.sql
-  psql -h <host> -U <user> -d <db> -f sql/step3.sql
+2. Commit the produced file: `sql/schema_snapshot.sql`.
 
-If using Supabase SQL editor, paste each file in the given order and run.
+3. Keep snapshots small and commit only when schema changes. This makes code review and debugging easier.
 
-All statements are idempotent (CREATE TABLE IF NOT EXISTS), safe to run multiple times.
+## Admin schema route
+If you prefer a live view, deploy the route `app/api/admin/schema/route.ts` and call:
+
+  curl -H "x-api-key: <ADMIN_API_KEY>" "https://<deploy>/api/admin/schema?tables=module_families,modules,tokens"
+
+This requires:
+- `SUPABASE_SERVICE_ROLE_KEY` present on the server.
+- `ADMIN_API_KEY` set as a server env var to protect the route.
+
+## Safety
+- `scripts/dump_schema.sh` writes a local file and does not change DB.
+- The admin schema route requires `ADMIN_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY`.
