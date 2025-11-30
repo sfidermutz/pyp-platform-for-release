@@ -3,6 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import DebriefPopup from './DebriefPopup';
 
+/**
+ * ScenarioEngine (reworked)
+ *
+ * - Option clicks only update local state (selection sequences & counts).
+ * - Only the NEXT button locks the DP and POSTs a single definitive record to /api/decisions/lock.
+ * - Confidence is 1-5, initial state = null; user blocked from proceeding until set.
+ *
+ * TODO: BETH: Add brand color tokens here (primary/accent) — placeholder used in classes.
+ */
+
 function makeLocalSessionId() {
   if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
     return (crypto as any).randomUUID();
@@ -11,9 +21,13 @@ function makeLocalSessionId() {
 }
 
 export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any; scenarioId: string }) {
-  const [screen, setScreen] = useState<number>(1);
-  const [selections, setSelections] = useState<any>({});
-  const [startTimes, setStartTimes] = useState<any>({});
+  const [screen, setScreen] = useState<number>(1); // which DP user is on (1..3)
+  const [selections, setSelections] = useState<Record<number, { optionId?: string; confidence?: number | null; timeMs?: number }>>({});
+  const [selectionSequences, setSelectionSequences] = useState<Record<number, string[]>>({});
+  const [changeCounts, setChangeCounts] = useState<Record<number, number>>({});
+  const [selectionFirstTimes, setSelectionFirstTimes] = useState<Record<number, number | null>>({});
+  const [startTimes, setStartTimes] = useState<Record<number, number>>({});
+  const [confidenceChangeCounts, setConfidenceChangeCounts] = useState<Record<number, number>>({});
   const [reflection, setReflection] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [debrief, setDebrief] = useState<any | null>(null);
@@ -32,25 +46,16 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           console.log('[ScenarioEngine] found existing session id', existing);
         }
       } catch (e) {
-        // If localStorage is not available for any reason, just log and continue.
         console.warn('[ScenarioEngine] localStorage unavailable', e);
       }
     }
+    // initialize start time for DP1
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
-  function optionSelected(dpIndex: number, optionId: string, confidence?: number) {
-    const now = Date.now();
-    const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
-    setSelections((prev: any) => ({
-      ...prev,
-      [dpIndex]: { optionId, confidence: confidence ?? prev?.[dpIndex]?.confidence ?? 50, timeMs: timeOnPage }
-    }));
-  }
-
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
-    if (Array.isArray(dpRaw.options)) return dpRaw;
+    if (Array.isArray(dpRaw?.options)) return dpRaw;
     if (Array.isArray(dpRaw)) return { narrative: '', stem: '', options: dpRaw };
     return { narrative: dpRaw.narrative ?? '', stem: dpRaw.stem ?? '', options: [] };
   }
@@ -95,6 +100,48 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     return { narrative: '', stem: '', options: [] };
   }
 
+  // local-only: update selection sequence & change count when user clicks an option
+  function onSelectOption(dpIndex: number, optionId: string) {
+    // don't allow selecting a locked DP (earlier screens)
+    if (dpIndex < screen) return;
+
+    const now = Date.now();
+    const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
+
+    setSelectionSequences(prev => {
+      const prevSeq = prev[dpIndex] ?? [];
+      const last = prevSeq.length ? prevSeq[prevSeq.length - 1] : null;
+      const newSeq = last === optionId ? prevSeq : [...prevSeq, optionId];
+      // set first selection timestamp if this is the first selection
+      if (!selectionFirstTimes[dpIndex] && newSeq.length === 1) {
+        setSelectionFirstTimes(s => ({ ...s, [dpIndex]: Date.now() }));
+      }
+      // update change count
+      setChangeCounts(cPrev => {
+        const prevCount = cPrev[dpIndex] ?? 0;
+        const increment = last === optionId ? 0 : 1;
+        return { ...cPrev, [dpIndex]: prevCount + increment };
+      });
+      return { ...prev, [dpIndex]: newSeq };
+    });
+
+    setSelections(prev => ({
+      ...prev,
+      [dpIndex]: { optionId, confidence: prev[dpIndex]?.confidence ?? null, timeMs: timeOnPage }
+    }));
+  }
+
+  function onConfidenceChange(dpIndex: number, val: number) {
+    // val expected 1..5
+    const now = Date.now();
+    const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
+    setSelections(prev => ({
+      ...prev,
+      [dpIndex]: { optionId: prev[dpIndex]?.optionId, confidence: val, timeMs: timeOnPage }
+    }));
+    setConfidenceChangeCounts(prev => ({ ...prev, [dpIndex]: (prev[dpIndex] ?? 0) + 1 }));
+  }
+
   async function persistReflection(sessionId: string | null, scenario_id: string, phase: string, text: string) {
     try {
       await fetch('/api/reflections', {
@@ -112,44 +159,90 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  // Lock current DP via explicit server endpoint
+  async function lockDecisionAndAdvance(currentScreen: number) {
+    setError(null);
+
+    const sel = selections[currentScreen];
+    const seq = selectionSequences[currentScreen] ?? [];
+    const count = changeCounts[currentScreen] ?? seq.length > 0 ? seq.length : 0;
+    const conf = sel?.confidence ?? null;
+
+    if (!sel?.optionId) {
+      setError('Please select an option and set confidence before continuing.');
+      return null;
+    }
+    if (conf === null || typeof conf === 'undefined') {
+      // spec-standardized prompt - exact wording
+      setError('Please rate your confidence before continuing.');
+      return null;
+    }
+
+    // timestamps (optional)
+    const ts = {
+      first_selection: selectionFirstTimes[currentScreen] ?? null,
+      final_selection: Date.now()
+    };
+
+    const payload: any = {
+      session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
+      scenario_id: scenarioId,
+      decision_point: currentScreen,
+      final_option_id: sel.optionId,
+      selection_sequence: seq,
+      change_count: count,
+      confidence: conf,
+      confidence_change_count: confidenceChangeCounts[currentScreen] ?? 0,
+      time_on_page_ms: sel.timeMs ?? 0,
+      timestamps: ts
+    };
+
+    try {
+      const res = await fetch('/api/decisions/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        console.error('lock decision failed', json);
+        setError(json?.error || 'Failed to lock decision');
+        return null;
+      }
+      return json;
+    } catch (e) {
+      console.error('lock decision exception', e);
+      setError('Server error locking decision');
+      return null;
+    }
+  }
+
   async function goNext() {
     setError(null);
 
     if (screen === 1 || screen === 2) {
-      const sel = selections[screen];
-      if (!sel || !sel.optionId) {
-        setError('Please select an option and set confidence before continuing.');
-        return;
-      }
+      // lock current DP (1 or 2)
+      setSubmitting(true);
+      const lockRes = await lockDecisionAndAdvance(screen);
+      setSubmitting(false);
+      if (!lockRes) return;
 
-      try {
-        await fetch('/api/decisions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
-            scenario_id: scenarioId,
-            decision_point: screen,
-            selected_option_id: sel.optionId,
-            confidence: sel.confidence,
-            time_on_page_ms: sel.timeMs,
-            details: { step: screen }
-          })
-        });
-      } catch (e) {
-        console.debug('decision post failed', e);
-      }
-
+      // advance
       const next = screen + 1;
       setScreen(next);
       setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
       return;
     }
 
+    // screen === 3 (final)
     if (screen === 3) {
       const sel = selections[3];
-      if (!sel || !sel.optionId) {
+      if (!sel?.optionId) {
         setError('Please select an option and set confidence before continuing.');
+        return;
+      }
+      if (sel?.confidence === null || typeof sel?.confidence === 'undefined') {
+        setError('Please rate your confidence before continuing.');
         return;
       }
       const wordCount = reflection.trim().split(/\s+/).filter(Boolean).length;
@@ -160,43 +253,33 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
       setSubmitting(true);
       try {
-        try {
-          await fetch('/api/decisions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
-              scenario_id: scenarioId,
-              decision_point: 3,
-              selected_option_id: sel.optionId,
-              confidence: sel.confidence,
-              time_on_page_ms: sel.timeMs,
-              details: { step: 3 }
-            })
-          });
-        } catch (e) {
-          console.debug('decision post failed', e);
+        // Lock final DP
+        const lockRes = await lockDecisionAndAdvance(3);
+        if (!lockRes) {
+          setSubmitting(false);
+          return;
         }
 
         const session_hint = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
 
+        // Persist empty pre reflection if desired (backwards compat)
         try {
           await persistReflection(session_hint, scenarioId, 'pre', '');
-        } catch (e) {
-          /* ignore */
-        }
+        } catch (e) { /* ignore */ }
 
+        // Compute debrief
         const res = await fetch('/api/compute-debrief', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            session_hint: session_hint,
+            session_hint,
             scenario_id: scenarioId,
             selections,
             reflection,
             scenario
           })
         });
+
         const json = await res.json();
         if (!res.ok) {
           setError(json?.error || 'Failed to compute debrief');
@@ -251,47 +334,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
-  function onSelectOption(dpIndex: number, optionId: string) {
-    const now = Date.now();
-    const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
-    const confidence = selections[dpIndex]?.confidence ?? 50;
-
-    setSelections((prev: any) => ({
-      ...prev,
-      [dpIndex]: { optionId, confidence, timeMs: timeOnPage }
-    }));
-
-    (async () => {
-      try {
-        await fetch('/api/decisions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_hint: typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null,
-            scenario_id: scenarioId,
-            decision_point: dpIndex,
-            selected_option_id: optionId,
-            confidence,
-            time_on_page_ms: timeOnPage,
-            details: { step: dpIndex }
-          })
-        });
-      } catch (e) {
-        console.debug('decision post failed', e);
-      }
-
-      if (dpIndex < 3) {
-        const next = dpIndex + 1;
-        setScreen(next);
-        setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
-      }
-    })();
-  }
-
-  function onConfidenceChange(dpIndex: number, val: number) {
-    optionSelected(dpIndex, selections[dpIndex]?.optionId ?? '', val);
-  }
-
+  // Render
   return (
     <div className="space-y-6">
       <div className="bg-[#071017] border border-[#202933] rounded-xl p-6">
@@ -328,6 +371,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                           }}
                           className={`text-left w-full px-3 py-3 rounded-md border ${chosen ? 'border-sky-500 bg-sky-700/10' : 'border-slate-700'} hover:bg-slate-800 transition`}
                           aria-pressed={chosen}
+                          aria-label={`DP${i} option ${opt.id}`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="text-sm">{opt.text}</div>
@@ -339,49 +383,64 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
                   <div className="mt-4">
                     <label className="text-[11px] text-slate-400 uppercase tracking-wider">Confidence</label>
-                    <div className="mt-2 flex items-center gap-4">
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        value={selections[i]?.confidence ?? 50}
-                        onChange={(e) => onConfidenceChange(i, Number(e.target.value))}
-                        disabled={!isCurrent}
-                        className="flex-1"
-                      />
-                      <div className="w-12 text-right text-xs">{selections[i]?.confidence ?? 50}%</div>
+
+                    <div className="mt-2 flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((v) => {
+                        const pressed = selected?.confidence === v;
+                        return (
+                          <button
+                            key={v}
+                            onClick={() => { if (!isLocked && isCurrent) onConfidenceChange(i, v); }}
+                            className={`px-3 py-1 rounded-md border ${pressed ? 'bg-sky-500 text-black' : 'bg-[#0a0f12] text-slate-200'} focus:outline-none`}
+                            aria-pressed={pressed}
+                            aria-label={`Confidence ${v} for DP ${i}`}
+                          >
+                            {v}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-2 text-[11px] text-slate-400">
+                      <div>Set confidence before proceeding (1 = low, 5 = high).</div>
                     </div>
                   </div>
+
+                  {!isCurrent && !isLocked && <div className="mt-2 text-xs text-slate-500">Not active</div>}
                 </div>
               );
             })}
           </div>
-        </div>
 
-        {screen === 3 && (
-          <div className="mt-6">
-            <label className="block text-sm font-semibold">Reflection</label>
-            <p className="text-sm text-slate-300 mt-2">{scenario.reflections?.pre?.prompt ?? scenario.reflection1_prompt}</p>
-            <textarea
-              value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-              className="mt-3 w-full min-h-[160px] rounded-md bg-slate-900 border border-slate-700 p-3 text-sm"
-              placeholder="Write at least 50 words reflecting on your decisions and confidence."
-            />
-            <div className="text-xs text-slate-400 mt-2">Words: {reflection.trim().split(/\s+/).filter(Boolean).length} (min 50)</div>
+          {error && <div className="mt-4 text-rose-400 text-sm">{error}</div>}
+
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              onClick={goNext}
+              disabled={submitting}
+              className={`px-5 py-2 rounded-md font-semibold ${submitting ? 'bg-slate-600 cursor-wait' : 'bg-sky-500 text-black'}`}
+            >
+              {submitting ? 'Processing…' : (screen < 3 ? 'NEXT' : 'Submit')}
+            </button>
+
+            <button
+              onClick={() => {
+                // "Back to Coins" - preserve original behaviour
+                if (typeof window !== 'undefined') window.location.href = '/coins';
+              }}
+              className="px-4 py-2 rounded-md border border-slate-700 text-sm text-slate-200"
+            >
+              Back to Coins
+            </button>
           </div>
-        )}
-
-        {error && <div className="mt-4 text-sm text-rose-400">{error}</div>}
-
-        <div className="mt-6 flex justify-end">
-          <button onClick={goNext} className="px-5 py-2 rounded-md bg-sky-500 text-black font-semibold" disabled={submitting}>
-            {screen < 3 ? 'NEXT' : submitting ? 'Submitting…' : 'Submit Reflection'}
-          </button>
         </div>
       </div>
 
-      {debrief && <DebriefPopup debrief={debrief} onClose={() => setDebrief(null)} />}
+      {debrief && (
+        <div>
+          <DebriefPopup debrief={debrief} />
+        </div>
+      )}
     </div>
   );
 }
