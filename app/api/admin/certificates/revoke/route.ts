@@ -10,7 +10,13 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 /**
  * POST /api/admin/certificates/revoke
- * Headers: x-api-key, Body: { id: '<certificate-id>' }
+ * Headers: x-api-key required (ADMIN_API_KEY)
+ * Body: { id: '<certificate-id>' }
+ *
+ * This implementation:
+ *  - Fetches the current certificate.meta
+ *  - Merges { revoked: true } into meta client-side (safe)
+ *  - Updates valid_until to now and writes meta back
  */
 export async function POST(req: NextRequest) {
   try {
@@ -21,11 +27,42 @@ export async function POST(req: NextRequest) {
     const { id } = body ?? {};
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
+    // 1) Read current meta
+    const { data: existing, error: fetchErr } = await supabaseAdmin
+      .from('certificates')
+      .select('meta')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchErr) {
+      console.error('certificate fetch meta error', fetchErr);
+      return NextResponse.json({ error: 'db error' }, { status: 500 });
+    }
+
+    let metaObj: any = existing?.meta ?? null;
+
+    // Normalize meta to an object
+    if (metaObj === null || typeof metaObj !== 'object') {
+      // If meta is a JSON string, attempt parse
+      if (typeof metaObj === 'string') {
+        try {
+          metaObj = JSON.parse(metaObj);
+        } catch (e) {
+          metaObj = {};
+        }
+      } else {
+        metaObj = {};
+      }
+    }
+
+    // Merge revoked flag
+    metaObj = { ...metaObj, revoked: true, revoked_at: new Date().toISOString() };
+
+    // 2) Update the certificate: set valid_until to now and merged meta
     const now = new Date().toISOString();
-    // set valid_until to now and annotate meta.revoked=true
     const { data, error } = await supabaseAdmin
       .from('certificates')
-      .update({ valid_until: now, meta: supabaseAdmin.raw('COALESCE(meta, \'{}\'::jsonb) || ?::jsonb', [JSON.stringify({ revoked: true })]) })
+      .update({ valid_until: now, meta: metaObj })
       .eq('id', id)
       .select('*')
       .single();
@@ -34,6 +71,7 @@ export async function POST(req: NextRequest) {
       console.error('certificate revoke error', error);
       return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
+
     return NextResponse.json({ revoked: data });
   } catch (e: any) {
     console.error('certificate revoke catch', e);
