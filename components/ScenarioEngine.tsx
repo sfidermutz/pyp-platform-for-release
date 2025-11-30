@@ -4,16 +4,12 @@ import React, { useState, useEffect } from 'react';
 import DebriefPopup from './DebriefPopup';
 
 /**
- * ScenarioEngine (updated)
+ * ScenarioEngine (with focus management)
  *
- * Changes:
- * - NEXT/Submit buttons are now rendered *inside each DP box* (where the decision lives),
- *   eliminating the need to scroll to the bottom of the page to continue.
- * - Each DP shows its own NEXT (or Submit for DP3) when it is the current DP.
- * - NEXT is disabled until a selection and a confidence (1-5) have been set.
- * - The exact blocking message is used: "Please rate your confidence before continuing."
- *
- * Note: The authoritative lock POST still uses /api/decisions/lock as implemented earlier.
+ * - NEXT/Submit remain inside each DP box (no page-end controls).
+ * - When screen (current DP) changes we focus the first interactive element inside the DP:
+ *   first option button, then confidence buttons, then NEXT.
+ * - Option buttons have class "option-btn" and are tabbable.
  */
 
 function makeLocalSessionId() {
@@ -24,7 +20,7 @@ function makeLocalSessionId() {
 }
 
 export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any; scenarioId: string }) {
-  const [screen, setScreen] = useState<number>(1); // which DP user is on (1..3)
+  const [screen, setScreen] = useState<number>(1);
   const [selections, setSelections] = useState<Record<number, { optionId?: string; confidence?: number | null; timeMs?: number }>>({});
   const [selectionSequences, setSelectionSequences] = useState<Record<number, string[]>>({});
   const [changeCounts, setChangeCounts] = useState<Record<number, number>>({});
@@ -53,6 +49,35 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
+
+  // Focus management: when screen changes, focus first interactive element within that DP
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // Delay slightly to allow DOM render
+    const t = setTimeout(() => {
+      try {
+        const container = document.querySelector(`[data-dp="${screen}"]`);
+        if (!container) return;
+        const firstOption = container.querySelector<HTMLButtonElement>('.option-btn');
+        if (firstOption) {
+          firstOption.focus();
+          return;
+        }
+        const firstConfidence = container.querySelector<HTMLButtonElement>('[aria-label^="Confidence"]');
+        if (firstConfidence) {
+          firstConfidence.focus();
+          return;
+        }
+        const nextBtn = container.querySelector<HTMLButtonElement>(`[aria-label^="Next"], [aria-label="Submit final reflection and view debrief"]`);
+        if (nextBtn) {
+          nextBtn.focus();
+        }
+      } catch (e) {
+        // no-op
+      }
+    }, 80);
+    return () => clearTimeout(t);
+  }, [screen]);
 
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
@@ -101,7 +126,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     return { narrative: '', stem: '', options: [] };
   }
 
-  // local-only: update selection sequence & change count when user clicks an option
   function onSelectOption(dpIndex: number, optionId: string) {
     if (dpIndex < screen) return;
 
@@ -221,20 +245,15 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       const next = dpIndex + 1;
       setScreen(next);
       setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
-    } else {
-      // DP3: after lock, proceed to reflection and debrief submission works from the Submit button for DP3
     }
   }
 
   async function handleSubmitFinal() {
     setError(null);
-
-    // ensure DP3 is locked first
     setSubmitting(true);
     const lockRes = await lockDecisionAndAdvance(3);
     if (!lockRes) { setSubmitting(false); return; }
 
-    // validate reflection
     const wordCount = reflection.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 50) {
       setError('Reflection must be at least 50 words.');
@@ -323,6 +342,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
               return (
                 <div
                   key={i}
+                  data-dp={i}
                   className={`rounded-md p-4 border ${isCurrent ? 'border-sky-500 bg-[#071820]' : 'border-slate-700 bg-[#071016]'}`}
                 >
                   <div className="flex items-center justify-between">
@@ -342,9 +362,10 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                           onClick={() => {
                             if (!isLocked && isCurrent) onSelectOption(i, opt.id);
                           }}
-                          className={`text-left w-full px-3 py-3 rounded-md border ${chosen ? 'border-sky-500 bg-sky-700/10' : 'border-slate-700'} hover:bg-slate-800 transition`}
+                          className={`option-btn text-left w-full px-3 py-3 rounded-md border ${chosen ? 'border-sky-500 bg-sky-700/10' : 'border-slate-700'} hover:bg-slate-800 transition`}
                           aria-pressed={chosen}
                           aria-label={`DP${i} option ${opt.id}`}
+                          tabIndex={0}
                         >
                           <div className="flex items-center justify-between">
                             <div className="text-sm">{opt.text}</div>
@@ -367,6 +388,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                             className={`px-3 py-1 rounded-md border ${pressed ? 'bg-sky-500 text-black' : 'bg-[#0a0f12] text-slate-200'} focus:outline-none`}
                             aria-pressed={pressed}
                             aria-label={`Confidence ${v} for DP ${i}`}
+                            tabIndex={0}
                           >
                             {v}
                           </button>
@@ -379,7 +401,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     </div>
                   </div>
 
-                  {/* When this DP is current, show its NEXT/Submit button inside the DP box */}
                   {isCurrent && !isLocked && (
                     <div className="mt-4 flex items-center gap-3">
                       {i < 3 ? (
@@ -416,17 +437,14 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     </div>
                   )}
 
-                  {/* If this DP is not current and not locked (rare), show small note */}
                   {!isCurrent && !isLocked && <div className="mt-2 text-xs text-slate-500">Not active</div>}
                 </div>
               );
             })}
           </div>
 
-          {/* Show global error near the top of the scenario area */}
           {error && <div className="mt-4 text-rose-400 text-sm">{error}</div>}
 
-          {/* For DP3, show a reflection box underneath the DP3 block (the DP3 block contains the Submit button itself) */}
           {screen === 3 && (
             <div className="mt-6 bg-[#071017] border border-[#202933] rounded-md p-4">
               <h3 className="text-sm font-semibold">Reflection</h3>
@@ -444,7 +462,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
               </div>
             </div>
           )}
-
         </div>
       </div>
 
