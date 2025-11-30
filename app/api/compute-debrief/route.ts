@@ -1,6 +1,21 @@
 // app/api/compute-debrief/route.ts
 import { NextResponse, NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'nodejs';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
+
+/**
+ * Compute debrief metrics and persist a debrief record if possible.
+ *
+ * Body expected:
+ * {
+ *   session_hint, scenario_id, selections, reflection, scenario
+ * }
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -8,61 +23,32 @@ export async function POST(req: NextRequest) {
 
     const sc = scenario;
 
-    // Helper: normalize a dp object (which may be many forms) into a single options[] array
     function getOptionsFromDp(dpRaw: any): any[] {
       if (!dpRaw) return [];
-
-      // If dpRaw has .options as an array, return it
-      if (Array.isArray(dpRaw.options)) {
-        return dpRaw.options;
-      }
-
-      // If dpRaw itself is an array of options, return it
-      if (Array.isArray(dpRaw)) {
-        return dpRaw;
-      }
-
-      // If dpRaw is an object that is a branching map (keys -> array of options),
-      // gather all arrays that are arrays into a combined options array.
+      if (Array.isArray(dpRaw?.options)) return dpRaw.options;
+      if (Array.isArray(dpRaw)) return dpRaw;
       if (typeof dpRaw === 'object') {
         const combined: any[] = [];
         for (const k of Object.keys(dpRaw)) {
-          // Skip common metadata keys if present
           if (k === 'narrative' || k === 'stem' || k === 'options' || k === 'default') continue;
           const v = dpRaw[k];
-          if (Array.isArray(v)) {
-            combined.push(...v);
-          }
+          if (Array.isArray(v)) combined.push(...v);
         }
-        // If there is a default branch and it's an array, include it at the end
-        if (Array.isArray((dpRaw as any).default)) {
-          combined.push(...(dpRaw as any).default);
-        }
-        // If no arrays found, but dpRaw has some keys which are options objects (rare), attempt to coerce
-        // Otherwise combined could be empty — return as-is
+        if (Array.isArray((dpRaw as any).default)) combined.push(...(dpRaw as any).default);
         return combined;
       }
-
       return [];
     }
 
-    // Find option by id within DP index 1|2|3, supporting both flat and branching dp structures
     function optionFor(dpIndex: number, optionId: string) {
       if (!sc || !optionId) return null;
-
       const dpRaw = dpIndex === 1 ? sc.dp1 : dpIndex === 2 ? sc.dp2 : sc.dp3;
-      // If dpRaw is absent return null
       if (!dpRaw) return null;
-
-      // If dpRaw is a normal structure with .options or an array, search directly
       if (Array.isArray(dpRaw) || Array.isArray(dpRaw?.options)) {
         const arr = Array.isArray(dpRaw) ? dpRaw : dpRaw.options;
         return arr.find((o: any) => o.id === optionId) ?? null;
       }
-
-      // If dpRaw is an object (branching map or mixed), attempt direct matches in its branches
       if (typeof dpRaw === 'object') {
-        // Directly search known keys that may contain arrays (branching or keyed by previous choices)
         for (const key of Object.keys(dpRaw)) {
           const candidate = (dpRaw as any)[key];
           if (Array.isArray(candidate)) {
@@ -70,21 +56,16 @@ export async function POST(req: NextRequest) {
             if (found) return found;
           }
         }
-
-        // As fallback, try combining arrays into one list and search
         const combined = getOptionsFromDp(dpRaw);
         if (combined && combined.length) {
           const found = combined.find((o: any) => o.id === optionId);
           if (found) return found;
         }
       }
-
-      // If all else fails, return null
       return null;
     }
 
-    // compute metrics (original logic) using robust optionFor
-    const dpIndices = [1,2,3];
+    const dpIndices = [1, 2, 3];
     let decisionQualitySum = 0;
     let confidenceAlignmentSum = 0;
     let count = 0;
@@ -144,9 +125,41 @@ export async function POST(req: NextRequest) {
       reflection_quality: Math.round(reflectionQuality)
     };
 
-    return NextResponse.json({ ...metrics, short_feedback, metrics });
+    // Attempt to persist a debrief record if DB configured
+    let debriefSaved = false;
+    let debriefId: string | null = null;
+    try {
+      if (supabaseAdmin && session_hint) {
+        const insertPayload = {
+          session_id: session_hint,
+          scenario_id,
+          selections: selections ?? {},
+          reflection: reflection ?? '',
+          metrics,
+          short_feedback,
+          meta: { computed_at: new Date().toISOString() }
+        };
+        const { data: inserted, error: insertErr } = await supabaseAdmin
+          .from('debriefs')
+          .insert([insertPayload])
+          .select('*')
+          .single();
+
+        if (insertErr) {
+          console.error('debrief insert err', insertErr);
+        } else {
+          debriefSaved = true;
+          debriefId = inserted?.id ?? null;
+        }
+      }
+    } catch (dbErr) {
+      console.error('debrief persist exception', dbErr);
+    }
+
+    // Return top-level metrics and short_feedback (compat), plus persistence info
+    return NextResponse.json({ ...metrics, short_feedback, debrief_saved: debriefSaved, debrief_id: debriefId });
   } catch (e) {
-    console.error(e);
+    console.error('compute-debrief error', e);
     return NextResponse.json({ error: 'server error' }, { status: 500 });
   }
 }
