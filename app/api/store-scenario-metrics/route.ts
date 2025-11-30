@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'scenario_id required' }, { status: 400 });
     }
 
+    // Build row without meta first, then conditionally add meta if present
     const row: any = {
       session_id,
       scenario_id,
@@ -47,8 +48,14 @@ export async function POST(req: NextRequest) {
       cri: toIntish(metricsRaw.CRI ?? metricsRaw.cri) ?? toIntish(metricsRaw.Cri) ?? null,
       confidence_alignment: toIntish(metricsRaw.confidence_alignment ?? metricsRaw.confidenceAlignment) ?? null,
       reflection_quality: toIntish(metricsRaw.reflection_quality ?? metricsRaw.reflectionQuality) ?? null,
-      meta: meta ?? (short_feedback ? { short_feedback } : null)
     };
+
+    // Add meta only if we actually have something to store
+    if (meta !== null) {
+      row.meta = meta;
+    } else if (short_feedback) {
+      row.meta = { short_feedback };
+    }
 
     // computed_at column: allow client to provide (e.g., compute time) or use now()
     const computed_at = body.computed_at ?? new Date().toISOString();
