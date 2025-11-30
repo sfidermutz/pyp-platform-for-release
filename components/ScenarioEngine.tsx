@@ -1,13 +1,19 @@
 // components/ScenarioEngine.tsx
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DebriefPopup from './DebriefPopup';
 
 /**
- * ScenarioEngine (ARIA + keyboard access)
- * - Options are rendered inside a role="radiogroup"
- * - Each option button uses role="radio" and supports arrow navigation and Enter/Space to select
- * - Keeps NEXT/Submit-in-DP behavior and confidence semantics
+ * ScenarioEngine
+ *
+ * - Options are rendered as an accessible radiogroup.
+ * - Arrow keys (Left/Up/Right/Down) move selection and focus.
+ * - Enter/Space selects the focused option.
+ * - NEXT / Lock & Continue are inside each DP card (no page-end control).
+ * - DP3 has "Lock & Continue to Reflection" which locks the DP and scrolls/focuses the reflection area.
+ * - Submit & Debrief lives inside the Reflection block.
+ * - Creates a local session id (pyp_session_id) if missing.
+ * - Sanitizes metrics before sending to /api/store-scenario-metrics.
  */
 
 function makeLocalSessionId() {
@@ -29,25 +35,31 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const [error, setError] = useState<string | null>(null);
   const [debrief, setDebrief] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [dp3Locked, setDp3Locked] = useState(false);
 
-  // Refs for option lists to enable arrow navigation
+  // refs for option groups to enable arrow navigation + focusing
   const optionGroupRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  // ref for reflection textarea
+  const reflectionRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    // ensure session id exists
     if (typeof window !== 'undefined') {
       try {
         const existing = localStorage.getItem('pyp_session_id');
         if (!existing) {
           const newSid = makeLocalSessionId();
           localStorage.setItem('pyp_session_id', newSid);
+          // console.debug('[ScenarioEngine] created new session id', newSid);
         }
       } catch (e) {
-        console.warn('[ScenarioEngine] localStorage unavailable', e);
+        // ignore localStorage errors
       }
     }
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
+  // normalize DP shapes
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
     if (Array.isArray(dpRaw?.options)) return dpRaw;
@@ -56,42 +68,31 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   }
 
   function dpFor(i: number) {
-    if (i === 1) return normalizeDP(scenario.dp1);
-
+    if (i === 1) return normalizeDP(scenario?.dp1);
     if (i === 2) {
-      const raw = scenario.dp2;
+      const raw = scenario?.dp2;
       if (!raw) return { narrative: '', stem: '', options: [] };
       if (Array.isArray(raw) || Array.isArray(raw?.options)) return normalizeDP(raw);
 
       const prev1 = selections[1]?.optionId;
-      if (prev1 && Array.isArray(raw[prev1])) {
-        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev1] };
-      }
-      if (raw.default && Array.isArray(raw.default)) {
-        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
-      }
+      if (prev1 && Array.isArray(raw[prev1])) return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev1] };
+      if (raw.default && Array.isArray(raw.default)) return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
 
       const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v)).flat();
       return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: combined };
     }
-
     if (i === 3) {
-      const raw = scenario.dp3;
+      const raw = scenario?.dp3;
       if (!raw) return { narrative: '', stem: '', options: [] };
       if (Array.isArray(raw) || Array.isArray(raw?.options)) return normalizeDP(raw);
 
       const prev2 = selections[2]?.optionId;
-      if (prev2 && Array.isArray(raw[prev2])) {
-        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev2] };
-      }
-      if (raw.default && Array.isArray(raw.default)) {
-        return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
-      }
+      if (prev2 && Array.isArray(raw[prev2])) return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw[prev2] };
+      if (raw.default && Array.isArray(raw.default)) return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: raw.default };
 
       const combined: any[] = Object.values(raw).flat().filter((v: any) => Array.isArray(v)).flat();
       return { narrative: raw.narrative ?? '', stem: raw.stem ?? '', options: combined };
     }
-
     return { narrative: '', stem: '', options: [] };
   }
 
@@ -131,9 +132,22 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     setConfidenceChangeCounts(prev => ({ ...prev, [dpIndex]: (prev[dpIndex] ?? 0) + 1 }));
   }
 
-  // keyboard handler for option radio group
+  // keyboard nav for options
   function handleOptionKeyDown(e: React.KeyboardEvent, dpIndex: number, optionIndex: number, optionsLength: number) {
     const key = e.key;
+    if (key === 'Enter' || key === ' ') {
+      e.preventDefault();
+      // select focused option
+      const group = optionGroupRefs.current[dpIndex];
+      if (!group) return;
+      const btns = Array.from(group.querySelectorAll<HTMLButtonElement>('.option-btn'));
+      const target = btns[optionIndex];
+      if (target) {
+        const id = target.getAttribute('data-option-id') || undefined;
+        if (id) onSelectOption(dpIndex, id);
+      }
+      return;
+    }
     if (key !== 'ArrowLeft' && key !== 'ArrowUp' && key !== 'ArrowRight' && key !== 'ArrowDown') return;
     e.preventDefault();
     let nextIndex = optionIndex;
@@ -142,14 +156,12 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     } else {
       nextIndex = (optionIndex + 1) % optionsLength;
     }
-    // focus the next option button
     const group = optionGroupRefs.current[dpIndex];
     if (!group) return;
     const btns = Array.from(group.querySelectorAll<HTMLButtonElement>('.option-btn'));
     const target = btns[nextIndex];
     if (target) {
       target.focus();
-      // select it
       const id = target.getAttribute('data-option-id') || undefined;
       if (id) onSelectOption(dpIndex, id);
     }
@@ -168,13 +180,13 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         })
       });
     } catch (e) {
+      // non-fatal
       console.debug('persistReflection failed', e);
     }
   }
 
   async function lockDecisionAndAdvance(currentScreen: number) {
     setError(null);
-
     const sel = selections[currentScreen];
     const seq = selectionSequences[currentScreen] ?? [];
     const count = changeCounts[currentScreen] ?? (seq.length > 0 ? seq.length : 0);
@@ -227,6 +239,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  // next for DP1/DP2
   async function handleNextForDP(dpIndex: number) {
     setError(null);
     setSubmitting(true);
@@ -240,27 +253,94 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
-  async function handleSubmitFinal() {
+  // DP3 lock + scroll/focus reflection
+  async function lockDP3AndGoToReflection() {
     setError(null);
     setSubmitting(true);
     const lockRes = await lockDecisionAndAdvance(3);
-    if (!lockRes) { setSubmitting(false); return; }
+    setSubmitting(false);
+    if (!lockRes) return;
+    setDp3Locked(true);
+    // scroll and focus reflection textarea
+    try {
+      if (reflectionRef.current) {
+        reflectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        reflectionRef.current.focus();
+      } else {
+        const el = document.getElementById('reflection-textarea');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (el as HTMLTextAreaElement).focus();
+        } else {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+      }
+      // make sure screen is on DP3 so reflection is shown
+      setScreen(3);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // helper: coerce numeric values safely
+  function toIntish(v: any): number {
+    const n = Number(v);
+    if (Number.isFinite(n)) return Math.round(n);
+    return 0;
+  }
+
+  async function handleSubmitFinal() {
+    setError(null);
+
+    // ensure DP3 locked
+    if (!dp3Locked) {
+      setSubmitting(true);
+      const lr = await lockDecisionAndAdvance(3);
+      setSubmitting(false);
+      if (!lr) return;
+      setDp3Locked(true);
+    }
 
     const wordCount = reflection.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 50) {
       setError('Reflection must be at least 50 words.');
-      setSubmitting(false);
+      // focus reflection
+      try {
+        if (reflectionRef.current) {
+          reflectionRef.current.focus();
+          reflectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (e) {}
       return;
     }
 
+    setSubmitting(true);
     try {
-      const session_hint = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+      // ensure session id exists
+      let session_hint: string | null = null;
+      if (typeof window !== 'undefined') {
+        try {
+          session_hint = localStorage.getItem('pyp_session_id');
+        } catch (e) {
+          session_hint = null;
+        }
+        if (!session_hint) {
+          const newSid = makeLocalSessionId();
+          try {
+            localStorage.setItem('pyp_session_id', newSid);
+            session_hint = newSid;
+          } catch (e) {
+            session_hint = newSid;
+          }
+        }
+      }
 
       try {
         await persistReflection(session_hint, scenarioId, 'pre', '');
-      } catch (e) { /* ignore */ }
+      } catch (e) {}
 
-      const res = await fetch('/api/compute-debrief', {
+      // compute debrief
+      const computeRes = await fetch('/api/compute-debrief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -271,41 +351,69 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           scenario
         })
       });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json?.error || 'Failed to compute debrief');
+
+      const computeJson = await computeRes.json();
+      if (!computeRes.ok) {
+        setError(computeJson?.error || 'Failed to compute debrief');
         setDebrief(null);
-      } else {
-        setDebrief(json);
-        try {
-          await persistReflection(session_hint, scenarioId, 'post', reflection);
-        } catch (e) {
-          console.debug('persist post reflection failed', e);
+        setSubmitting(false);
+        return;
+      }
+
+      setDebrief(computeJson);
+
+      try {
+        await persistReflection(session_hint, scenarioId, 'post', reflection);
+      } catch (e) {}
+
+      // sanitize metrics and send to store-scenario-metrics
+      try {
+        const metricsCandidate: any = computeJson ?? {};
+        const numericKeys = [
+          'mission_score','decision_quality','trust_calibration','information_advantage','bias_awareness',
+          'cognitive_adaptability','escalation_tendency','CRI','confidence_alignment','reflection_quality'
+        ];
+        const metrics: Record<string, number> = {};
+        for (const k of numericKeys) {
+          metrics[k] = toIntish(metricsCandidate[k] ?? metricsCandidate[k.toLowerCase()] ?? 0);
         }
-        try {
-          await fetch('/api/store-scenario-metrics', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: session_hint, scenario_id: scenarioId, metrics: json })
-          });
-        } catch (e) {
-          console.debug('store scenario metrics failed', e);
-        }
-        try {
-          if (typeof window !== 'undefined') {
-            let sid = localStorage.getItem('pyp_session_id');
-            if (!sid) {
-              const newSid = makeLocalSessionId();
-              localStorage.setItem('pyp_session_id', newSid);
-              sid = newSid;
-            }
-            if (sid) {
-              localStorage.setItem(`pyp_debrief_${sid}_${scenarioId}`, JSON.stringify(json));
-            }
+
+        const payloadForStore = {
+          session_id: session_hint,
+          scenario_id: scenarioId,
+          metrics,
+          short_feedback: metricsCandidate.short_feedback ?? null
+        };
+
+        // fire-and-forget but log error
+        const storeRes = await fetch('/api/store-scenario-metrics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadForStore)
+        });
+
+        if (!storeRes.ok) {
+          try {
+            const body = await storeRes.json();
+            console.debug('store-scenario-metrics returned', body);
+          } catch (e) {
+            console.debug('store-scenario-metrics unknown error');
           }
-        } catch (e) {
-          console.debug('saving debrief to localStorage failed', e);
         }
+      } catch (e) {
+        console.debug('store scenario metrics exception', e);
+      }
+
+      // save debrief locally for the debrief page
+      try {
+        if (typeof window !== 'undefined') {
+          const sid = session_hint ?? localStorage.getItem('pyp_session_id');
+          if (sid) {
+            localStorage.setItem(`pyp_debrief_${sid}_${scenarioId}`, JSON.stringify(computeJson));
+          }
+        }
+      } catch (e) {
+        console.debug('saving debrief to localStorage failed', e);
       }
     } catch (e) {
       console.error(e);
@@ -316,7 +424,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
-  // focus management: when screen changes, focus first Option
+  // focus management when screen changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const t = setTimeout(() => {
@@ -327,18 +435,20 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         if (firstOpt) { firstOpt.focus(); return; }
         const firstConf = container.querySelector<HTMLButtonElement>('[aria-label^="Confidence"]');
         if (firstConf) { firstConf.focus(); return; }
-        const nextBtn = container.querySelector<HTMLButtonElement>(`[aria-label^="Next"], [aria-label="Submit final reflection and view debrief"]`);
+        const nextBtn = container.querySelector<HTMLButtonElement>(`[aria-label^="Next"], [aria-label="Lock & Continue to Reflection"], [aria-label="Submit final reflection and view debrief"]`);
         if (nextBtn) nextBtn.focus();
       } catch (e) {}
     }, 80);
     return () => clearTimeout(t);
   }, [screen]);
 
+  // Render
   return (
     <div className="space-y-6">
       <div className="bg-[#071017] border border-[#202933] rounded-xl p-6">
         <p className="text-xs text-slate-400 tracking-[0.24em] uppercase">Scenario</p>
-        <h2 className="text-2xl font-semibold mt-2">{scenario.title}</h2>
+        <h2 className="text-2xl font-semibold mt-2">{scenario?.title ?? 'Scenario'}</h2>
+
         <div className="mt-6">
           <div className="space-y-4">
             {[1,2,3].map((i) => {
@@ -346,6 +456,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
               const isCurrent = i === screen;
               const isLocked = i < screen;
               const selected = selections[i];
+
               return (
                 <div key={i} data-dp={i} className={`rounded-md p-4 border ${isCurrent ? 'border-sky-500 bg-[#071820]' : 'border-slate-700 bg-[#071016]'}`}>
                   <div className="flex items-center justify-between">
@@ -356,12 +467,11 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                   <p className="mt-3 text-sm text-slate-300">{dp.narrative}</p>
                   <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem}</p>
 
-                  {/* Options: render as a radiogroup for accessibility */}
                   <div
                     className="mt-4 grid gap-3"
                     role="radiogroup"
                     aria-labelledby={`dp${i}-label`}
-                    ref={(el) => { optionGroupRefs.current[i] = el; }}
+                    ref={(el) => { optionGroupRefs.current[i] = el ?? null; }}
                   >
                     {dp.options.map((opt: any, idx: number) => {
                       const chosen = selected?.optionId === opt.id;
@@ -424,13 +534,13 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                       ) : (
                         <>
                           <button
-                            onClick={handleSubmitFinal}
-                            disabled={submitting || !selections[3]?.optionId || (selections[3]?.confidence === null || typeof selections[3]?.confidence === 'undefined') || (reflection.trim().split(/\s+/).filter(Boolean).length < 50)}
-                            aria-disabled={submitting || !selections[3]?.optionId || (selections[3]?.confidence === null || typeof selections[3]?.confidence === 'undefined') || (reflection.trim().split(/\s+/).filter(Boolean).length < 50)}
-                            className={`px-4 py-2 rounded-md font-semibold ${submitting ? 'bg-slate-600 cursor-wait' : 'bg-green-500 text-black'}`}
-                            aria-label="Submit final reflection and view debrief"
+                            onClick={lockDP3AndGoToReflection}
+                            disabled={submitting || !selections[3]?.optionId || (selections[3]?.confidence === null || typeof selections[3]?.confidence === 'undefined')}
+                            aria-disabled={submitting || !selections[3]?.optionId || (selections[3]?.confidence === null || typeof selections[3]?.confidence === 'undefined')}
+                            className={`px-4 py-2 rounded-md font-semibold ${submitting ? 'bg-slate-600 cursor-wait' : 'bg-sky-500 text-black'}`}
+                            aria-label="Lock & Continue to Reflection"
                           >
-                            {submitting ? 'Submitting…' : 'Submit & Debrief'}
+                            {submitting ? 'Processing…' : 'Lock & Continue to Reflection'}
                           </button>
                         </>
                       )}
@@ -453,11 +563,14 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
           {error && <div className="mt-4 text-rose-400 text-sm">{error}</div>}
 
+          {/* Reflection block */}
           {screen === 3 && (
             <div className="mt-6 bg-[#071017] border border-[#202933] rounded-md p-4">
               <h3 className="text-sm font-semibold">Reflection</h3>
               <p className="mt-2 text-xs text-slate-400">Write a reflection of at least 50 words explaining your reasoning and any biases you noticed.</p>
               <textarea
+                id="reflection-textarea"
+                ref={reflectionRef}
                 value={reflection}
                 onChange={(e) => setReflection(e.target.value)}
                 rows={6}
@@ -468,17 +581,31 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
               <div className="mt-2 text-xs text-slate-400">
                 Word count: {reflection.trim().split(/\s+/).filter(Boolean).length} (minimum 50)
               </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={handleSubmitFinal}
+                  disabled={submitting || (reflection.trim().split(/\s+/).filter(Boolean).length < 50)}
+                  className={`px-4 py-2 rounded-md font-semibold ${submitting ? 'bg-slate-600 cursor-wait' : 'bg-green-500 text-black'}`}
+                  aria-label="Submit final reflection and view debrief"
+                >
+                  {submitting ? 'Submitting…' : 'Submit & Debrief'}
+                </button>
+
+                <button
+                  onClick={() => { if (typeof window !== 'undefined') window.location.href = '/coins'; }}
+                  className="px-3 py-2 rounded-md border border-slate-700 text-sm text-slate-200"
+                  aria-label="Back to Coins"
+                >
+                  Back to Coins
+                </button>
+              </div>
             </div>
           )}
-
         </div>
       </div>
 
-      {debrief && (
-        <div>
-          <DebriefPopup debrief={debrief} />
-        </div>
-      )}
+      {debrief && <DebriefPopup debrief={debrief} />}
     </div>
   );
 }
