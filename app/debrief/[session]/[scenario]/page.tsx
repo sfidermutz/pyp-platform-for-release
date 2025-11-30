@@ -31,13 +31,19 @@ export default function FullDebriefPage({ params }: { params: { session: string,
       const key = `pyp_debrief_${session}_${scenario}`;
       const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
       if (raw) {
-        setDebrief(JSON.parse(raw));
+        try {
+          setDebrief(JSON.parse(raw));
+        } catch (e) {
+          // ignore parse error
+          setDebrief(null);
+        }
       } else {
         setDebrief(null);
       }
 
       (async () => {
         try {
+          // Load scenario JSON (same fallback as before)
           const rawUrl = `/data/scenarios/${encodeURIComponent(scenario)}.json`;
           const r = await fetch(rawUrl);
           if (r.ok) {
@@ -65,7 +71,44 @@ export default function FullDebriefPage({ params }: { params: { session: string,
   }, [session, scenario]);
 
   useEffect(() => {
-    // ensure top-of-page focus for screen readers on mount
+    // If no local debrief found, try to fetch persisted debrief from server
+    if (!debrief) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/debrief?session_id=${encodeURIComponent(session)}&scenario_id=${encodeURIComponent(scenario)}`);
+          if (res.ok) {
+            const json = await res.json();
+            const serverDebrief = json?.debrief ?? null;
+            if (serverDebrief) {
+              // Compose a debrief object that matches the client expectations:
+              // serverDebrief.metrics contains metrics; short_feedback similarly; selections/reflection
+              const composed = {
+                ...serverDebrief.metrics,
+                short_feedback: serverDebrief.short_feedback,
+                selections: serverDebrief.selections,
+                reflection: serverDebrief.reflection
+              };
+              setDebrief(composed);
+
+              // also save to localStorage for future convenience
+              try {
+                const key = `pyp_debrief_${session}_${scenario}`;
+                localStorage.setItem(key, JSON.stringify(composed));
+              } catch (e) {
+                // ignore storage error
+              }
+            }
+          } else {
+            // no persisted debrief or server error
+          }
+        } catch (e) {
+          // ignore fetch errors
+        }
+      })();
+    }
+  }, [debrief, session, scenario]);
+
+  useEffect(() => {
     try {
       const el = document.getElementById('debrief-header');
       if (el) el.focus();
@@ -81,7 +124,7 @@ export default function FullDebriefPage({ params }: { params: { session: string,
       <main className="min-h-screen bg-black text-white p-8">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl font-bold">Debrief not found</h1>
-          <p className="mt-4 text-slate-400">No local debrief data was found for this session & scenario. Please complete the scenario first or check logs.</p>
+          <p className="mt-4 text-slate-400">No debrief data was found for this session & scenario. Please complete the scenario first or check logs.</p>
           <div className="mt-6">
             <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-sky-500 rounded text-black">Back to Coins</button>
           </div>
@@ -103,7 +146,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
 
   return (
     <main className="min-h-screen bg-black text-white p-8">
-      {/* Sticky header */}
       <div id="debrief-header" className="fixed left-0 right-0 top-0 z-40 bg-[#071017] border-b border-slate-800 p-4 flex items-center justify-between" tabIndex={-1}>
         <div>
           <div className="text-xs text-slate-500">PYP: STRATEGIC EDGE · DEMO</div>
@@ -117,15 +159,11 @@ export default function FullDebriefPage({ params }: { params: { session: string,
         </div>
       </div>
 
-      {/* Spacer to account for sticky header height */}
       <div style={{ height: 96 }} />
 
       <div className="max-w-5xl mx-auto mt-4">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            {/* Title left blank; header already shows title */}
-          </div>
-
+          <div />
           <div className="text-right">
             <div className="text-sm text-slate-300">Mission Score</div>
             <div className="text-5xl font-extrabold text-sky-400">{debrief.mission_score}</div>
