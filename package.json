@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node scripts/validate-scenarios.js",
+    "ci": "npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
