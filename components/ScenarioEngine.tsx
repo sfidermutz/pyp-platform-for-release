@@ -1,15 +1,13 @@
 // components/ScenarioEngine.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DebriefPopup from './DebriefPopup';
 
 /**
- * ScenarioEngine (with focus management)
- *
- * - NEXT/Submit remain inside each DP box (no page-end controls).
- * - When screen (current DP) changes we focus the first interactive element inside the DP:
- *   first option button, then confidence buttons, then NEXT.
- * - Option buttons have class "option-btn" and are tabbable.
+ * ScenarioEngine (ARIA + keyboard access)
+ * - Options are rendered inside a role="radiogroup"
+ * - Each option button uses role="radio" and supports arrow navigation and Enter/Space to select
+ * - Keeps NEXT/Submit-in-DP behavior and confidence semantics
  */
 
 function makeLocalSessionId() {
@@ -32,6 +30,9 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const [debrief, setDebrief] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Refs for option lists to enable arrow navigation
+  const optionGroupRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -39,9 +40,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         if (!existing) {
           const newSid = makeLocalSessionId();
           localStorage.setItem('pyp_session_id', newSid);
-          console.log('[ScenarioEngine] created new session id', newSid);
-        } else {
-          console.log('[ScenarioEngine] found existing session id', existing);
         }
       } catch (e) {
         console.warn('[ScenarioEngine] localStorage unavailable', e);
@@ -49,35 +47,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
-
-  // Focus management: when screen changes, focus first interactive element within that DP
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Delay slightly to allow DOM render
-    const t = setTimeout(() => {
-      try {
-        const container = document.querySelector(`[data-dp="${screen}"]`);
-        if (!container) return;
-        const firstOption = container.querySelector<HTMLButtonElement>('.option-btn');
-        if (firstOption) {
-          firstOption.focus();
-          return;
-        }
-        const firstConfidence = container.querySelector<HTMLButtonElement>('[aria-label^="Confidence"]');
-        if (firstConfidence) {
-          firstConfidence.focus();
-          return;
-        }
-        const nextBtn = container.querySelector<HTMLButtonElement>(`[aria-label^="Next"], [aria-label="Submit final reflection and view debrief"]`);
-        if (nextBtn) {
-          nextBtn.focus();
-        }
-      } catch (e) {
-        // no-op
-      }
-    }, 80);
-    return () => clearTimeout(t);
-  }, [screen]);
 
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
@@ -128,7 +97,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
   function onSelectOption(dpIndex: number, optionId: string) {
     if (dpIndex < screen) return;
-
     const now = Date.now();
     const timeOnPage = startTimes[dpIndex] ? now - startTimes[dpIndex] : 0;
 
@@ -161,6 +129,30 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       [dpIndex]: { optionId: prev[dpIndex]?.optionId, confidence: val, timeMs: timeOnPage }
     }));
     setConfidenceChangeCounts(prev => ({ ...prev, [dpIndex]: (prev[dpIndex] ?? 0) + 1 }));
+  }
+
+  // keyboard handler for option radio group
+  function handleOptionKeyDown(e: React.KeyboardEvent, dpIndex: number, optionIndex: number, optionsLength: number) {
+    const key = e.key;
+    if (key !== 'ArrowLeft' && key !== 'ArrowUp' && key !== 'ArrowRight' && key !== 'ArrowDown') return;
+    e.preventDefault();
+    let nextIndex = optionIndex;
+    if (key === 'ArrowLeft' || key === 'ArrowUp') {
+      nextIndex = (optionIndex - 1 + optionsLength) % optionsLength;
+    } else {
+      nextIndex = (optionIndex + 1) % optionsLength;
+    }
+    // focus the next option button
+    const group = optionGroupRefs.current[dpIndex];
+    if (!group) return;
+    const btns = Array.from(group.querySelectorAll<HTMLButtonElement>('.option-btn'));
+    const target = btns[nextIndex];
+    if (target) {
+      target.focus();
+      // select it
+      const id = target.getAttribute('data-option-id') || undefined;
+      if (id) onSelectOption(dpIndex, id);
+    }
   }
 
   async function persistReflection(sessionId: string | null, scenario_id: string, phase: string, text: string) {
@@ -245,6 +237,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       const next = dpIndex + 1;
       setScreen(next);
       setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
+      // focus management will move focus to first option of new DP
     }
   }
 
@@ -309,8 +302,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
             }
             if (sid) {
               localStorage.setItem(`pyp_debrief_${sid}_${scenarioId}`, JSON.stringify(json));
-            } else {
-              console.warn('No session id available to save debrief');
             }
           }
         } catch (e) {
@@ -326,6 +317,24 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  // focus management: when screen changes, focus first Option
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const t = setTimeout(() => {
+      try {
+        const container = document.querySelector(`[data-dp="${screen}"]`) as HTMLElement | null;
+        if (!container) return;
+        const firstOpt = container.querySelector<HTMLButtonElement>('.option-btn');
+        if (firstOpt) { firstOpt.focus(); return; }
+        const firstConf = container.querySelector<HTMLButtonElement>('[aria-label^="Confidence"]');
+        if (firstConf) { firstConf.focus(); return; }
+        const nextBtn = container.querySelector<HTMLButtonElement>(`[aria-label^="Next"], [aria-label="Submit final reflection and view debrief"]`);
+        if (nextBtn) nextBtn.focus();
+      } catch (e) {}
+    }, 80);
+    return () => clearTimeout(t);
+  }, [screen]);
+
   return (
     <div className="space-y-6">
       <div className="bg-[#071017] border border-[#202933] rounded-xl p-6">
@@ -333,18 +342,13 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
         <h2 className="text-2xl font-semibold mt-2">{scenario.title}</h2>
         <div className="mt-6">
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => {
+            {[1,2,3].map((i) => {
               const dp = dpFor(i);
               const isCurrent = i === screen;
               const isLocked = i < screen;
               const selected = selections[i];
-
               return (
-                <div
-                  key={i}
-                  data-dp={i}
-                  className={`rounded-md p-4 border ${isCurrent ? 'border-sky-500 bg-[#071820]' : 'border-slate-700 bg-[#071016]'}`}
-                >
+                <div key={i} data-dp={i} className={`rounded-md p-4 border ${isCurrent ? 'border-sky-500 bg-[#071820]' : 'border-slate-700 bg-[#071016]'}`}>
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">{`DP${i}`}</div>
                     {isLocked ? <div className="text-[10px] text-slate-400 uppercase tracking-wider">Locked</div> : null}
@@ -353,19 +357,26 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                   <p className="mt-3 text-sm text-slate-300">{dp.narrative}</p>
                   <p className="mt-3 text-sm text-sky-300 font-medium">{dp.stem}</p>
 
-                  <div className="mt-4 grid gap-3">
-                    {dp.options.map((opt: any) => {
+                  {/* Options: render as a radiogroup for accessibility */}
+                  <div
+                    className="mt-4 grid gap-3"
+                    role="radiogroup"
+                    aria-labelledby={`dp${i}-label`}
+                    ref={(el) => optionGroupRefs.current[i] = el}
+                  >
+                    {dp.options.map((opt: any, idx: number) => {
                       const chosen = selected?.optionId === opt.id;
                       return (
                         <button
                           key={opt.id}
-                          onClick={() => {
-                            if (!isLocked && isCurrent) onSelectOption(i, opt.id);
-                          }}
+                          data-option-id={opt.id}
+                          onClick={() => { if (!isLocked && isCurrent) onSelectOption(i, opt.id); }}
+                          onKeyDown={(e) => handleOptionKeyDown(e, i, idx, dp.options.length)}
                           className={`option-btn text-left w-full px-3 py-3 rounded-md border ${chosen ? 'border-sky-500 bg-sky-700/10' : 'border-slate-700'} hover:bg-slate-800 transition`}
-                          aria-pressed={chosen}
+                          role="radio"
+                          aria-checked={chosen}
+                          tabIndex={isCurrent ? 0 : -1}
                           aria-label={`DP${i} option ${opt.id}`}
-                          tabIndex={0}
                         >
                           <div className="flex items-center justify-between">
                             <div className="text-sm">{opt.text}</div>
@@ -376,10 +387,9 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                   </div>
 
                   <div className="mt-4">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider">Confidence</label>
-
-                    <div className="mt-2 flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map((v) => {
+                    <label id={`dp${i}-label`} className="text-[11px] text-slate-400 uppercase tracking-wider">Confidence</label>
+                    <div className="mt-2 flex items-center gap-2" role="group" aria-labelledby={`dp${i}-label`}>
+                      {[1,2,3,4,5].map((v) => {
                         const pressed = selected?.confidence === v;
                         return (
                           <button
@@ -388,7 +398,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                             className={`px-3 py-1 rounded-md border ${pressed ? 'bg-sky-500 text-black' : 'bg-[#0a0f12] text-slate-200'} focus:outline-none`}
                             aria-pressed={pressed}
                             aria-label={`Confidence ${v} for DP ${i}`}
-                            tabIndex={0}
                           >
                             {v}
                           </button>
@@ -462,6 +471,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
               </div>
             </div>
           )}
+
         </div>
       </div>
 
