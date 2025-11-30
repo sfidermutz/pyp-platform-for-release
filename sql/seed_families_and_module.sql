@@ -40,7 +40,8 @@ ON CONFLICT (token) DO UPDATE
 --   'TECHNICAL_RESILIENCE_FAMILY','COMMAND_CONTROL_FAMILY'
 -- ) ORDER BY sort_order;
 --
--- SELECT m.id, m.code, m.name, m.family_id, f.code AS family_code FROM public.modules m
+-- SELECT m.id, m.code, m.name, m.family_id, f.code AS family_code, f.name AS family_name, m.is_demo
+-- FROM public.modules m
 -- LEFT JOIN public.module_families f ON f.id = m.family_id
 -- WHERE m.code = 'MOD_HYBRID_GRAY';
 --
