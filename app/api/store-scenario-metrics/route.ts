@@ -17,20 +17,6 @@ function toIntish(v: any): number | null {
   return null;
 }
 
-/**
- * POST /api/store-scenario-metrics
- *
- * Expected body:
- * {
- *   session_id: "<uuid|null>",
- *   scenario_id: "HYB-01",
- *   metrics: { mission_score, decision_quality, trust_calibration, information_advantage, bias_awareness, cognitive_adaptability, escalation_tendency, CRI, confidence_alignment, reflection_quality },
- *   short_feedback?: { line1, line2 },
- *   meta?: {}
- * }
- *
- * This route writes into public.scenario_metrics (columns) — matches SQL migration.
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -48,7 +34,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'scenario_id required' }, { status: 400 });
     }
 
-    // normalize numeric fields to avoid DB type errors
     const row: any = {
       session_id,
       scenario_id,
@@ -69,12 +54,10 @@ export async function POST(req: NextRequest) {
     const computed_at = body.computed_at ?? new Date().toISOString();
     row.computed_at = computed_at;
 
-    // If DB is not configured (demo), return success but indicate not persisted
     if (!supabaseAdmin) {
       return NextResponse.json({ success: true, persisted: false, reason: 'no db configured' });
     }
 
-    // Insert into the real table: public.scenario_metrics
     const { data, error } = await supabaseAdmin
       .from('scenario_metrics')
       .insert([row])
@@ -83,8 +66,14 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('store-scenario-metrics db error', error);
-      if (SHOW_DB_ERRORS || process.env.NODE_ENV !== 'production') {
-        return NextResponse.json({ error: 'db error', detail: error }, { status: 500 });
+
+      // return helpful debug info when requested via header or when server env allows it
+      const url = new URL(req.url);
+      // header x-debug takes precedence
+      const debugHeader = req.headers.get('x-debug') || url.searchParams.get('x-debug');
+      if (SHOW_DB_ERRORS || (debugHeader && debugHeader.toLowerCase() === 'true')) {
+        // Return error details (message only) — safe for debugging
+        return NextResponse.json({ error: 'db error', detail: String(error.message || error) }, { status: 500 });
       }
       return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
@@ -92,7 +81,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, persisted: true, id: data?.id ?? null });
   } catch (e: any) {
     console.error('store-scenario-metrics exception', e);
-    if (SHOW_DB_ERRORS || process.env.NODE_ENV !== 'production') {
+    const debugHeader = req.headers.get('x-debug');
+    if (SHOW_DB_ERRORS || (debugHeader && debugHeader.toLowerCase() === 'true')) {
       return NextResponse.json({ error: 'server error', detail: String(e?.message ?? e) }, { status: 500 });
     }
     return NextResponse.json({ error: 'server error' }, { status: 500 });
