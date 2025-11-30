@@ -9,8 +9,6 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 /**
  * POST /api/store-scenario-metrics
- * Accepts metrics computed from the debrief engine and persists them for the dashboard.
- * Returns general errors on failure (no DB internals returned).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -36,6 +34,11 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabaseAdmin.from('scenario_metrics').insert([row]).select('*').single();
     if (error) {
       console.error('store scenario metrics error', error);
+      // helpful error if missing table
+      const msg = String(error?.message || '').toLowerCase();
+      if (msg.includes('relation') && msg.includes('does not exist')) {
+        return NextResponse.json({ error: 'scenario_metrics table not found - run DB migrations' }, { status: 500 });
+      }
       return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
     return NextResponse.json({ inserted: data });
