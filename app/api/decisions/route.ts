@@ -2,18 +2,20 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'nodejs';
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('Missing SUPABASE env variables for decisions route');
+}
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 /**
  * POST /api/decisions
- * Accepts a decision post from the client. The client currently sends a scenario
- * identifier string (scenario code, e.g., "HYB-01") as `scenario_id`. Because the
- * decisions table's `scenario_id` column is a UUID, we write NULL there to avoid
- * UUID parsing errors and store the human-readable code in `scenario_code` text.
- *
- * Server returns a minimal error on DB failure (no DB internals exposed).
+ * Accepts per-click (ephemeral) decision events. These are NOT the authoritative lock.
+ * We mark them with details.is_ephemeral = true so analytics can filter them from final locks.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +33,12 @@ export async function POST(req: NextRequest) {
     const session_id = session_hint ?? null;
     const scenario_code = typeof scenario_id === 'string' ? scenario_id : null;
 
+    // Ensure details is an object and flag ephemeral
+    const detailsSafe = (details && typeof details === 'object') ? { ...details } : {};
+    if (typeof detailsSafe.is_ephemeral === 'undefined') {
+      detailsSafe.is_ephemeral = true;
+    }
+
     const { data, error } = await supabaseAdmin.from('decisions').insert([{
       session_id,
       scenario_id: null,      // keep null to avoid uuid parse issues
@@ -39,7 +47,7 @@ export async function POST(req: NextRequest) {
       selected_option_id,
       confidence,
       time_on_page_ms,
-      details
+      details: detailsSafe
     }]).select('*').single();
 
     if (error) {
