@@ -8,6 +8,7 @@ export const runtime = 'nodejs';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const SHOW_DB_ERRORS = (process.env.SHOW_DB_ERRORS || 'false').toLowerCase() === 'true';
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -28,33 +29,54 @@ export async function POST(req: NextRequest) {
     const valid_until = new Date();
     valid_until.setFullYear(valid_until.getFullYear() + 2); // 24 months
 
-    // If you have a real module LO to put here, supply it via body or fetch from DB.
-    const moduleLO = body.module_LO ?? 'Module LO placeholder';
+    // Accept module_LO in many cases: module_LO or module_lo, default value otherwise
+    const moduleLO = body.module_LO ?? body.module_lo ?? 'Module LO placeholder';
 
+    // insert certificate row; use lowercased keys to match table columns (module_lo)
     const { data, error } = await supabaseAdmin.from('certificates').insert([{
       session_id,
       module: module_id,
       verification_code,
       completed_on: new Date().toISOString(),
       valid_until: valid_until.toISOString(),
-      ects: 0.1,
-      module_LO: moduleLO
+      ects: typeof body.ects !== 'undefined' ? Number(body.ects) : 0.1,
+      module_lo: moduleLO
     }]).select('*').single();
 
     if (error) {
       console.error('certificate insert error', error);
+      if (SHOW_DB_ERRORS || process.env.NODE_ENV !== 'production') {
+        return NextResponse.json({ error: 'db error', detail: error }, { status: 500 });
+      }
       return NextResponse.json({ error: 'db error' }, { status: 500 });
     }
 
+    // attempt to return a static demo certificate if present; otherwise return a tiny placeholder PDF
     const demoPath = path.join(process.cwd(), 'public', 'demo_certificate.pdf');
     if (!fs.existsSync(demoPath)) {
       const fallback = Buffer.from(`%PDF-1.4\n%Demo placeholder certificate for code ${verification_code}\n`);
-      return new NextResponse(fallback, { status: 200, headers: { 'Content-Type': 'application/pdf', 'x-verification-code': verification_code }});
+      return new NextResponse(fallback, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'x-verification-code': verification_code
+        }
+      });
     }
+
     const pdfBuffer = fs.readFileSync(demoPath);
-    return new NextResponse(pdfBuffer, { status: 200, headers: { 'Content-Type': 'application/pdf', 'x-verification-code': verification_code }});
-  } catch (e) {
+    return new NextResponse(pdfBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'x-verification-code': verification_code
+      }
+    });
+  } catch (e: any) {
     console.error('generate-certificate error', e);
+    if (SHOW_DB_ERRORS || process.env.NODE_ENV !== 'production') {
+      return NextResponse.json({ error: 'server error', detail: String(e?.message ?? e) }, { status: 500 });
+    }
     return NextResponse.json({ error: 'server error' }, { status: 500 });
   }
 }
