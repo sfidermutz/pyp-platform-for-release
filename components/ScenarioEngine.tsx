@@ -237,7 +237,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       const next = dpIndex + 1;
       setScreen(next);
       setStartTimes((prev: any) => ({ ...prev, [next]: Date.now() }));
-      // focus management will move focus to first option of new DP
     }
   }
 
@@ -362,7 +361,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     className="mt-4 grid gap-3"
                     role="radiogroup"
                     aria-labelledby={`dp${i}-label`}
-                    ref={(el) => optionGroupRefs.current[i] = el}
+                    ref={(el) => { optionGroupRefs.current[i] = el; }}
                   >
                     {dp.options.map((opt: any, idx: number) => {
                       const chosen = selected?.optionId === opt.id;
