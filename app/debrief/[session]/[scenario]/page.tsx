@@ -28,7 +28,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
   useEffect(() => {
     setLoading(true);
     try {
-      // Try reading from localStorage first
       const key = `pyp_debrief_${session}_${scenario}`;
       const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
       if (raw) {
@@ -37,7 +36,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
         setDebrief(null);
       }
 
-      // load scenario JSON from repo raw (server fetch)
       (async () => {
         try {
           const rawUrl = `/data/scenarios/${encodeURIComponent(scenario)}.json`;
@@ -46,7 +44,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
             const content = await r.json();
             setScenarioData(content);
           } else {
-            // fallback - raw GitHub URL
             const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
             const r2 = await fetch(`${RAW_BASE}/data/scenarios/${encodeURIComponent(scenario)}.json`);
             if (r2.ok) {
@@ -66,6 +63,14 @@ export default function FullDebriefPage({ params }: { params: { session: string,
       setLoading(false);
     }
   }, [session, scenario]);
+
+  useEffect(() => {
+    // ensure top-of-page focus for screen readers on mount
+    try {
+      const el = document.getElementById('debrief-header');
+      if (el) el.focus();
+    } catch (e) {}
+  }, []);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white">Loading debrief…</div>;
@@ -98,12 +103,27 @@ export default function FullDebriefPage({ params }: { params: { session: string,
 
   return (
     <main className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-5xl mx-auto">
+      {/* Sticky header */}
+      <div id="debrief-header" className="fixed left-0 right-0 top-0 z-40 bg-[#071017] border-b border-slate-800 p-4 flex items-center justify-between" tabIndex={-1}>
+        <div>
+          <div className="text-xs text-slate-500">PYP: STRATEGIC EDGE · DEMO</div>
+          <div className="text-lg font-bold mt-1">{scenarioData?.title ?? scenario}</div>
+          <div className="text-sm text-slate-400 mt-1">{scenarioData?.role ?? ''} · {scenarioData?.year ?? ''}</div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-slate-700 rounded">Back to Coins</button>
+          <a href="/demo_certificate.pdf" className="px-4 py-2 bg-green-500 rounded text-black" target="_blank" rel="noopener noreferrer">Download Placeholder Cert</a>
+        </div>
+      </div>
+
+      {/* Spacer to account for sticky header height */}
+      <div style={{ height: 96 }} />
+
+      <div className="max-w-5xl mx-auto mt-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className="text-xs text-slate-500">PYP: STRATEGIC EDGE · DEMO</div>
-            <h1 className="text-3xl font-bold mt-1">{scenarioData?.title ?? scenario}</h1>
-            <div className="text-sm text-slate-400 mt-2">{scenarioData?.role ?? ''} · {scenarioData?.year ?? ''}</div>
+            {/* Title left blank; header already shows title */}
           </div>
 
           <div className="text-right">
@@ -121,7 +141,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
             <div className="mt-6 space-y-4">
               {[1,2,3].map((i)=> {
                 const dp = i === 1 ? scenarioData?.dp1 : i === 2 ? scenarioData?.dp2 : scenarioData?.dp3;
-                const chosen = debrief?.selected_path?.[`dp${i}`] ?? null;
                 return (
                   <div key={i} className="rounded-md p-4 border border-slate-700 bg-[#071016]">
                     <div className="flex items-center justify-between">
@@ -129,7 +148,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
                       <div className="text-xs text-slate-400 uppercase tracking-wider">Locked</div>
                     </div>
                     <p className="mt-3 text-sm text-slate-300">{dp?.narrative ?? dp?.stem}</p>
-                    {/* show options read-only */}
                     <div className="mt-3 grid gap-3">
                       {(dp?.options ?? []).map((opt: any) => {
                         const isSelected = (debrief?.selections && Object.values(debrief?.selections).find((s:any) => s?.optionId === opt.id));
@@ -166,11 +184,6 @@ export default function FullDebriefPage({ params }: { params: { session: string,
                   <div className="text-lg font-bold text-sky-300">{m.value}</div>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-slate-700 rounded">Back to Coins</button>
-              <a href="/demo_certificate.pdf" className="px-4 py-2 bg-green-500 rounded text-black" target="_blank" rel="noopener noreferrer">Download Placeholder Cert</a>
             </div>
           </div>
         </div>
