@@ -109,3 +109,24 @@ Token object (server-side):
   "cohort_tags": ["NSOU-2025", "SOF", "Pilot-1"],
   "is_active": true
 }
+Tokens are not tied to PII in PYP.
+Institutions map token ↔ user externally and may pass a non-identifying alias in a custom field if desired.
+
+3.2 User Session
+
+Session object:
+
+{
+  "session_id": "uuid",
+  "token_id": "string",
+  "module_id": "HYB",
+  "scenario_progress": {
+    "HYB-PRE-01": { "status": "completed", "path": "B-B2-BA3", "scores": {...} }
+  },
+  "created_at": "ISO8601",
+  "updated_at": "ISO8601"
+}
+
+
+Supports resuming module where user left off.
+Module order is enforced: scenarios are locked until prior ones completed (for Strategic Edge).
