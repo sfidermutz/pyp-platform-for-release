@@ -11,25 +11,47 @@ export default function DebriefPopup({ debrief, onClose }: { debrief: any, onClo
 
   function getSessionId() {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('pyp_session_id') ?? null;
+    try {
+      return localStorage.getItem('pyp_session_id') ?? null;
+    } catch (e) {
+      return null;
+    }
   }
 
   function getScenarioIdFromDebriefOrPath() {
     // Prefer debrief scenario id if present
     if (debrief?.scenario_id) return String(debrief.scenario_id);
+    if (debrief?.scenario) {
+      // Some debrief payloads include a scenario object or code
+      if (typeof debrief.scenario === 'string') return String(debrief.scenario);
+      if (debrief.scenario?.id) return String(debrief.scenario.id);
+      if (debrief.scenario?.code) return String(debrief.scenario.code);
+    }
+
     if (typeof window !== 'undefined') {
-      // Expect path like /scenario/HYB-01 or /scenario/HYB-01/
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      if (parts.length > 0) {
-        // If on /scenario/HYB-01, last segment is HYB-01
-        return parts[parts.length - 1];
+      const path = window.location.pathname || '';
+      // If URL contains /scenario/<id>, prefer that
+      const m = path.match(/\/scenario\/([^\/?#]+)/i);
+      if (m && m[1]) return decodeURIComponent(m[1]);
+
+      // If URL contains /debrief/<session>/<scenario>
+      const m2 = path.match(/\/debrief\/[^\/]+\/([^\/?#]+)/i);
+      if (m2 && m2[1]) return decodeURIComponent(m2[1]);
+
+      // General fallback: last non-empty segment that looks like a scenario code (alphanumeric + hyphen)
+      const parts = path.split('/').filter(Boolean);
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const seg = parts[i];
+        if (/^[A-Z0-9\-]+$/i.test(seg)) return decodeURIComponent(seg);
       }
     }
     return '';
   }
 
   function replay() {
-    router.push(window.location.pathname + '?replay=1');
+    if (typeof window !== 'undefined') {
+      router.push(window.location.pathname + '?replay=1');
+    }
     if (onClose) onClose();
   }
 
@@ -61,14 +83,11 @@ export default function DebriefPopup({ debrief, onClose }: { debrief: any, onClo
         body: JSON.stringify({ session_id: sid, module_id: debrief?.module_id ?? 'MOD_HYBRID_GRAY', name: '' })
       });
       if (!res.ok) {
-        // try to parse JSON error for clearer message
         let msg = res.statusText;
         try {
           const j = await res.json();
           msg = j?.error ?? j?.message ?? msg;
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
         alert('Certificate generation failed: ' + msg);
         return;
       }
