@@ -54,43 +54,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         if (serverScenarios.length > 0) {
           if (active) setScenarios(serverScenarios);
         } else {
-          // fallback: try raw github listing (non-blocking)
-          const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
-          try {
-            const listRes = await fetch(`${RAW_BASE}/data/scenarios`);
-            if (listRes.ok) {
-              const listing = await listRes.json();
-              if (Array.isArray(listing)) {
-                const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
-                const results: ScenarioMeta[] = [];
-                for (const item of jsonFiles) {
-                  try {
-                    const r = await fetch(item.download_url);
-                    if (!r.ok) continue;
-                    const parsed = await r.json();
-                    const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleId;
-                    if (mid && String(mid).toLowerCase() === String(moduleCode).toLowerCase()) {
-                      results.push({
-                        filename: item.name,
-                        scenario_id: parsed?.scenarioId ?? parsed?.scenario_id ?? parsed?.id ?? null,
-                        title: parsed?.title ?? parsed?.name ?? '',
-                        role: parsed?.role ?? '',
-                        learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? '',
-                        narrative: parsed?.situation ?? parsed?.narrative ?? ''
-                      });
-                    }
-                  } catch (_) { /* ignore individual file errors */ }
-                }
-                if (active) setScenarios(results);
-              } else {
-                if (active) setScenarios([]);
-              }
-            } else {
-              if (active) setScenarios([]);
-            }
-          } catch (_) {
-            if (active) setScenarios([]);
-          }
+          if (active) setScenarios([]);
         }
       } catch (e) {
         setScError(String(e));
@@ -109,9 +73,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     const key = `pyp_scenario_${scenarioId}`;
     try {
       if (localStorage.getItem(key)) return;
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
 
     (async () => {
       try {
@@ -138,7 +100,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
       console.warn('[ModuleClient] No scenario id provided to ensureSessionAndNavigate');
       return;
     }
-
     try {
       prefetchScenario(scenarioId);
     } catch (e) {}
@@ -195,11 +156,15 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
   return (
     <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
         <div className="w-28 h-28 flex-shrink-0">
           {module?.image_path ? (
-            <img src={module.image_path} alt={module.name} className="w-full h-full object-cover rounded-full border border-slate-800" />
+            <img
+              src={module.image_path}
+              alt={module.name}
+              className="w-full h-full object-cover rounded-full border border-slate-800"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
+            />
           ) : (
             <div className="w-28 h-28 rounded-full bg-slate-800 flex items-center justify-center text-white font-semibold text-xl">
               {module?.name ? module.name.split(' ').slice(0,2).map(s=>s[0]).join('') : 'M'}
@@ -224,7 +189,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="module-badge px-3 py-1">{module?.ects ?? '0.1'} ECTS</div>
+                <div className="module-badge px-3 py-1">{module?.ects ?? '—'} ECTS</div>
                 <button
                   onClick={startDefaultScenario}
                   disabled={starting}
@@ -238,7 +203,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         </div>
       </div>
 
-      {/* SCENARIO LIST */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Scenarios</h2>
 
