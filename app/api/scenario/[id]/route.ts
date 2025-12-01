@@ -1,16 +1,20 @@
 // app/api/scenario/[id]/route.ts
-import { NextResponse, NextRequest } from 'next/server';
+// Serve scenario JSON only to authorized clients (session or token).
+// Use plain Request/Response and accept context:any so TypeScript/Next.js signatures align.
+
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs/promises';
 import path from 'path';
 
 export const runtime = 'nodejs';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string | undefined;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.warn('Missing SUPABASE env variables for scenario API');
+  // keep a server-side warning but allow build — runtime will fail auth checks without keys
+  // eslint-disable-next-line no-console
+  console.warn('SUPABASE env not configured for scenario API');
 }
 
 const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
@@ -47,41 +51,55 @@ async function validateSession(sessionId: string | null) {
   return Boolean(tkn.is_active);
 }
 
+function jsonResponse(obj: any, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 /**
- * GET /api/scenario/[id]
+ * GET handler for /api/scenario/[id]
  *
- * Security: only returns scenario JSON to clients that provide a valid
- * session id (x-session-id) or a valid demo/access token (x-pyp-token).
- *
- * Implementation detail: Next.js may type `context.params` as a Promise in
- * certain runtimes, so accept `context: any` and normalize.
+ * context may have params as a Promise in some runtimes, so accept context:any
+ * and await context.params if necessary.
  */
-export async function GET(req: NextRequest, context: any) {
+export async function GET(request: Request, context: any): Promise<Response> {
   try {
-    // Normalize params: support both { params: {...} } and { params: Promise<...> }
+    // normalize params (context.params might be a Promise in some Next runtimes)
     let paramsObj = context?.params;
     if (paramsObj && typeof paramsObj.then === 'function') {
       paramsObj = await paramsObj;
     }
     const scenarioId = paramsObj?.id ?? null;
     if (!scenarioId) {
-      return NextResponse.json({ error: 'scenario id required' }, { status: 400 });
+      return jsonResponse({ error: 'scenario id required' }, 400);
     }
 
+    // read auth headers from the incoming Request
     // Accept either x-pyp-token (access token) OR x-session-id (session created via /api/create-session)
-    const tokenHeader = req.headers.get('x-pyp-token') ?? req.headers.get('x-demo-token');
-    const sessionHeader = req.headers.get('x-session-id') ?? req.headers.get('x-pyp-session');
+    const headers = request.headers;
+    const tokenHeader = headers.get('x-pyp-token') ?? headers.get('x-demo-token');
+    const sessionHeader = headers.get('x-session-id') ?? headers.get('x-pyp-session');
 
     let authorized = false;
     if (tokenHeader) {
-      try { authorized = await validateToken(tokenHeader); } catch (e) { authorized = false; }
+      try {
+        authorized = await validateToken(tokenHeader);
+      } catch (e) {
+        authorized = false;
+      }
     }
     if (!authorized && sessionHeader) {
-      try { authorized = await validateSession(sessionHeader); } catch (e) { authorized = false; }
+      try {
+        authorized = await validateSession(sessionHeader);
+      } catch (e) {
+        authorized = false;
+      }
     }
 
     if (!authorized) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 403 });
+      return jsonResponse({ error: 'unauthorized' }, 403);
     }
 
     // Read canonical scenario JSON from server filesystem (data/scenarios/<id>.json)
@@ -89,13 +107,18 @@ export async function GET(req: NextRequest, context: any) {
     try {
       const raw = await fs.readFile(filePath, 'utf8');
       const parsed = JSON.parse(raw);
-      return NextResponse.json(parsed, { status: 200 });
+      return jsonResponse(parsed, 200);
     } catch (e: any) {
       if (e?.code === 'ENOENT') {
-        return NextResponse.json({ error: 'scenario not found' }, { status: 404 });
+        return jsonResponse({ error: 'scenario not found' }, 404);
       }
+      // eslint-disable-next-line no-console
       console.error('scenario read error', e);
-      return NextResponse.json({ error: 'server error' }, { status: 500 });
+      return jsonResponse({ error: 'server error' }, 500);
     }
-  } catch (e) {
-    console.error('scenario route e
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('scenario route error', err);
+    return jsonResponse({ error: 'server error' }, 500);
+  }
+}
