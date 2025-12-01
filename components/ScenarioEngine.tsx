@@ -5,32 +5,33 @@ import React, { useEffect, useRef, useState } from 'react';
 import DebriefPopup from './DebriefPopup';
 
 /**
- * ScenarioEngine (slim)
+ * ScenarioEngine — polished UI
  *
- * UX rules:
- * - Next / Lock buttons inside each DP card
- * - Confidence defaults to null (unset), required before locking
- * - Next disabled until both option and confidence chosen
- * - No auto-advance: arrow keys move focus/selection, Enter/Space selects only
- * - DP3 lock scrolls/focuses reflection; reflection requires 50 words
- *
- * Telemetry & server calls (kept minimal):
- * - /api/decisions/lock for locked decisions
- * - /api/compute-debrief for final scoring
- * - /api/store-scenario-metrics best-effort after compute
+ * - Adds progress bar and DP numbering
+ * - Larger stems, denser option cards, subtle hover states
+ * - Option meta badges (score, bias tags) for authors
+ * - Reflection word counter + progress indicator
+ * - Keeps server calls (/api/decisions/lock, /api/compute-debrief, /api/store-scenario-metrics)
+ * - Keeps accessibility rules: radio group roles, keyboard handling, focus outlines
  */
 
+/* ---------- Utilities ---------- */
+
 function makeLocalSessionId() {
-  if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
-    return (crypto as any).randomUUID();
-  }
+  try {
+    if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+      return (crypto as any).randomUUID();
+    }
+  } catch {}
   return 's_' + Math.random().toString(36).slice(2, 10);
 }
 
 type Selection = { optionId?: string; confidence?: number | null; timeMs?: number };
 
+/* ---------- Component ---------- */
+
 export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any; scenarioId: string }) {
-  const [screen, setScreen] = useState<number>(1);
+  const [screen, setScreen] = useState<number>(1); // 1..3
   const [selections, setSelections] = useState<Record<number, Selection>>({});
   const [selectionSequences, setSelectionSequences] = useState<Record<number, string[]>>({});
   const [changeCounts, setChangeCounts] = useState<Record<number, number>>({});
@@ -46,6 +47,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
   const optionGroupRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const reflectionRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // ensure session id exists
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -54,11 +56,14 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           const newSid = makeLocalSessionId();
           localStorage.setItem('pyp_session_id', newSid);
         }
-      } catch (e) {}
+      } catch (e) {
+        // swallow storage errors
+      }
     }
     setStartTimes((prev: any) => ({ ...prev, [1]: Date.now() }));
   }, []);
 
+  // normalize DP shapes
   function normalizeDP(dpRaw: any): { narrative?: string; stem?: string; options: any[] } {
     if (!dpRaw) return { narrative: '', stem: '', options: [] };
     if (Array.isArray(dpRaw?.options)) return dpRaw;
@@ -90,6 +95,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
     return { narrative: '', stem: '', options: [] };
   }
+
+  /* ---------- Selection / keyboard handlers (unchanged semantics) ---------- */
 
   function onSelectOption(dpIndex: number, optionId: string) {
     if (dpIndex < screen) return;
@@ -161,6 +168,8 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
       if (id) onSelectOption(dpIndex, id);
     }
   }
+
+  /* ---------- Server calls (unchanged semantics) ---------- */
 
   async function lockDecisionAndAdvance(currentScreen: number) {
     setError(null);
@@ -251,12 +260,6 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     } catch (e) {}
   }
 
-  function toIntish(v: any): number {
-    const n = Number(v);
-    if (Number.isFinite(n)) return Math.round(n);
-    return 0;
-  }
-
   async function handleSubmitFinal() {
     setError(null);
 
@@ -327,7 +330,10 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
             })
           });
         }
-      } catch (e) {}
+      } catch (e) {
+        // non fatal if metrics persist fails
+        console.debug('store-scenario-metrics failed', e);
+      }
 
       setDebrief(json ?? null);
     } catch (e) {
@@ -338,12 +344,24 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     }
   }
 
+  /* ---------- Rendering helpers ---------- */
+
   function optId(o: any) {
     return String(o?.id ?? o?.option_id ?? o?.optionId ?? (o?.id ?? JSON.stringify(o)));
   }
   function optText(o: any) {
     return o?.text ?? o?.label ?? o?.title ?? o?.name ?? '';
   }
+
+  /* ---------- New: progress calculation ---------- */
+  const lockedCount = (() => {
+    if (dp3Locked) return 3;
+    // count locked as previous screens (screen - 1)
+    return Math.max(0, Math.min(3, screen - 1));
+  })();
+  const progressPct = Math.round((lockedCount / 3) * 100);
+
+  /* ---------- Rendering DP card (polished) ---------- */
 
   function DPCard({ dpIndex }: { dpIndex: number }) {
     const dp = dpFor(dpIndex);
@@ -355,17 +373,23 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     return (
       <div className="scenario-card" role="region" aria-labelledby={`dp-${dpIndex}-label`}>
         <div className="flex items-start justify-between">
-          <div>
-            <div id={`dp-${dpIndex}-label`} className="text-xs text-slate-400 uppercase tracking-wider">Decision Point {dpIndex}</div>
-            <h3 className="text-lg font-semibold mt-1">{dp?.stem ?? dp?.narrative ?? (dpIndex === 1 ? 'Initial decision' : `Decision ${dpIndex}`)}</h3>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-[#071827] flex items-center justify-center text-sky-300 font-bold text-sm border border-slate-700">
+              {dpIndex}
+            </div>
+            <div>
+              <div id={`dp-${dpIndex}-label`} className="text-xs text-slate-400 uppercase tracking-wider">Decision Point {dpIndex}</div>
+              <h3 className="text-xl font-semibold mt-1 leading-tight">{dp?.stem ?? dp?.narrative ?? (dpIndex === 1 ? 'Initial decision' : `Decision ${dpIndex}`)}</h3>
+            </div>
           </div>
+
           <div className="text-xs text-slate-400">CEFR B2</div>
         </div>
 
         {dp?.narrative && <div className="mt-3 text-sm text-slate-300">{dp.narrative}</div>}
 
         <div
-          className="mt-4"
+          className="mt-4 grid gap-3"
           ref={(el) => { optionGroupRefs.current[dpIndex] = el; }}
           role="radiogroup"
           aria-labelledby={`dp-${dpIndex}-label`}
@@ -375,8 +399,12 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           {opts.map((o: any, idx: number) => {
             const id = optId(o);
             const checked = selectedId === id;
+            const biasTags = o?.bias_tags ?? o?.biasTags ?? [];
             return (
-              <div key={id} className="flex items-start gap-3 bg-[#0b1114] border border-slate-800 rounded-md p-3 mt-3">
+              <div
+                key={id}
+                className={`flex items-start gap-3 bg-[#0b1114] border ${checked ? 'border-sky-500 bg-sky-700/6' : 'border-slate-800'} rounded-md p-3 mt-3 transition-transform hover:translate-y-[-4px]`}
+              >
                 <button
                   type="button"
                   role="radio"
@@ -394,9 +422,20 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                     handleOptionKeyDown(e, dpIndex, idx, opts.length);
                   }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full ${checked ? 'bg-sky-500' : 'border border-slate-700'} flex-shrink-0`} aria-hidden />
-                    <div className="text-sm text-slate-200">{optText(o)}</div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 mt-1 flex-shrink-0">
+                      <div className={`w-4 h-4 rounded-full ${checked ? 'bg-sky-500' : 'border border-slate-700'}`} aria-hidden />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="text-sm text-slate-200">{optText(o)}</div>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        {Array.isArray(biasTags) && biasTags.slice(0,3).map((b: string) => (
+                          <span key={b} className="text-[11px] px-2 py-0.5 bg-[#07141a] rounded text-slate-400 border border-slate-800">{b}</span>
+                        ))}
+                        <span className="text-[11px] px-2 py-0.5 bg-[#07141a] rounded text-slate-400 border border-slate-800">Score: {typeof o.score === 'number' ? o.score : '—'}</span>
+                      </div>
+                    </div>
                   </div>
                 </button>
               </div>
@@ -404,6 +443,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           })}
         </div>
 
+        {/* Confidence block */}
         <div className="mt-4 p-4 border rounded-md bg-[#07181b]">
           <div className="text-sm text-slate-300">Confidence (select a value)</div>
           <div className="mt-2 flex items-center gap-4">
@@ -431,6 +471,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
 
           <div className="mt-2 text-xs text-slate-400">Choose how confident you are (required).</div>
 
+          {/* Next / Lock button inside DP card */}
           <div className="mt-4">
             {dpIndex < 3 ? (
               <button
@@ -459,38 +500,46 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
     );
   }
 
+  /* ---------- Main render ---------- */
+
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header + progress */}
         <div className="bg-[#071017] border border-[#202933] rounded-xl p-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-slate-400 tracking-[0.24em] uppercase">Scenario</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">Scenario</p>
               <h1 className="text-2xl font-semibold mt-2">{scenario?.title ?? scenario?.scenario_id ?? 'Untitled Scenario'}</h1>
               <div className="mt-2 text-sm text-slate-300">
                 {scenario?.role ? <span className="mr-3"><strong>Role:</strong> {scenario.role}</span> : null}
                 {scenario?.year ? <span className="mr-3"><strong>Year:</strong> {scenario.year}</span> : null}
               </div>
+            </div>
 
-              {scenario?.scenario_lo ? (
-                <div className="mt-4 p-3 rounded-md bg-[#071820] border border-slate-700">
-                  <div className="text-sm text-slate-300 font-medium">Learning Outcome</div>
-                  <div className="mt-1 text-sm text-sky-300">{scenario.scenario_lo}</div>
-                </div>
-              ) : null}
+            <div style={{ minWidth: 220 }}>
+              <div className="text-xs text-slate-400 mb-2">Progress</div>
+              <div className="w-full bg-[#05121a] rounded-full h-3 overflow-hidden border border-slate-800">
+                <div style={{ width: `${progressPct}%` }} className="h-3 bg-gradient-to-r from-sky-500 to-amber-400" />
+              </div>
+              <div className="text-xs text-slate-400 mt-2 text-right">{progressPct}% complete</div>
             </div>
           </div>
         </div>
 
+        {/* DP1 */}
         <DPCard dpIndex={1} />
 
+        {/* DP2 */}
         <div style={{ display: screen >= 2 ? 'block' : 'none' }}>
           <DPCard dpIndex={2} />
         </div>
 
+        {/* DP3 */}
         <div style={{ display: screen >= 3 ? 'block' : 'none' }}>
           <DPCard dpIndex={3} />
 
+          {/* Reflection block */}
           <div className="scenario-card" id="reflection-block" aria-live="polite">
             <div className="text-sm text-slate-300">Reflection</div>
             <div className="mt-3">
@@ -504,6 +553,13 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
                 placeholder="Reflect on your decisions — minimum 50 words."
                 aria-required={true}
               />
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <div className="text-xs text-slate-400">Minimum 50 words required. Aim 75–125 words.</div>
+              <div className="text-xs text-slate-300">
+                Words: {reflection.trim().split(/\s+/).filter(Boolean).length}
+              </div>
             </div>
 
             <div className="mt-4 flex items-center gap-3">
@@ -521,6 +577,7 @@ export default function ScenarioEngine({ scenario, scenarioId }: { scenario: any
           </div>
         </div>
 
+        {/* Debrief popup */}
         {debrief ? (
           <DebriefPopup debrief={debrief} onClose={() => setDebrief(null)} />
         ) : null}
