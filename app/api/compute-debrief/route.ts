@@ -1,6 +1,8 @@
 // app/api/compute-debrief/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs/promises';
+import path from 'path';
 
 export const runtime = 'nodejs';
 
@@ -8,46 +10,33 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
 
-/**
- * Compute debrief metrics and persist a debrief record if possible.
- *
- * Body expected:
- * {
- *   session_hint, session_id, scenario_id, selections, reflection, scenario
- * }
- *
- * Behavior changes:
- * - Accept session_id as a fallback to session_hint.
- * - If `scenario` is not supplied in the body but `scenario_id` is, fetch
- *   the canonical JSON from /data/scenarios/<scenario_id>.json on the same origin.
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    // Accept session_hint OR session_id
     const session_hint = body.session_hint ?? body.session_id ?? null;
     const scenario_id = body.scenario_id ?? null;
     const selections = body.selections ?? {};
     const reflection = body.reflection ?? '';
     const incomingScenario = body.scenario ?? null;
 
-    // Use provided scenario if present, otherwise attempt to fetch canonical scenario JSON
+    // Use provided scenario if present, otherwise attempt to read canonical scenario JSON server-side
     let sc = incomingScenario;
     if (!sc && scenario_id) {
       try {
-        const base = new URL(req.url).origin;
-        const scenarioUrl = `${base}/data/scenarios/${scenario_id}.json`;
-        const fetchResp = await fetch(scenarioUrl);
-        if (fetchResp.ok) {
-          sc = await fetchResp.json();
-        } else {
-          console.warn(`compute-debrief: failed to fetch canonical scenario ${scenario_id} -> ${fetchResp.status}`);
+        const filePath = path.join(process.cwd(), 'data', 'scenarios', `${scenario_id}.json`);
+        try {
+          const raw = await fs.readFile(filePath, 'utf8');
+          sc = JSON.parse(raw);
+        } catch (e: any) {
+          if (e.code !== 'ENOENT') console.error('compute-debrief: error reading canonical scenario', e);
+          // continue without sc
         }
       } catch (fetchErr) {
         console.error('compute-debrief: error fetching canonical scenario', fetchErr);
       }
     }
 
+    // (rest of compute logic unchanged) ...
     function getOptionsFromDp(dpRaw: any): any[] {
       if (!dpRaw) return [];
       if (Array.isArray(dpRaw?.options)) return dpRaw.options;
@@ -150,7 +139,6 @@ export async function POST(req: NextRequest) {
       reflection_quality: Math.round(reflectionQuality)
     };
 
-    // Attempt to persist a debrief record if DB configured and we have a session hint
     let debriefSaved = false;
     let debriefId: string | null = null;
     try {
@@ -165,7 +153,6 @@ export async function POST(req: NextRequest) {
           meta: { computed_at: new Date().toISOString() }
         };
 
-        // Include the canonical scenario id & a small scenario snapshot if available for auditing
         if (sc && sc.id) {
           insertPayload.meta.scenario_snapshot = { id: sc.id, title: sc.title ?? null };
         }
@@ -187,7 +174,6 @@ export async function POST(req: NextRequest) {
       console.error('debrief persist exception', dbErr);
     }
 
-    // Return top-level metrics and short_feedback (compat), plus persistence info
     return NextResponse.json({ ...metrics, short_feedback, debrief_saved: debriefSaved, debrief_id: debriefId });
   } catch (e) {
     console.error('compute-debrief error', e);
