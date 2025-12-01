@@ -7,22 +7,17 @@ import { supabase } from '@/lib/supabaseClient';
 import ModuleCard from '@/components/ModuleCard';
 
 type Family = { name?: string; code?: string };
-
-/**
- * Permissive ModuleRecord used by the coins page.
- * Keep fields optional/nullable/undefined to match ModuleCard's ModuleRecord and avoid type incompatibilities.
- */
 type ModuleRecord = {
   id: string;
   name: string;
-  description?: string | null | undefined;
-  shelf_position?: number | null | undefined;
-  is_demo?: boolean | undefined;
-  module_families?: Family[] | undefined;
-  image_path?: string | null | undefined;
-  default_scenario_id?: string | null | undefined;
-  module_code?: string | null | undefined;
-  ects?: number | null | undefined;
+  description: string | null;
+  shelf_position: number | null;
+  is_demo: boolean;
+  module_families: Family[];
+  image_path?: string | null;
+  default_scenario_id?: string | null;
+  module_code?: string | null;
+  ects?: number | null;
   [key: string]: any;
 };
 
@@ -34,6 +29,17 @@ export default function CoinsPage() {
 
   const [search, setSearch] = useState('');
   const [activeFamily, setActiveFamily] = useState<string>('All');
+
+  // density: 'default' | 'dense'
+  const [density, setDensity] = useState<'default' | 'dense'>('default');
+
+  useEffect(() => {
+    // restore density from localStorage
+    try {
+      const stored = localStorage.getItem('pyp_tile_density');
+      if (stored === 'dense' || stored === 'default') setDensity(stored);
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
@@ -58,7 +64,6 @@ export default function CoinsPage() {
     setLoading(true);
     setFetchError(null);
     try {
-      // NOTE: do NOT request `ects` here — some DB schemas don't have that column.
       const { data, error } = await supabase
         .from('modules')
         .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
@@ -94,7 +99,7 @@ export default function CoinsPage() {
           image_path: m.image_path ?? null,
           default_scenario_id: m.default_scenario_id ?? null,
           module_code: m.module_code ?? null,
-          // ects intentionally not read here (DB may not have it)
+          ects: (typeof m.ects === 'number') ? m.ects : null
         };
       });
 
@@ -107,34 +112,36 @@ export default function CoinsPage() {
     }
   }
 
-  async function openModuleDashboard(m: ModuleRecord) {
-    try {
-      let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-      if (!sessionId) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
-        if (!token) { router.push('/'); return; }
-        const res = await fetch('/api/create-session', {
+  function openModuleDashboard(m: ModuleRecord) {
+    (async () => {
+      try {
+        let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+        if (!sessionId) {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
+          if (!token) { router.push('/'); return; }
+          const res = await fetch('/api/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+          if (!res.ok) { router.push('/'); return; }
+          const json = await res.json();
+          sessionId = json?.session?.id || json?.session_id || null;
+          if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+        }
+
+        await fetch('/api/log-event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-        if (!res.ok) { router.push('/'); return; }
-        const json = await res.json();
-        sessionId = json?.session?.id || json?.session_id || null;
-        if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+          body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
+        }).catch(()=>{});
+
+        router.push(`/module/${m.id}`);
+      } catch (e) {
+        console.error('openModuleDashboard failed', e);
+        router.push(`/module/${m.id}`);
       }
-
-      await fetch('/api/log-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
-      }).catch(()=>{});
-
-      router.push(`/module/${m.id}`);
-    } catch (e) {
-      console.error('openModuleDashboard failed', e);
-      router.push(`/module/${m.id}`);
-    }
+    })();
   }
 
   const familyOrder = useMemo(() => {
@@ -147,7 +154,7 @@ export default function CoinsPage() {
     return modules.filter(m => {
       if (activeFamily && activeFamily !== 'All') {
         const fams = m.module_families?.map(f => (f.name ?? '').toLowerCase()) ?? [];
-        if (!fams.includes(String(activeFamily).toLowerCase())) return false;
+        if (!fams.includes(activeFamily.toLowerCase())) return false;
       }
       if (!q) return true;
       const desc = (m.description ?? '') as string;
@@ -156,12 +163,23 @@ export default function CoinsPage() {
     });
   }, [modules, activeFamily, search]);
 
+  // density toggle handler
+  function toggleDensity() {
+    const next = density === 'default' ? 'dense' : 'default';
+    setDensity(next);
+    try { localStorage.setItem('pyp_tile_density', next); } catch (e) {}
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-12">
+    <main
+      className="min-h-screen bg-black text-white px-6 py-12"
+      // apply dynamic CSS var for tile height
+      style={{ ['--coin-tile-height' as any]: density === 'dense' ? '300px' : '340px' }}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
@@ -172,7 +190,7 @@ export default function CoinsPage() {
             <div className="text-rose-400 mb-4">Warning: failed to load modules: {fetchError}</div>
           ) : null}
 
-          {/* Controls */}
+          {/* Controls: search + family + density */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <input
@@ -185,7 +203,6 @@ export default function CoinsPage() {
               />
 
               <div className="hidden md:flex items-center gap-2 text-xs text-slate-400">
-                <label htmlFor="family-filter" className="sr-only">Filter modules by family</label>
                 <span>Filter:</span>
                 <select
                   id="family-filter"
@@ -203,6 +220,19 @@ export default function CoinsPage() {
               <div className="hidden md:flex items-center text-xs text-slate-400">
                 {filteredModules.length} modules
               </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-400 mr-2">Density</label>
+                <button
+                  onClick={toggleDensity}
+                  className={`px-3 py-1 rounded-md text-sm ${density === 'dense' ? 'bg-sky-500 text-black' : 'bg-transparent border border-slate-700 text-slate-200'}`}
+                  aria-pressed={density === 'dense'}
+                  aria-label="Toggle tile density"
+                >
+                  {density === 'dense' ? 'Dense' : 'Default'}
+                </button>
+              </div>
+
               <button onClick={() => { setSearch(''); setActiveFamily('All'); }} className="px-3 py-2 rounded-md border border-slate-700 text-sm">Reset</button>
             </div>
           </div>
