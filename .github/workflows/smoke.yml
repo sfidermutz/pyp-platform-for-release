@@ -1,97 +1,131 @@
-name: Smoke Test - PYP End-to-End
+name: Manual Smoke Tests
 
 on:
   workflow_dispatch:
     inputs:
       deploy_url:
-        description: 'Full deployed base URL (e.g. https://my-site.vercel.app). Leave empty to use secret DEPLOY_URL'
+        description: 'Full deployed URL (e.g. https://pyp.example.com)'
+        required: true
+        default: ''
+      demo_token:
+        description: 'Demo token to use for create-session (if needed)'
         required: false
+        default: 'demo-token-123'
+      scenario_id:
+        description: 'Scenario ID to test'
+        required: true
+        default: 'HYB-PRE-01'
 
 jobs:
   smoke:
-    name: End-to-end smoke test
     runs-on: ubuntu-latest
     env:
-      # Uses workflow input deploy_url or falls back to repository secret DEPLOY_URL
-      DEPLOY_URL: ${{ github.event.inputs.deploy_url || secrets.DEPLOY_URL }}
-      # Demo token used by the smoke test - override in repo secrets if different
-      DEMO_TOKEN: 'demo-token-123'
+      DEPLOY_URL: ${{ github.event.inputs.deploy_url }}
+      DEMO_TOKEN: ${{ github.event.inputs.demo_token }}
+      SCENARIO_ID: ${{ github.event.inputs.scenario_id }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Run smoke script
-        shell: bash
+      - name: Validate inputs
         run: |
-          cat > smoke.js <<'JS'
-          (async () => {
-            try {
-              const base = process.env.DEPLOY_URL;
-              if (!base) {
-                console.error('DEPLOY_URL not set (either pass inputs.deploy_url or set secret DEPLOY_URL)');
-                process.exit(2);
-              }
-              const headers = {'Content-Type':'application/json'};
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "Please provide deploy_url when dispatching the workflow."
+            exit 1
+          fi
+          echo "Running smoke tests against $DEPLOY_URL"
 
-              console.log('Using DEPLOY_URL:', base);
+      - name: Create session
+        id: create_session
+        run: |
+          echo "Creating session with token $DEMO_TOKEN"
+          resp=$(curl -s -X POST "$DEPLOY_URL/api/create-session" \
+            -H "Content-Type: application/json" \
+            -d "{\"token\":\"$DEMO_TOKEN\"}")
+          echo "create-session response: $resp"
+          echo "::set-output name=resp::$resp"
+          sid=$(echo "$resp" | jq -r '.session.id // .session_id // ""')
+          if [ -z "$sid" ]; then
+            echo "Failed to create session. Full response:"
+            echo "$resp"
+            exit 2
+          fi
+          echo "::set-output name=session_id::$sid"
 
-              // 1) create-session
-              const r1 = await fetch(`${base}/api/create-session`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ token: process.env.DEMO_TOKEN })
-              });
-              const j1 = await r1.json().catch(()=>null);
-              console.log('create-session status', r1.status, j1);
-              if (r1.status !== 200 || !j1?.session?.id) {
-                console.error('create-session failed');
-                process.exit(3);
-              }
-              const sid = j1.session.id;
+      - name: Lock DP1 (decisions.lock)
+        id: lock_dp
+        run: |
+          SESSION="${{ steps.create_session.outputs.session_id }}"
+          echo "Locking DP1 for session $SESSION"
+          payload=$(jq -n \
+            --arg sh "$SESSION" \
+            --arg sc "$SCENARIO_ID" \
+            '{
+              session_hint: $sh,
+              scenario_id: $sc,
+              decision_point: 1,
+              final_option_id: "DP1-A",
+              selection_sequence: ["DP1-A"],
+              change_count: 1,
+              confidence: 4,
+              confidence_change_count: 1,
+              time_on_page_ms: 1200,
+              timestamps: { first_selection: 0, final_selection: 0 }
+            }')
+          echo "payload: $payload"
+          out=$(curl -s -X POST "$DEPLOY_URL/api/decisions/lock" -H "Content-Type: application/json" -d "$payload")
+          echo "decisions/lock -> $out"
+          ok=$(echo "$out" | jq -r '.decision.id // empty')
+          if [ -z "$ok" ]; then
+            echo "decisions/lock failed or returned no id"
+            exit 3
+          fi
+          echo "::set-output name=lock_res::$out"
 
-              // 2) store-scenario-metrics
-              const metricsPayload = {
-                session_id: sid,
-                scenario_id: 'HYB-PRE-01',
-                metrics: { mission_score: 65, decision_quality: 80, trust_calibration: 86 }
-              };
-              const r2 = await fetch(`${base}/api/store-scenario-metrics`, {
-                method: 'POST',
-                headers: { ...headers, 'x-debug':'true' },
-                body: JSON.stringify(metricsPayload)
-              });
-              const j2 = await r2.json().catch(()=>null);
-              console.log('store-scenario-metrics', r2.status, j2);
-              if (r2.status !== 200 || !j2?.success) {
-                console.error('store-scenario-metrics failed');
-                process.exit(4);
-              }
+      - name: Compute debrief
+        id: compute
+        run: |
+          SESSION="${{ steps.create_session.outputs.session_id }}"
+          echo "Compute debrief for session $SESSION, scenario $SCENARIO_ID"
+          payload=$(jq -n \
+            --arg sh "$SESSION" \
+            --arg sc "$SCENARIO_ID" \
+            --arg refl "This is a smoke-test reflection with more than fifty words. We are exercising the compute-debrief flow for smoke validation purposes. This is not real user data and is only used for CI verification purposes." \
+            '{
+              session_hint: $sh,
+              scenario_id: $sc,
+              selections: {
+                "1": { "optionId": "DP1-A", "confidence": 4 },
+                "2": { "optionId": "DP2-A1", "confidence": 3 },
+                "3": { "optionId": "DP3-A1a", "confidence": 3 }
+              },
+              reflection: $refl
+            }')
+          echo "payload: $payload"
+          resp=$(curl -s -X POST "$DEPLOY_URL/api/compute-debrief" -H "Content-Type: application/json" -d "$payload")
+          echo "compute-debrief -> $resp"
+          ok=$(echo "$resp" | jq -r '.mission_score // empty')
+          if [ -z "$ok" ]; then
+            echo "compute-debrief failed or returned no mission_score"
+            exit 4
+          fi
+          echo "::set-output name=compute_resp::$resp"
 
-              // 3) compute-debrief
-              const r3 = await fetch(`${base}/api/compute-debrief`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ session_id: sid, scenario_id: 'HYB-PRE-01' })
-              });
-              const j3 = await r3.json().catch(()=>null);
-              console.log('compute-debrief', r3.status, j3);
-              if (r3.status !== 200 || !j3) {
-                console.error('compute-debrief failed');
-                process.exit(5);
-              }
+      - name: Verify debrief persisted
+        id: verify_debrief
+        run: |
+          SESSION="${{ steps.create_session.outputs.session_id }}"
+          echo "GET debrief for $SESSION / $SCENARIO_ID"
+          out=$(curl -s -X GET "$DEPLOY_URL/api/debrief?session_id=$SESSION&scenario_id=$SCENARIO_ID")
+          echo "debrief GET -> $out"
+          ok=$(echo "$out" | jq -r '.debrief.metrics.mission_score // empty')
+          if [ -z "$ok" ]; then
+            echo "debrief not found or not persisted -> exiting"
+            exit 5
+          fi
 
-              console.log('Smoke test PASS — session:', sid);
-              process.exit(0);
-            } catch (err) {
-              console.error('Smoke test script error', err);
-              process.exit(10);
-            }
-          })();
-          JS
-
-          node smoke.js
+      - name: Optional: Generate certificate (best-effort)
+        run: |
+          SESSION="${{ steps.create_session.outputs.session_id }}"
+          echo "Attempt generate certificate (best-effort)"
+          payload=$(jq -n --arg s "$SESSION" --arg sc "$SCENARIO_ID" '{ session_id: $s, scenario_id: $sc }')
+          resp=$(curl -s -X POST "$DEPLOY_URL/api/generate-certificate" -H "Content-Type: application/json" -d "$payload")
+          echo "generate-certificate -> $resp"
+          # do not fail if certificate generation not configured
