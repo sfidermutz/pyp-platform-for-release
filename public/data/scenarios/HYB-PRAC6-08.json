@@ -1,0 +1,90 @@
+{
+  "scenario_id": "HYB-PRAC6-08",
+  "module_id": "HYB",
+  "operation_name": "Crossed Lines",
+  "year": 2031,
+  "rank_header": "OF-6",
+  "region_aor_header": "Eastern land corridor – logistics and population movement",
+  "role_metadata": "Senior land component planner in a multinational corps HQ, synchronizing movements, host-nation support, and information posture.",
+  "scenario_lo_id": "HYB-LO-08",
+  "scenario_lo_text": "Evaluate how hybrid activity along key land corridors affects logistics, population movement, and perceptions of allied presence, and organize cross-sector response options.",
+  "bloom_primary_level": "Evaluate",
+  "krathwohl_secondary_level": "Organizing",
+  "scenario_intro": "TODO: BETH - final approved intro (80-140 words) for HYB-PRAC6-08.",
+  "dp1": {
+    "stem": "",
+    "options": [
+      { "option_id":"DP1-A","text":"TODO: BETH - DP1-A","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+      { "option_id":"DP1-B","text":"TODO: BETH - DP1-B","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+      { "option_id":"DP1-C","text":"TODO: BETH - DP1-C","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+    ]
+  },
+  "dp2": [
+    { "branch":"A","stem":"TODO: BETH - DP2 A stem","options":[
+        { "option_id":"DP2-A1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-A2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-A3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"B","stem":"TODO: BETH - DP2 B stem","options":[
+        { "option_id":"DP2-B1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-B2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-B3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"C","stem":"TODO: BETH - DP2 C stem","options":[
+        { "option_id":"DP2-C1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-C2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP2-C3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] }
+  ],
+  "dp3": [
+    { "branch":"AA","stem":"TODO: BETH - DP3 AA stem","options":[
+        { "option_id":"DP3-AA1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AA2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AA3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"AB","stem":"TODO: BETH - DP3 AB stem","options":[
+        { "option_id":"DP3-AB1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AB2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AB3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"AC","stem":"TODO: BETH - DP3 AC stem","options":[
+        { "option_id":"DP3-AC1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AC2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-AC3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"BA","stem":"TODO: BETH - DP3 BA stem","options":[
+        { "option_id":"DP3-BA1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BA2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BA3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"BB","stem":"TODO: BETH - DP3 BB stem","options":[
+        { "option_id":"DP3-BB1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BB2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BB3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"BC","stem":"TODO: BETH - DP3 BC stem","options":[
+        { "option_id":"DP3-BC1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BC2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-BC3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"CA","stem":"TODO: BETH - DP3 CA stem","options":[
+        { "option_id":"DP3-CA1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CA2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CA3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"CB","stem":"TODO: BETH - DP3 CB stem","options":[
+        { "option_id":"DP3-CB1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CB2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CB3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] },
+    { "branch":"CC","stem":"TODO: BETH - DP3 CC stem","options":[
+        { "option_id":"DP3-CC1","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CC2","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]},
+        { "option_id":"DP3-CC3","text":"TODO: BETH","metric_weights":{"DecisionQuality":0},"bias_tags":["TODO: BETH"]}
+      ] }
+  ],
+  "reflections": {
+    "reflection1": { "id":"R1","type":"process","text":"TODO: BETH - Reflection 1","min_words":50,"max_words":300 },
+    "reflection2": { "id":"R2","type":"lo_self_assessment","text":"TODO: BETH - Reflection 2","min_words":50,"max_words":300 }
+  }
+}
