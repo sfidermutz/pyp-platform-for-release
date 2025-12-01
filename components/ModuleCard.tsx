@@ -4,23 +4,24 @@
 import React from 'react';
 
 type Family = { name?: string };
+
 /**
- * Accept a permissive module shape — keep fields optional to be tolerant of varying DB schemas.
- * This prevents TypeScript incompatibilities when different files declare slightly different ModuleRecord shapes.
+ * Permissive ModuleRecord used by ModuleCard.
+ * Note: fields are optional and allow `undefined` to remain compatible with other module shapes
+ * returned by Supabase or used in other files. Index signature allows additional metadata without breaking typing.
  */
 export type ModuleRecord = {
   id: string;
   name: string;
-  description?: string | null;
-  image_path?: string | null;
-  default_scenario_id?: string | null;
-  module_code?: string | null;
-  ects?: number | null;
-  module_families?: Family[];
-  // Extra fields that other files may include — keep optional for compatibility
-  shelf_position?: number | null;
-  is_demo?: boolean;
-  // allow arbitrary additional metadata without breaking typing
+  description?: string | null | undefined;
+  image_path?: string | null | undefined;
+  default_scenario_id?: string | null | undefined;
+  module_code?: string | null | undefined;
+  ects?: number | null | undefined;
+  module_families?: Family[] | undefined;
+  // Optional additional fields that other modules may contain
+  shelf_position?: number | null | undefined;
+  is_demo?: boolean | undefined;
   [key: string]: any;
 };
 
@@ -55,11 +56,11 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
         )}
       </div>
 
-      <div className="module-tile-title" title={module.name}>
+      <div className="module-tile-title" title={String(module.name ?? '')}>
         {module.name}
       </div>
 
-      <div className="module-tile-desc" title={module.description ?? ''}>
+      <div className="module-tile-desc" title={String(module.description ?? '')}>
         {module.description ?? <span className="text-muted">No description</span>}
       </div>
 
