@@ -11,9 +11,9 @@ type ModuleType = {
   description?: string | null;
   image_path?: string | null;
   default_scenario_id?: string;
-  scenario_id?: string;
   module_families?: Family[];
   module_code?: string | null;
+  ects?: number | null;
 };
 
 type ScenarioMeta = {
@@ -27,65 +27,15 @@ type ScenarioMeta = {
 
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [scenarios, setScenarios] = useState<ScenarioMeta[]>([]);
   const [scLoading, setScLoading] = useState<boolean>(true);
   const [scError, setScError] = useState<string | null>(null);
+  const [starting, setStarting] = useState<boolean>(false);
 
   const moduleCode = (module?.module_code || (module?.module_families && module.module_families[0]?.name) || module?.id || '').toString();
 
   useEffect(() => {
     let active = true;
-
-    async function fetchRemoteScenariosFromGitHub(code: string) {
-      try {
-        const listRes = await fetch('https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios');
-        if (!listRes.ok) return [];
-        const listing = await listRes.json();
-        if (!Array.isArray(listing)) return [];
-
-        const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
-        const results: ScenarioMeta[] = [];
-        const concurrency = 6;
-
-        for (let i = 0; i < jsonFiles.length; i += concurrency) {
-          const batch = jsonFiles.slice(i, i + concurrency);
-          const downloads = batch.map((item: any) =>
-            fetch(item.download_url)
-              .then(r => (r.ok ? r.text() : Promise.reject(new Error(`fetch ${item.name} ${r.status}`))))
-              .then(text => {
-                try {
-                  const parsed = JSON.parse(text);
-                  const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.moduleCode;
-                  if (mid && String(mid).toLowerCase() === String(code).toLowerCase()) {
-                    return {
-                      filename: item.name,
-                      scenario_id: parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null,
-                      title: parsed?.title ?? parsed?.name ?? '',
-                      role: parsed?.role ?? '',
-                      learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? parsed?.scenarioLO ?? '',
-                      narrative: parsed?.narrative ?? parsed?.situation ?? ''
-                    } as ScenarioMeta;
-                  }
-                  return null;
-                } catch (e) {
-                  return null;
-                }
-              })
-              .catch(() => null)
-          );
-
-          const batchRes = await Promise.all(downloads);
-          for (const got of batchRes) {
-            if (got) results.push(got);
-          }
-          await new Promise((r) => setTimeout(r, 100));
-        }
-        return results;
-      } catch (e) {
-        return [];
-      }
-    }
 
     async function loadScenarios() {
       setScLoading(true);
@@ -104,8 +54,43 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         if (serverScenarios.length > 0) {
           if (active) setScenarios(serverScenarios);
         } else {
-          const remote = await fetchRemoteScenariosFromGitHub(moduleCode);
-          if (active) setScenarios(remote);
+          // fallback: try raw github listing (non-blocking)
+          const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
+          try {
+            const listRes = await fetch(`${RAW_BASE}/data/scenarios`);
+            if (listRes.ok) {
+              const listing = await listRes.json();
+              if (Array.isArray(listing)) {
+                const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
+                const results: ScenarioMeta[] = [];
+                for (const item of jsonFiles) {
+                  try {
+                    const r = await fetch(item.download_url);
+                    if (!r.ok) continue;
+                    const parsed = await r.json();
+                    const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleId;
+                    if (mid && String(mid).toLowerCase() === String(moduleCode).toLowerCase()) {
+                      results.push({
+                        filename: item.name,
+                        scenario_id: parsed?.scenarioId ?? parsed?.scenario_id ?? parsed?.id ?? null,
+                        title: parsed?.title ?? parsed?.name ?? '',
+                        role: parsed?.role ?? '',
+                        learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? '',
+                        narrative: parsed?.situation ?? parsed?.narrative ?? ''
+                      });
+                    }
+                  } catch (_) { /* ignore individual file errors */ }
+                }
+                if (active) setScenarios(results);
+              } else {
+                if (active) setScenarios([]);
+              }
+            } else {
+              if (active) setScenarios([]);
+            }
+          } catch (_) {
+            if (active) setScenarios([]);
+          }
         }
       } catch (e) {
         setScError(String(e));
@@ -117,15 +102,15 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
     loadScenarios();
     return () => { active = false; };
-  }, [moduleCode, module?.id]);
+  }, [moduleCode]);
 
   function prefetchScenario(scenarioId?: string) {
     if (!scenarioId || typeof window === 'undefined') return;
     const key = `pyp_scenario_${scenarioId}`;
     try {
-      if (localStorage.getItem(key)) return; // already cached
+      if (localStorage.getItem(key)) return;
     } catch (e) {
-      // ignore localStorage errors
+      // ignore
     }
 
     (async () => {
@@ -133,22 +118,18 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         const localResp = await fetch(`/data/scenarios/${encodeURIComponent(scenarioId)}.json`);
         if (localResp.ok) {
           const j = await localResp.json();
-          try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) { /* ignore */ }
+          try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) {}
           return;
         }
-      } catch (e) {
-        // ignore; try raw
-      }
+      } catch (e) {}
       try {
         const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
         const r = await fetch(`${RAW_BASE}/data/scenarios/${encodeURIComponent(scenarioId)}.json`);
         if (r.ok) {
           const j = await r.json();
-          try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) { /* ignore */ }
+          try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) {}
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     })();
   }
 
@@ -160,9 +141,9 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
     try {
       prefetchScenario(scenarioId);
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 
-    setLoading(true);
+    setStarting(true);
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
       if (!sessionId) {
@@ -178,8 +159,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         });
 
         if (!res.ok) {
-          const fallback = `/scenario/${encodeURIComponent(scenarioId)}`;
-          window.location.href = fallback;
+          window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
           return;
         }
 
@@ -194,75 +174,74 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId, event_type: 'enter_scenario', payload: { scenario_id: scenarioId }})
         });
-      } catch (logErr) {
-        // ignore logging failure
-      }
+      } catch (logErr) {}
 
       try {
-        router.push(`/scenario/${encodeURIComponent(scenarioId)}`);
-        setTimeout(() => {
-          if (window.location.pathname.indexOf('/scenario/') !== 0) {
-            window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
-          }
-        }, 1000);
+        window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
       } catch (rpErr) {
         window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
       }
     } catch (e) {
       window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
     } finally {
-      setLoading(false);
+      setStarting(false);
     }
   }
 
   async function startDefaultScenario() {
-    // prefer explicit default_scenario_id provided by module record (module.default_scenario_id),
-    // fall back to module.scenario_id or a safe 'HYB-01'
-    const scenarioToStart = (module?.default_scenario_id || module?.scenario_id || 'HYB-01');
+    const scenarioToStart = (module?.default_scenario_id || 'HYB-PRE-01');
     await ensureSessionAndNavigate(scenarioToStart);
   }
 
   return (
-    <div className="bg-[#0b0f14] border border-[#202933] rounded-xl p-6">
-      <div className="flex items-start gap-6">
-        {module?.image_path ? (
-          <div className="w-36 h-36 flex-shrink-0 overflow-hidden rounded-full bg-black/20 border border-slate-800">
-            <img src={module.image_path} alt={module.name} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="w-36 h-36 flex-shrink-0 rounded-full bg-slate-800/40 flex items-center justify-center text-white font-semibold">
-            {module?.name ? module.name.split(' ').slice(0,2).map(s=>s[0]).join('') : 'M'}
-          </div>
-        )}
-
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{module?.name ?? 'Module'}</h1>
-          {module?.module_families && module.module_families.length > 0 && (
-            <div className="text-xs text-slate-400 mt-1">{module.module_families.map(f=>f.name).filter(Boolean).join(' · ')}</div>
+    <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+        <div className="w-28 h-28 flex-shrink-0">
+          {module?.image_path ? (
+            <img src={module.image_path} alt={module.name} className="w-full h-full object-cover rounded-full border border-slate-800" />
+          ) : (
+            <div className="w-28 h-28 rounded-full bg-slate-800 flex items-center justify-center text-white font-semibold text-xl">
+              {module?.name ? module.name.split(' ').slice(0,2).map(s=>s[0]).join('') : 'M'}
+            </div>
           )}
-          {module?.description ? <p className="mt-3 text-slate-300">{module.description}</p> : <p className="mt-3 text-slate-300">No module description provided.</p>}
+        </div>
 
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              onClick={startDefaultScenario}
-              disabled={loading}
-              className={`px-5 py-2 rounded-md font-semibold ${loading ? 'bg-slate-600 cursor-wait' : 'bg-sky-500 text-black'}`}
-            >
-              {loading ? 'Starting…' : 'Start Default Scenario'}
-            </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">{module?.name ?? 'Module'}</h1>
+              <div className="mt-1 text-xs text-slate-400">
+                {module?.module_families && module.module_families.length > 0 ? module.module_families.map(f=>f.name).filter(Boolean).join(' · ') : null}
+              </div>
+              {module?.description ? <p className="mt-3 text-slate-300 text-sm">{module.description}</p> : null}
+            </div>
 
-            <button
-              onClick={() => { window.location.href = '/coins'; }}
-              className="px-4 py-2 rounded-md border border-slate-700 text-sm text-slate-200"
-            >
-              Back to Coins
-            </button>
+            <div className="flex flex-col items-end gap-3">
+              <div className="inline-flex items-center gap-2">
+                <div className="module-badge px-3 py-1">{module?.module_code ?? '—'}</div>
+                <div className="module-badge px-3 py-1">Scenario: {module?.default_scenario_id ?? 'TBD'}</div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="module-badge px-3 py-1">{module?.ects ?? '0.1'} ECTS</div>
+                <button
+                  onClick={startDefaultScenario}
+                  disabled={starting}
+                  className={`px-4 py-2 rounded-md font-semibold ${starting ? 'bg-slate-600' : 'bg-amber-500 text-black'}`}
+                >
+                  {starting ? 'Starting…' : 'Start Default Scenario'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* SCENARIO LIST */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Scenarios</h2>
+
         {scLoading ? (
           <div className="mt-4 text-slate-300">Loading scenarios…</div>
         ) : scError ? (
@@ -270,30 +249,36 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         ) : scenarios.length === 0 ? (
           <div className="mt-4 text-slate-400">No scenarios found for this module.</div>
         ) : (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {scenarios.map((s) => {
               const idForStart = s.scenario_id ?? s.filename ?? undefined;
               return (
-                <div key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-md p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold">{s.title ?? s.scenario_id}</div>
+                <article key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-xl p-4 flex flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-sky-300 truncate">{s.title ?? s.scenario_id}</div>
                       {s.role ? <div className="text-xs text-slate-400 mt-1">{s.role}</div> : null}
-                      {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic">{s.learningOutcome}</div> : null}
-                      {s.narrative ? <div className="text-sm text-slate-300 mt-3 line-clamp-3">{s.narrative}</div> : null}
+                      {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic line-clamp-2">{s.learningOutcome}</div> : null}
                     </div>
-                    <div className="flex-shrink-0 ml-4">
+                    <div className="flex-shrink-0">
                       <button
                         onClick={() => ensureSessionAndNavigate(idForStart)}
                         className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
-                        disabled={!idForStart || loading}
+                        disabled={!idForStart}
                         title={!idForStart ? 'No scenario id available' : `Start ${s.title ?? idForStart}`}
                       >
                         Start
                       </button>
                     </div>
                   </div>
-                </div>
+
+                  {s.narrative ? <p className="mt-3 text-sm text-slate-300 line-clamp-3">{s.narrative}</p> : null}
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-xs text-slate-400">ID: <span className="text-slate-200">{s.scenario_id ?? s.filename}</span></div>
+                    <div className="text-xs text-slate-400">Role: <span className="text-slate-200">{s.role ?? '—'}</span></div>
+                  </div>
+                </article>
               );
             })}
           </div>
