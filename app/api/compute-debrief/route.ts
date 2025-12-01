@@ -13,15 +13,40 @@ const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient
  *
  * Body expected:
  * {
- *   session_hint, scenario_id, selections, reflection, scenario
+ *   session_hint, session_id, scenario_id, selections, reflection, scenario
  * }
+ *
+ * Behavior changes:
+ * - Accept session_id as a fallback to session_hint.
+ * - If `scenario` is not supplied in the body but `scenario_id` is, fetch
+ *   the canonical JSON from /data/scenarios/<scenario_id>.json on the same origin.
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { session_hint, scenario_id, selections = {}, reflection = '', scenario } = body;
+    const body = await req.json().catch(() => ({}));
+    // Accept session_hint OR session_id
+    const session_hint = body.session_hint ?? body.session_id ?? null;
+    const scenario_id = body.scenario_id ?? null;
+    const selections = body.selections ?? {};
+    const reflection = body.reflection ?? '';
+    const incomingScenario = body.scenario ?? null;
 
-    const sc = scenario;
+    // Use provided scenario if present, otherwise attempt to fetch canonical scenario JSON
+    let sc = incomingScenario;
+    if (!sc && scenario_id) {
+      try {
+        const base = new URL(req.url).origin;
+        const scenarioUrl = `${base}/data/scenarios/${scenario_id}.json`;
+        const fetchResp = await fetch(scenarioUrl);
+        if (fetchResp.ok) {
+          sc = await fetchResp.json();
+        } else {
+          console.warn(`compute-debrief: failed to fetch canonical scenario ${scenario_id} -> ${fetchResp.status}`);
+        }
+      } catch (fetchErr) {
+        console.error('compute-debrief: error fetching canonical scenario', fetchErr);
+      }
+    }
 
     function getOptionsFromDp(dpRaw: any): any[] {
       if (!dpRaw) return [];
@@ -83,7 +108,7 @@ export async function POST(req: NextRequest) {
     const decision_quality = count ? (decisionQualitySum / count) : 0;
     const confidence_alignment = count ? (confidenceAlignmentSum / count) : 0;
 
-    const wordCount = reflection.trim().split(/\s+/).filter(Boolean).length;
+    const wordCount = (reflection || '').trim().split(/\s+/).filter(Boolean).length;
     let reflectionQuality = 0;
     if (wordCount < 50) {
       reflectionQuality = Math.min(50, Math.max(0, (wordCount / 50) * 50));
@@ -125,12 +150,12 @@ export async function POST(req: NextRequest) {
       reflection_quality: Math.round(reflectionQuality)
     };
 
-    // Attempt to persist a debrief record if DB configured
+    // Attempt to persist a debrief record if DB configured and we have a session hint
     let debriefSaved = false;
     let debriefId: string | null = null;
     try {
       if (supabaseAdmin && session_hint) {
-        const insertPayload = {
+        const insertPayload: any = {
           session_id: session_hint,
           scenario_id,
           selections: selections ?? {},
@@ -139,6 +164,12 @@ export async function POST(req: NextRequest) {
           short_feedback,
           meta: { computed_at: new Date().toISOString() }
         };
+
+        // Include the canonical scenario id & a small scenario snapshot if available for auditing
+        if (sc && sc.id) {
+          insertPayload.meta.scenario_snapshot = { id: sc.id, title: sc.title ?? null };
+        }
+
         const { data: inserted, error: insertErr } = await supabaseAdmin
           .from('debriefs')
           .insert([insertPayload])
