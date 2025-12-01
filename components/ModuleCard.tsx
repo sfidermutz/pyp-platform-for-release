@@ -6,13 +6,12 @@ import React from 'react';
 type Family = { name?: string };
 
 /**
- * Permissive ModuleRecord used by ModuleCard.
- * Optional fields allow compatibility with various DB shapes.
+ * Compact ModuleRecord used by ModuleCard.
+ * For now, force PYP fallback token for all coins until custom coins are finished.
  */
 export type ModuleRecord = {
   id: string;
   name: string;
-  // remove long descriptions from the tile for compact uniform look
   description?: string | null | undefined;
   image_path?: string | null | undefined;
   default_scenario_id?: string | null | undefined;
@@ -24,6 +23,11 @@ export type ModuleRecord = {
   [key: string]: any;
 };
 
+// Toggle: show PYP fallback for all tiles while custom coins are unfinished.
+// Set to `false` if you want to show module.image_path when present.
+const FORCE_PYP_TOKEN = true;
+const PYP_TOKEN_PATH = '/coins/pyp-token.svg';
+
 export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, onOpen: (m: ModuleRecord) => void }) {
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -31,6 +35,12 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
       onOpen(module);
     }
   };
+
+  const imageSrc = (() => {
+    if (FORCE_PYP_TOKEN) return PYP_TOKEN_PATH;
+    if (module.image_path) return String(module.image_path);
+    return PYP_TOKEN_PATH;
+  })();
 
   return (
     <article
@@ -41,43 +51,32 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
       onKeyDown={handleKey}
       className="coin-tile"
     >
-      {/* Top: icon + title */}
       <div>
         <div style={{ width: 84, height: 84 }} className="relative mx-auto">
-          {module.image_path ? (
-            <img
-              src={String(module.image_path)}
-              alt={module.name ?? ''}
-              className="tile-image"
-              loading="lazy"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
-            />
-          ) : (
-            <img src="/coins/placeholder.svg" alt="" className="tile-image" loading="lazy" />
-          )}
+          <img
+            src={imageSrc}
+            alt={module.name ?? ''}
+            className="tile-image"
+            loading="lazy"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = PYP_TOKEN_PATH; }}
+          />
         </div>
 
         <div className="module-tile-title mt-3" title={String(module.name ?? '')}>
           {module.name}
         </div>
 
-        {/* Small single-line subtitle (if you want a short tagline, else remove) */}
-        {module?.description ? (
-          <div className="text-xs text-slate-300 mt-2" style={{ minHeight: '28px', maxHeight: '28px', overflow: 'hidden' }}>
-            {String(module.description).slice(0, 80)}
-          </div>
-        ) : (
-          <div style={{ height: 28 }} />
-        )}
+        {/* single-line short subtitle for compactness */}
+        <div className="module-tile-sub">
+          {module.description ? String(module.description).slice(0, 64) : ''}
+        </div>
       </div>
 
-      {/* Footer: badges + CTA pinned to bottom */}
       <div className="coin-tile-footer">
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           {module.module_families && module.module_families.length > 0 && module.module_families.slice(0,2).map((f, i) => (
             <div key={i} className="module-badge" style={{ fontSize: 11, padding: '4px 6px' }}>{f.name}</div>
           ))}
-          {/* Show ECTS only if present */}
           {typeof module.ects === 'number' ? (
             <div className="module-badge" style={{ fontSize: 11 }}>ECTS {module.ects}</div>
           ) : null}
