@@ -119,7 +119,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     return () => { active = false; };
   }, [moduleCode, module?.id]);
 
-  // Prefetch helper: non-blocking fetch and cache scenario JSON
   function prefetchScenario(scenarioId?: string) {
     if (!scenarioId || typeof window === 'undefined') return;
     const key = `pyp_scenario_${scenarioId}`;
@@ -129,7 +128,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
       // ignore localStorage errors
     }
 
-    // Try local first, then fallback to raw GitHub
     (async () => {
       try {
         const localResp = await fetch(`/data/scenarios/${encodeURIComponent(scenarioId)}.json`);
@@ -160,12 +158,9 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
       return;
     }
 
-    // Start prefetch but do not block navigation on it
     try {
       prefetchScenario(scenarioId);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) { /* ignore */ }
 
     setLoading(true);
     try {
@@ -221,6 +216,8 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
   }
 
   async function startDefaultScenario() {
+    // prefer explicit default_scenario_id provided by module record (module.default_scenario_id),
+    // fall back to module.scenario_id or a safe 'HYB-01'
     const scenarioToStart = (module?.default_scenario_id || module?.scenario_id || 'HYB-01');
     await ensureSessionAndNavigate(scenarioToStart);
   }
@@ -243,7 +240,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           {module?.module_families && module.module_families.length > 0 && (
             <div className="text-xs text-slate-400 mt-1">{module.module_families.map(f=>f.name).filter(Boolean).join(' · ')}</div>
           )}
-          <p className="mt-3 text-slate-300">{module?.description ?? 'No description available.'}</p>
+          {module?.description ? <p className="mt-3 text-slate-300">{module.description}</p> : <p className="mt-3 text-slate-300">No module description provided.</p>}
 
           <div className="mt-6 flex items-center gap-3">
             <button
