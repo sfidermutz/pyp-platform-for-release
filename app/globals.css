@@ -2,29 +2,21 @@
 
 /* PYP Branding tokens (from Beth's Brand Kit) */
 :root {
-  /* Colors */
   --bg-carbon: #0A0C0F;
   --bg-gunmetal: #1C1F22;
   --bg-nearblack: #0E0E11;
   --text-primary: #FFFFFF;
   --text-muted: #C4CCD2;
-  --nato-blue: #003366;
-  --steel-gray: #4C5560;
-  --accent-gold: #C9A44A;
-  --error-red: #C4423C;
-  --surface-1: #071017;
-  --surface-2: #0b1114;
   --tile-border: rgba(255,255,255,0.06);
 }
 
-/* Base body */
+/* Base */
 body {
   background: var(--bg-gunmetal);
   color: var(--text-primary);
   font-family: var(--font-body, Inter, system-ui, -apple-system, "Segoe UI", Roboto);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  line-height: 1.45;
   margin: 0;
   padding: 0;
 }
@@ -39,7 +31,7 @@ body {
 @media(min-width:1024px){ .coin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media(min-width:1280px){ .coin-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
-/* Core tile: equal heights and visible CTA */
+/* Core tile */
 .coin-tile {
   display: flex;
   flex-direction: column;
@@ -62,7 +54,6 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-/* tile image */
 .tile-image {
   width: 84px;
   height: 84px;
@@ -70,7 +61,7 @@ body {
   border-radius: 9999px;
 }
 
-/* tile title - clamp to two lines */
+/* Title clamped to two lines */
 .module-tile-title {
   font-family: var(--font-header, 'Orbitron', sans-serif);
   font-weight: 600;
@@ -85,17 +76,18 @@ body {
   line-height: 1.15;
 }
 
-/* small subtitle / short tagline */
+/* Small subtitle — single-line */
 .module-tile-sub {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 8px;
-  min-height: 26px;
-  max-height: 26px;
+  height: 26px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Footer area fixed height so Start button never gets cut off */
+/* Footer area */
 .coin-tile-footer {
   display: flex;
   align-items: center;
@@ -104,10 +96,22 @@ body {
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px dashed rgba(255,255,255,0.02);
-  height: 62px; /* keep CTA area visible */
+  height: 72px;      /* ensure CTA area visible */
+  min-height: 72px;
+  box-sizing: border-box;
+  overflow: visible; /* allow button to be visible */
 }
 
-/* badges */
+/* Left area for badges - allow shrink and truncation */
+.tile-footer-left {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* badges: allow shrink and ellipsize so they won't push CTA off-screen */
 .module-badge {
   background: rgba(255,255,255,0.03);
   padding: 6px 8px;
@@ -115,19 +119,30 @@ body {
   font-size: 12px;
   color: var(--text-muted);
   border: 1px solid rgba(255,255,255,0.04);
+  flex: 0 1 auto; /* allow shrink */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
-/* small helpers */
+/* Right area for the CTA — never shrink */
+.tile-footer-right { flex: 0 0 auto; display:flex; align-items:center; gap:8px; }
+
+/* Ensure CTA fits */
+.tile-footer-right button { min-width: 56px; z-index: 5; }
+
+/* Helpers */
 .text-muted { color: var(--text-muted); }
 
-/* scenario cards */
-.scenario-card { background: var(--surface-1); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; margin-bottom: 16px; }
+/* scenario card */
+.scenario-card { background: #071017; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; }
 
-/* responsive tweaks */
-@media(max-width: 640px) {
+/* responsive */
+@media(max-width:640px) {
   .coin-tile { height: 280px; min-height: 260px; max-height: 320px; padding: 12px; border-radius: 14px; }
   .module-tile-title { font-size: 14px; }
 }
 
-/* accessibility focus */
+/* focus outlines */
 :focus { outline: 3px solid rgba(0,115,230,0.22); outline-offset: 3px; }
