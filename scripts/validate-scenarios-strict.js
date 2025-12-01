@@ -17,7 +17,6 @@
  * Usage:
  *   node scripts/validate-scenarios-strict.js
  */
-
 const fs = require('fs');
 const path = require('path');
 
@@ -27,7 +26,9 @@ function readAllJsonFiles(dir) {
   if (!fs.existsSync(dir)) {
     return { ok: false, message: `directory not found: ${dir}`, files: [] };
   }
-  const files = fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith('.json'));
+  // skip files that start with underscore (templates, drafts)
+  const files = fs.readdirSync(dir)
+    .filter(f => f.toLowerCase().endsWith('.json') && !f.startsWith('_'));
   return { ok: true, files: files.map(f => path.join(dir, f)) };
 }
 
@@ -77,7 +78,9 @@ function run() {
     total++;
     const rel = path.relative(process.cwd(), file);
     try {
-      const raw = fs.readFileSync(file, 'utf8');
+      let raw = fs.readFileSync(file, 'utf8');
+      // strip BOM if present
+      if (raw && raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
       let parsed;
       try {
         parsed = JSON.parse(raw);
