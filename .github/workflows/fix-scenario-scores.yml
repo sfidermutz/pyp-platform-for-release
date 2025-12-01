@@ -1,0 +1,186 @@
+name: Fix scenario scores (add defaults & validate)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Write add-default-scores script
+        run: |
+          mkdir -p scripts
+          cat > scripts/add-default-scores.js <<'EOF'
+          // scripts/add-default-scores.js
+          const fs = require('fs');
+          const path = require('path');
+
+          const DIR = path.join(process.cwd(), 'data', 'scenarios');
+          const DEFAULT_SCORE = 50;
+          const DEFAULT_IDEAL_CONFIDENCE = 60;
+
+          function readJson(file) {
+            try {
+              const raw = fs.readFileSync(file, 'utf8');
+              return JSON.parse(raw);
+            } catch (e) {
+              console.error('readJson error', file, e.message);
+              return null;
+            }
+          }
+
+          function collectOptionsFromDp(dpRaw) {
+            if (!dpRaw) return [];
+            if (Array.isArray(dpRaw?.options)) return dpRaw.options;
+            if (Array.isArray(dpRaw)) return dpRaw;
+            if (Array.isArray(dpRaw?.default)) return dpRaw.default;
+
+            const arr = [];
+            for (const k of Object.keys(dpRaw)) {
+              if (k === 'narrative' || k === 'stem' || k === 'options' || k === 'default') continue;
+              const v = dpRaw[k];
+              if (Array.isArray(v)) arr.push(...v);
+            }
+            return arr;
+          }
+
+          function ensureDefaultsOnOptions(options, counters) {
+            if (!options || !Array.isArray(options)) return;
+            for (const opt of options) {
+              if (!opt || typeof opt !== 'object') continue;
+              if (typeof opt.score !== 'number') {
+                opt.score = DEFAULT_SCORE;
+                counters.addedScore++;
+              }
+              if (typeof opt.ideal_confidence !== 'number') {
+                opt.ideal_confidence = DEFAULT_IDEAL_CONFIDENCE;
+                counters.addedConfidence++;
+              }
+            }
+          }
+
+          function processFile(filePath) {
+            const rel = path.relative(process.cwd(), filePath);
+            const parsed = readJson(filePath);
+            if (!parsed) {
+              console.warn(`Skipping ${rel} (failed parse)`);
+              return { file: rel, updated: false };
+            }
+
+            const counters = { addedScore: 0, addedConfidence: 0 };
+
+            // dp1
+            const dp1 = parsed.dp1;
+            if (dp1) {
+              const opts = Array.isArray(dp1.options) ? dp1.options : (Array.isArray(dp1) ? dp1 : []);
+              if (Array.isArray(opts)) {
+                ensureDefaultsOnOptions(opts, counters);
+              }
+            }
+
+            // dp2 / dp3
+            for (const dpKey of ['dp2', 'dp3']) {
+              const raw = parsed[dpKey];
+              if (!raw) continue;
+              if (Array.isArray(raw) || Array.isArray(raw?.options)) {
+                const opts = Array.isArray(raw) ? raw : raw.options;
+                ensureDefaultsOnOptions(opts, counters);
+              } else if (typeof raw === 'object') {
+                for (const key of Object.keys(raw)) {
+                  const v = raw[key];
+                  if (Array.isArray(v)) {
+                    ensureDefaultsOnOptions(v, counters);
+                  }
+                }
+                if (Array.isArray(raw.default)) {
+                  ensureDefaultsOnOptions(raw.default, counters);
+                }
+              }
+            }
+
+            const updated = counters.addedScore > 0 || counters.addedConfidence > 0;
+            if (updated) {
+              const formatted = JSON.stringify(parsed, null, 2) + '\n';
+              fs.writeFileSync(filePath, formatted, 'utf8');
+            }
+
+            return { file: rel, updated, counters };
+          }
+
+          function main() {
+            if (!fs.existsSync(DIR)) {
+              console.error('Scenarios dir not found:', DIR);
+              process.exit(2);
+            }
+
+            const files = fs.readdirSync(DIR).filter(f => f.toLowerCase().endsWith('.json'));
+            console.log(`Found ${files.length} scenario files in ${DIR}`);
+            const summary = { filesProcessed: 0, filesUpdated: 0, totalAddedScore: 0, totalAddedConfidence: 0 };
+
+            for (const f of files) {
+              const full = path.join(DIR, f);
+              const res = processFile(full);
+              summary.filesProcessed++;
+              if (res.updated) {
+                summary.filesUpdated++;
+                summary.totalAddedScore += res.counters.addedScore;
+                summary.totalAddedConfidence += res.counters.addedConfidence;
+                console.log(`Updated ${res.file}: +score ${res.counters.addedScore}, +ideal_conf ${res.counters.addedConfidence}`);
+              }
+            }
+
+            console.log('---');
+            console.log('Processed files:', summary.filesProcessed);
+            console.log('Files updated:', summary.filesUpdated);
+            console.log('Total score fields added:', summary.totalAddedScore);
+            console.log('Total ideal_confidence fields added:', summary.totalAddedConfidence);
+          }
+
+          main();
+EOF
+
+      - name: Run add-default-scores script
+        run: |
+          node --version
+          node scripts/add-default-scores.js
+
+      - name: Write validator (if missing)
+        run: |
+          # If the strict validator exists already in scripts/validate-scenarios-strict.js we skip; otherwise fail early
+          if [ ! -f scripts/validate-scenarios-strict.js ]; then
+            echo "validator scripts/validate-scenarios-strict.js not found; cannot validate."
+            exit 2
+          fi
+          echo "Validator present."
+
+      - name: Run strict validator
+        run: |
+          node scripts/validate-scenarios-strict.js
+
+      - name: Commit & push changes (if any)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add data/scenarios/*.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(scenarios): add placeholder score & ideal_confidence to options for strict validation"
+          # Push using GITHUB_TOKEN
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main
