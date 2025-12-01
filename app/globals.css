@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
-/* PYP Branding tokens (from Beth's Brand Kit) */
+/* PYP Branding tokens */
 :root {
-  --bg-carbon: #0A0C0F;
   --bg-gunmetal: #1C1F22;
-  --bg-nearblack: #0E0E11;
   --text-primary: #FFFFFF;
   --text-muted: #C4CCD2;
   --tile-border: rgba(255,255,255,0.06);
@@ -31,37 +29,29 @@ body {
 @media(min-width:1024px){ .coin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media(min-width:1280px){ .coin-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
-/* Core tile */
+/* Core tile: use CSS var to allow density toggle */
 .coin-tile {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* pin footer */
+  justify-content: space-between;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid var(--tile-border);
   border-radius: 20px;
   padding: 18px;
   gap: 12px;
   text-align: center;
-  height: 340px;        /* fixed height for uniformity */
-  min-height: 320px;
-  max-height: 360px;
+  /* dynamic height */
+  height: var(--coin-tile-height, 340px);
+  min-height: calc(var(--coin-tile-height, 340px) - 20px);
+  max-height: calc(var(--coin-tile-height, 340px) + 20px);
   transition: transform 160ms ease, box-shadow 160ms ease;
   box-sizing: border-box;
   overflow: hidden;
 }
-.coin-tile:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
+.coin-tile:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-.tile-image {
-  width: 84px;
-  height: 84px;
-  object-fit: cover;
-  border-radius: 9999px;
-}
+.tile-image { width: 84px; height: 84px; object-fit: cover; border-radius: 9999px; }
 
-/* Title clamped to two lines */
 .module-tile-title {
   font-family: var(--font-header, 'Orbitron', sans-serif);
   font-weight: 600;
@@ -76,7 +66,6 @@ body {
   line-height: 1.15;
 }
 
-/* Small subtitle — single-line */
 .module-tile-sub {
   font-size: 12px;
   color: var(--text-muted);
@@ -96,22 +85,15 @@ body {
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px dashed rgba(255,255,255,0.02);
-  height: 72px;      /* ensure CTA area visible */
+  height: 72px;
   min-height: 72px;
   box-sizing: border-box;
-  overflow: visible; /* allow button to be visible */
+  overflow: visible;
 }
 
-/* Left area for badges - allow shrink and truncation */
-.tile-footer-left {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
-  overflow: hidden;
-}
+.tile-footer-left { display:flex; gap:6px; align-items:center; min-width:0; overflow:hidden; }
+.tile-footer-right { flex: 0 0 auto; display:flex; align-items:center; gap:8px; }
 
-/* badges: allow shrink and ellipsize so they won't push CTA off-screen */
 .module-badge {
   background: rgba(255,255,255,0.03);
   padding: 6px 8px;
@@ -119,30 +101,20 @@ body {
   font-size: 12px;
   color: var(--text-muted);
   border: 1px solid rgba(255,255,255,0.04);
-  flex: 0 1 auto; /* allow shrink */
+  flex: 0 1 auto;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 120px;
 }
 
-/* Right area for the CTA — never shrink */
-.tile-footer-right { flex: 0 0 auto; display:flex; align-items:center; gap:8px; }
-
-/* Ensure CTA fits */
-.tile-footer-right button { min-width: 56px; z-index: 5; }
-
-/* Helpers */
 .text-muted { color: var(--text-muted); }
 
-/* scenario card */
 .scenario-card { background: #071017; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; }
 
-/* responsive */
 @media(max-width:640px) {
-  .coin-tile { height: 280px; min-height: 260px; max-height: 320px; padding: 12px; border-radius: 14px; }
+  .coin-tile { padding: 12px; border-radius: 14px; }
   .module-tile-title { font-size: 14px; }
 }
 
-/* focus outlines */
 :focus { outline: 3px solid rgba(0,115,230,0.22); outline-offset: 3px; }
