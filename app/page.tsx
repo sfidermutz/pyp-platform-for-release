@@ -99,7 +99,7 @@ export default function Home() {
                 Train decision advantage under hybrid pressure. Adaptive scenarios, measurable metrics, and actionable debriefs — designed for operators and staff.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <a href="/coins" className="px-4 py-2 bg-sky-500 rounded text-black font-semibold">Explore Demo Modules</a>
+                <span className="px-4 py-2 border border-slate-700 rounded text-slate-200">Demo modules are token-gated. Enter your access token to proceed.</span>
                 <a href="/docs/TODO_BETH.md" className="px-4 py-2 border border-slate-700 rounded text-slate-200">Authoring Checklist</a>
               </div>
             </div>
