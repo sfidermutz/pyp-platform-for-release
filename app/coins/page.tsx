@@ -7,17 +7,22 @@ import { supabase } from '@/lib/supabaseClient';
 import ModuleCard from '@/components/ModuleCard';
 
 type Family = { name?: string; code?: string };
+
+/**
+ * Permissive ModuleRecord used by the coins page.
+ * Keep fields optional/nullable/undefined to match ModuleCard's ModuleRecord and avoid type incompatibilities.
+ */
 type ModuleRecord = {
   id: string;
   name: string;
-  description: string | null;
-  shelf_position: number | null;
-  is_demo: boolean;
-  module_families: Family[];
-  image_path?: string | null;
-  default_scenario_id?: string | null;
-  module_code?: string | null;
-  ects?: number | null;
+  description?: string | null | undefined;
+  shelf_position?: number | null | undefined;
+  is_demo?: boolean | undefined;
+  module_families?: Family[] | undefined;
+  image_path?: string | null | undefined;
+  default_scenario_id?: string | null | undefined;
+  module_code?: string | null | undefined;
+  ects?: number | null | undefined;
   [key: string]: any;
 };
 
