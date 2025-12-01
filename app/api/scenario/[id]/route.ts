@@ -37,7 +37,6 @@ async function validateSession(sessionId: string | null) {
     .eq('id', sessionId)
     .maybeSingle();
   if (error || !data) return false;
-  // optional: ensure token linked to session is active
   if (!data.token_id) return true;
   const { data: tkn, error: tErr } = await supabaseAdmin
     .from('tokens')
@@ -48,9 +47,23 @@ async function validateSession(sessionId: string | null) {
   return Boolean(tkn.is_active);
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+/**
+ * GET /api/scenario/[id]
+ *
+ * Security: only returns scenario JSON to clients that provide a valid
+ * session id (x-session-id) or a valid demo/access token (x-pyp-token).
+ *
+ * Implementation detail: Next.js may type `context.params` as a Promise in
+ * certain runtimes, so accept `context: any` and normalize.
+ */
+export async function GET(req: NextRequest, context: any) {
   try {
-    const scenarioId = params.id;
+    // Normalize params: support both { params: {...} } and { params: Promise<...> }
+    let paramsObj = context?.params;
+    if (paramsObj && typeof paramsObj.then === 'function') {
+      paramsObj = await paramsObj;
+    }
+    const scenarioId = paramsObj?.id ?? null;
     if (!scenarioId) {
       return NextResponse.json({ error: 'scenario id required' }, { status: 400 });
     }
@@ -61,10 +74,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     let authorized = false;
     if (tokenHeader) {
-      authorized = await validateToken(tokenHeader);
+      try { authorized = await validateToken(tokenHeader); } catch (e) { authorized = false; }
     }
     if (!authorized && sessionHeader) {
-      authorized = await validateSession(sessionHeader);
+      try { authorized = await validateSession(sessionHeader); } catch (e) { authorized = false; }
     }
 
     if (!authorized) {
@@ -78,15 +91,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const parsed = JSON.parse(raw);
       return NextResponse.json(parsed, { status: 200 });
     } catch (e: any) {
-      // Not found or parse error
-      if (e.code === 'ENOENT') {
+      if (e?.code === 'ENOENT') {
         return NextResponse.json({ error: 'scenario not found' }, { status: 404 });
       }
       console.error('scenario read error', e);
       return NextResponse.json({ error: 'server error' }, { status: 500 });
     }
   } catch (e) {
-    console.error('scenario route error', e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
-  }
-}
+    console.error('scenario route e
