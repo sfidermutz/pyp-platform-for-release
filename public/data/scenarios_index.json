@@ -1,0 +1,33 @@
+{
+  "generated_at": "2025-12-01T00:00:00Z",
+  "count": 3,
+  "items": [
+    {
+      "filename": "HYB-01.json",
+      "id": "HYB-01",
+      "title": "Ambiguous Information Probe in Littoral Space",
+      "module": "HYB",
+      "role": "Tactical Liaison Officer",
+      "year": "2026",
+      "default_scenario_id": null
+    },
+    {
+      "filename": "HYB-02.json",
+      "id": "HYB-02",
+      "title": "Hybrid Disruption on Maritime Lines",
+      "module": "HYB",
+      "role": "Task Force Commander",
+      "year": "2026",
+      "default_scenario_id": null
+    },
+    {
+      "filename": "HYB-PRE-01.json",
+      "id": "HYB-PRE-01",
+      "title": "Shadow Lines in the Estera Approaches",
+      "module": "HYB",
+      "role": "Staff Officer (J5 Plans)",
+      "year": null,
+      "default_scenario_id": null
+    }
+  ]
+}
