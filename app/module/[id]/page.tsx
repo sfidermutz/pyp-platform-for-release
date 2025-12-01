@@ -7,12 +7,11 @@ import ModuleClient from '@/components/ModuleClient';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
- * Client-side module page.
- * - uses useParams() to get the id
- * - queries Supabase anon to fetch module record, explicitly including module_code
- * - renders ModuleClient with the module object
+ * ModulePageClient
+ *
+ * Lightweight wrapper: fetch module record and render ModuleClient for full dashboard UI.
+ * This keeps presentation and behavior in ModuleClient so the page remains slim.
  */
-
 export default function ModulePageClient() {
   const params = useParams();
   const id = (params as any)?.id as string | undefined;
@@ -35,10 +34,9 @@ export default function ModulePageClient() {
 
     (async () => {
       try {
-        // IMPORTANT: explicitly select module_code so the client sees it
         const { data, error } = await supabase
           .from('modules')
-          .select('id, name, description, module_code, image_path, default_scenario_id, module_families(name)')
+          .select('id, name, description, module_code, image_path, default_scenario_id, module_families(name), ects')
           .eq('id', id)
           .maybeSingle();
 
@@ -73,23 +71,15 @@ export default function ModulePageClient() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading module…</div>;
   }
 
-  if (error) {
+  if (error || !mod) {
     console.debug('Module page client error', error);
-    return <div className="min-h-screen flex items-center justify-center text-white bg-black">Module not found.</div>;
-  }
-
-  if (!mod) {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Module not found.</div>;
   }
 
   return (
     <main className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold">{mod.name}</h1>
-        <p className="mt-4 text-slate-300">{mod.description}</p>
-        <div className="mt-6">
-          <ModuleClient module={mod} />
-        </div>
+      <div className="max-w-6xl mx-auto">
+        <ModuleClient module={mod} />
       </div>
     </main>
   );
