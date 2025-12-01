@@ -9,6 +9,9 @@
 }
 
 /* Base */
+html, body { box-sizing: border-box; }
+*, *:before, *:after { box-sizing: inherit; }
+
 body {
   background: var(--bg-gunmetal);
   color: var(--text-primary);
@@ -24,12 +27,15 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
+  /* tiny internal horizontal padding avoids visual clipping at panel edges */
+  padding-left: 12px;
+  padding-right: 12px;
 }
 @media(min-width:640px){ .coin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media(min-width:1024px){ .coin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media(min-width:1280px){ .coin-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
-/* Core tile: use CSS var to allow density toggle */
+/* Core tile */
 .coin-tile {
   display: flex;
   flex-direction: column;
@@ -40,13 +46,12 @@ body {
   padding: 18px;
   gap: 12px;
   text-align: center;
-  /* dynamic height */
   height: var(--coin-tile-height, 340px);
   min-height: calc(var(--coin-tile-height, 340px) - 20px);
   max-height: calc(var(--coin-tile-height, 340px) + 20px);
   transition: transform 160ms ease, box-shadow 160ms ease;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible; /* allow CTA to be visible even when it extends slightly */
 }
 .coin-tile:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
@@ -91,9 +96,23 @@ body {
   overflow: visible;
 }
 
-.tile-footer-left { display:flex; gap:6px; align-items:center; min-width:0; overflow:hidden; }
-.tile-footer-right { flex: 0 0 auto; display:flex; align-items:center; gap:8px; }
+.tile-footer-left {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  min-width:0;
+  overflow:hidden;
+  padding-right: 6px;
+}
 
+.tile-footer-right {
+  flex: 0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* badges */
 .module-badge {
   background: rgba(255,255,255,0.03);
   padding: 6px 8px;
@@ -108,8 +127,15 @@ body {
   max-width: 120px;
 }
 
-.text-muted { color: var(--text-muted); }
+/* ensure CTA sits above everything and is never clipped */
+.tile-footer-right button {
+  min-width: 56px;
+  z-index: 3;
+  position: relative;
+}
 
+/* helpers */
+.text-muted { color: var(--text-muted); }
 .scenario-card { background: #071017; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; }
 
 @media(max-width:640px) {
