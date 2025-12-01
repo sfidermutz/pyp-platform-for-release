@@ -285,6 +285,246 @@
           "bias_tags": ["StatusQuo_Bias", "Tempo_Cautious"]
         }
       ]
+    },
+
+    {
+      "branch": "BA",
+      "stem": "After proposing joint pattern analysis, allies ask for near-term evidence products. Cyber reports highlight suspicious data collection at harbour facilities and liaison channels report coordinated narratives in local media. Headquarters asks for a pragmatic next step that balances evidence gathering with coalition unity.",
+      "options": [
+        {
+          "option_id": "DP3-BA1",
+          "text": "Recommend producing a concise joint intelligence brief combining maritime patterns and cyber indicators for senior leadership.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Information_Seeking", "Pattern_Recognition"]
+        },
+        {
+          "option_id": "DP3-BA2",
+          "text": "Suggest stand-up of a short fused analysis team to provide vetted evidence, keeping public posture steady.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Coalition_Coordination", "Fusion_Focus"]
+        },
+        {
+          "option_id": "DP3-BA3",
+          "text": "Advise delaying a formal conclusion until the review yields stronger attribution signals to avoid political friction.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 0.5,
+            "EscalationTendency": -0.5
+          },
+          "bias_tags": ["Deferral_Bias", "Risk_Averse"]
+        }
+      ]
+    },
+
+    {
+      "branch": "BB",
+      "stem": "Focusing on cyber and port anomalies narrows the evidence set but risks missing maritime cues. Legal teams want a defensible basis for public language while operational planners want options that protect shipping and partners.",
+      "options": [
+        {
+          "option_id": "DP3-BB1",
+          "text": "Prioritise actionable cyber indicators while tasking maritime units for targeted confirmation missions near suspicious contact points.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0.5
+          },
+          "bias_tags": ["Information_Seeking", "Operational_Focus"]
+        },
+        {
+          "option_id": "DP3-BB2",
+          "text": "Coordinate with legal and political advisers to frame public messaging narrowly around cyber risks while operationally monitoring maritime signals.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Coalition_Sensitive", "Narrative_Management"]
+        },
+        {
+          "option_id": "DP3-BB3",
+          "text": "Recommend a pause on public escalation and request additional fusion reports to broaden the evidence picture next week.",
+          "metric_weights": {
+            "DecisionQuality": 0,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 0.5,
+            "EscalationTendency": -1
+          },
+          "bias_tags": ["Tempo_Cautious", "Deferral_Bias"]
+        }
+      ]
+    },
+
+    {
+      "branch": "BC",
+      "stem": "Stepping back from the 'hybrid campaign' term reassures some political leaders but frustrates front-line partners who want clearer guidance. Headquarters asks for a recommended framing that supports both patience and operational readiness.",
+      "options": [
+        {
+          "option_id": "DP3-BC1",
+          "text": "Recommend describing incidents as 'sustained, coordinated pressure' and invite allies to an evidence-sharing exercise.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Framing_Balanced", "Coalition_Coordination"]
+        },
+        {
+          "option_id": "DP3-BC2",
+          "text": "Propose careful public language combined with discrete measures to increase maritime safety and reassure partners.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 2,
+            "EscalationTendency": 0.5
+          },
+          "bias_tags": ["Narrative_Management", "Risk_Balanced"]
+        },
+        {
+          "option_id": "DP3-BC3",
+          "text": "Advise immediate modest posture adjustments to deter further actions while continuing to avoid charged language publicly.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 0,
+            "TrustCalibration": 0.5,
+            "EscalationTendency": 1
+          },
+          "bias_tags": ["Tempo_Assertive", "Escalation_Up"]
+        }
+      ]
+    },
+
+    {
+      "branch": "CA",
+      "stem": "Your structured assessment proposal earns support but commanders ask how to prioritize indicators across legal and operational lines. They want a short checklist next: which indicators should trigger posture change versus further investigation?",
+      "options": [
+        {
+          "option_id": "DP3-CA1",
+          "text": "Recommend a short set of thresholds: repeated GPS denial, confirmed cyber probes, and coordinated public narratives as primary triggers.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0.5
+          },
+          "bias_tags": ["Thresholds_Clear", "Framing_Balanced"]
+        },
+        {
+          "option_id": "DP3-CA2",
+          "text": "Propose tiered responses where initial signs trigger evidence gathering and sustained patterns trigger posture adjustments.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Information_Seeking", "Risk_Managed"]
+        },
+        {
+          "option_id": "DP3-CA3",
+          "text": "Suggest a conservative approach that emphasises verification before posture change to avoid politicising routine incidents.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 0.5,
+            "EscalationTendency": -0.5
+          },
+          "bias_tags": ["Risk_Averse", "Confirmation_Check"]
+        }
+      ]
+    },
+
+    {
+      "branch": "CB",
+      "stem": "Some staff propose concentrating on a few key incidents to avoid overcomplication. Commanders warn that focusing narrowly could miss a broader pattern. You must advise whether narrow focus or broader view best supports mission assurance.",
+      "options": [
+        {
+          "option_id": "DP3-CB1",
+          "text": "Recommend concentrating on high-confidence incidents that show patterning to provide clear evidence for allies.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Simplification", "Pattern_Recognition"]
+        },
+        {
+          "option_id": "DP3-CB2",
+          "text": "Propose a balanced approach: focus on key incidents but keep a light watch for broader signals to avoid tunnel vision.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Framing_Balanced", "Information_Seeking"]
+        },
+        {
+          "option_id": "DP3-CB3",
+          "text": "Advise a broader review including economic and diplomatic signals to prevent missing cross-domain indicators.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 2,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Complexity_Seeking", "Information_Integration"]
+        }
+      ]
+    },
+
+    {
+      "branch": "CC",
+      "stem": "The task force seeks a clear near-term recommendation. Allies want a coherent approach that preserves unity while addressing legitimate concerns and reducing adversary opportunity.",
+      "options": [
+        {
+          "option_id": "DP3-CC1",
+          "text": "Recommend a modest posture refinement plus a public guidance package for ports that signals vigilance without escalation.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 2,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Narrative_Management", "Coalition_Sensitive"]
+        },
+        {
+          "option_id": "DP3-CC2",
+          "text": "Propose a joint coalition message outlining what you are monitoring and offering practical port safety advice.",
+          "metric_weights": {
+            "DecisionQuality": 2,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 2,
+            "EscalationTendency": 0
+          },
+          "bias_tags": ["Communication_Transparent", "Coalition_Coordination"]
+        },
+        {
+          "option_id": "DP3-CC3",
+          "text": "Advise an internal posture update with rapid review inside 72 hours to keep options open while sharing limited reassurance publicly.",
+          "metric_weights": {
+            "DecisionQuality": 1,
+            "InformationAdvantage": 1,
+            "TrustCalibration": 1,
+            "EscalationTendency": 0.5
+          },
+          "bias_tags": ["Confirmation_Check", "Tempo_Balanced"]
+        }
+      ]
     }
   ],
   "reflections": {
