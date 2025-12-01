@@ -76,39 +76,48 @@ body {
 @media(min-width:1024px){ .coin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media(min-width:1280px){ .coin-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
+/* Core tile: consistent layout */
 .coin-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* ensures footer stays at bottom */
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid var(--tile-border);
   border-radius: 20px;
   padding: calc(var(--space-md));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 12px;
   text-align: center;
-  min-height: 160px;
+  min-height: 300px; /* enforce a consistent base height */
+  max-height: 380px;
   transition: transform 160ms ease, box-shadow 160ms ease;
+  overflow: hidden;
 }
 .coin-tile:hover {
   transform: translateY(-6px);
   box-shadow: 0 8px 28px rgba(0,0,0,0.45);
 }
 
-/* Module tile specifics (used in coins page) */
+/* tile inner content */
 .module-tile-title {
   font-family: var(--font-header);
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.04em;
+  font-size: 16px;
+  letter-spacing: 0.02em;
   color: var(--text-primary);
+  margin-top: 6px;
 }
+
+/* Keep descriptions consistent height so tiles line up */
 .module-tile-desc {
   font-size: 13px;
   color: var(--text-muted);
-  min-height: 38px;
+  min-height: 56px; /* 2 lines comfortably */
+  max-height: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Make module description wrap nicely */
+/* Make module footer consistent */
 .module-tile-meta {
   display:flex;
   width:100%;
@@ -117,6 +126,17 @@ body {
   gap:8px;
   margin-top: 8px;
 }
+
+/* Footer area container to pin CTA to the bottom */
+.coin-tile-footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top: 8px;
+}
+
+/* badges */
 .module-badge {
   background: rgba(255,255,255,0.03);
   padding: 6px 8px;
@@ -148,8 +168,8 @@ body {
 
 /* Compact helper for smaller screens */
 @media(max-width:640px) {
-  .module-tile-desc { font-size:12px; min-height:34px; }
-  .coin-tile { padding: 12px; min-height: 140px; border-radius: 14px; }
+  .module-tile-desc { font-size:12px; min-height:44px; }
+  .coin-tile { padding: 12px; min-height: 240px; max-height: 320px; border-radius: 14px; }
 }
 
 /* Accessibility focus outline */
