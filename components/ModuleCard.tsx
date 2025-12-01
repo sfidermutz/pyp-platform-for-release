@@ -19,7 +19,12 @@ export type ModuleRecord = {
   [key: string]: any;
 };
 
-const FORCE_PYP_TOKEN = true;
+/**
+ * Use NEXT_PUBLIC_FORCE_PYP_TOKEN (env) to control fallback behaviour.
+ * Default: true (use placeholder). Set NEXT_PUBLIC_FORCE_PYP_TOKEN=false in Vercel to show module.image_path.
+ */
+const envVal = typeof process !== 'undefined' && process.env ? process.env.NEXT_PUBLIC_FORCE_PYP_TOKEN : undefined;
+const FORCE_PYP_TOKEN = envVal !== undefined ? (String(envVal).toLowerCase() === 'true') : true;
 const PYP_PLACEHOLDER = '/coins/placeholder.svg';
 
 export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, onOpen: (m: ModuleRecord) => void }) {
@@ -36,9 +41,12 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
     try {
       const img = e.currentTarget;
       if (!img) return;
+      // avoid re-assigning same src (prevents blink/infinite loop)
       if (img.src && img.src.endsWith(PYP_PLACEHOLDER)) return;
       img.src = PYP_PLACEHOLDER;
-    } catch (err) {}
+    } catch (err) {
+      // swallow
+    }
   };
 
   return (
@@ -52,7 +60,13 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
     >
       <div>
         <div style={{ width: 84, height: 84 }} className="relative mx-auto">
-          <img src={imageSrc} alt={module.name ?? ''} className="tile-image" loading="lazy" onError={handleImgError} />
+          <img
+            src={imageSrc}
+            alt={module.name ?? ''}
+            className="tile-image"
+            loading="lazy"
+            onError={handleImgError}
+          />
         </div>
 
         <div className="module-tile-title mt-3" title={String(module.name ?? '')}>
