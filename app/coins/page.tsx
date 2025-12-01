@@ -58,9 +58,10 @@ export default function CoinsPage() {
     setLoading(true);
     setFetchError(null);
     try {
+      // NOTE: do NOT request `ects` here — some DB schemas don't have that column.
       const { data, error } = await supabase
         .from('modules')
-        .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code, ects`)
+        .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
         .order('shelf_position', { ascending: true });
 
       setLoading(false);
@@ -93,7 +94,7 @@ export default function CoinsPage() {
           image_path: m.image_path ?? null,
           default_scenario_id: m.default_scenario_id ?? null,
           module_code: m.module_code ?? null,
-          ects: (typeof m.ects === 'number') ? m.ects : null
+          // ects intentionally not read here (DB may not have it)
         };
       });
 
@@ -107,7 +108,6 @@ export default function CoinsPage() {
   }
 
   async function openModuleDashboard(m: ModuleRecord) {
-    // preserve existing behavior: ensure session and navigate
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
       if (!sessionId) {
@@ -147,7 +147,7 @@ export default function CoinsPage() {
     return modules.filter(m => {
       if (activeFamily && activeFamily !== 'All') {
         const fams = m.module_families?.map(f => (f.name ?? '').toLowerCase()) ?? [];
-        if (!fams.includes(activeFamily.toLowerCase())) return false;
+        if (!fams.includes(String(activeFamily).toLowerCase())) return false;
       }
       if (!q) return true;
       const desc = (m.description ?? '') as string;
@@ -185,13 +185,16 @@ export default function CoinsPage() {
               />
 
               <div className="hidden md:flex items-center gap-2 text-xs text-slate-400">
+                <label htmlFor="family-filter" className="sr-only">Filter modules by family</label>
                 <span>Filter:</span>
                 <select
+                  id="family-filter"
+                  aria-label="Filter by family"
                   value={activeFamily}
                   onChange={(e) => setActiveFamily(e.target.value)}
                   className="rounded-md bg-slate-900 border border-slate-700 px-2 py-1 text-sm"
                 >
-                  {familyOrder.map((f) => <option key={f} value={f}>{f}</option>)}
+                  {familyOrder.map((f) => <option key={String(f)} value={String(f)}>{String(f)}</option>)}
                 </select>
               </div>
             </div>
