@@ -150,7 +150,9 @@ export default function CoinsPage() {
         if (!fams.includes(activeFamily.toLowerCase())) return false;
       }
       if (!q) return true;
-      return (m.name ?? '').toLowerCase().includes(q) || ((m.description ?? '') as string).toLowerCase().includes(q) || ((m.module_code ?? '') as string).toLowerCase().includes(q);
+      const desc = (m.description ?? '') as string;
+      const code = (m.module_code ?? '') as string;
+      return (m.name ?? '').toLowerCase().includes(q) || desc.toLowerCase().includes(q) || code.toLowerCase().includes(q);
     });
   }, [modules, activeFamily, search]);
 
@@ -207,8 +209,8 @@ export default function CoinsPage() {
             <div className="flex gap-2">
               {familyOrder.map(f => (
                 <button
-                  key={f}
-                  onClick={() => setActiveFamily(f)}
+                  key={String(f)}
+                  onClick={() => setActiveFamily(String(f))}
                   className={`px-3 py-1 rounded-full text-xs ${activeFamily === f ? 'bg-sky-500 text-black' : 'bg-transparent border border-slate-700 text-slate-200'}`}
                 >
                   {f}
