@@ -43,10 +43,10 @@ export default function CoinsPage() {
 
   async function fetchModules() {
     setLoading(true);
+    // NOTE: removed `.eq('is_demo', true)` so all modules are shown.
     const { data, error } = await supabase
       .from('modules')
       .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
-      .eq('is_demo', true)
       .order('shelf_position', { ascending: true });
 
     setLoading(false);
