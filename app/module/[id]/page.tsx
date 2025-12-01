@@ -6,12 +6,6 @@ import { useParams } from 'next/navigation';
 import ModuleClient from '@/components/ModuleClient';
 import { supabase } from '@/lib/supabaseClient';
 
-/**
- * ModulePageClient
- *
- * Lightweight wrapper: fetch module record and render ModuleClient for full dashboard UI.
- * This keeps presentation and behavior in ModuleClient so the page remains slim.
- */
 export default function ModulePageClient() {
   const params = useParams();
   const id = (params as any)?.id as string | undefined;
@@ -34,9 +28,10 @@ export default function ModulePageClient() {
 
     (async () => {
       try {
+        // NOTE: do not request `ects` column (some DBs don't have it).
         const { data, error } = await supabase
           .from('modules')
-          .select('id, name, description, module_code, image_path, default_scenario_id, module_families(name), ects')
+          .select('id, name, description, module_code, image_path, default_scenario_id, module_families ( name )')
           .eq('id', id)
           .maybeSingle();
 
