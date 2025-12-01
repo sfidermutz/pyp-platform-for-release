@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
+/* PYP Branding tokens (from Beth's Brand Kit) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --bg-carbon: #0A0C0F;
+  --bg-gunmetal: #1C1F22;
+  --bg-nearblack: #0E0E11;
+  --text-primary: #FFFFFF;
+  --text-muted: #C4CCD2;
+  --nato-blue: #003366;
+  --steel-gray: #4C5560;
+  --accent-gold: #C9A44A;
+  --error-red: #C4423C;
+  --surface-1: #071017;
+  --surface-2: #0b1114;
+  --tile-border: rgba(255,255,255,0.06);
+
+  /* Fonts (variables set by app/layout.tsx using next/font) */
+  --font-header: var(--font-header, 'Orbitron', sans-serif);
+  --font-body: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+
+  /* Spacing tokens */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Dark-first styling (PYP UI is dark-themed) */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-gunmetal);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height: 1.45;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header / hero font */
+.h1-brand {
+  font-family: var(--font-header);
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+/* Utility: smaller muted text */
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* TILE / COIN fixes */
+/* Coin grid container helper for consistent spacing */
+.coin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+@media(min-width:640px){ .coin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media(min-width:1024px){ .coin-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media(min-width:1280px){ .coin-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.coin-tile {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--tile-border);
+  border-radius: 20px;
+  padding: calc(var(--space-md));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  min-height: 160px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.coin-tile:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+
+/* Module tile specifics (used in coins page) */
+.module-tile-title {
+  font-family: var(--font-header);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+.module-tile-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 38px;
+}
+
+/* Make module description wrap nicely */
+.module-tile-meta {
+  display:flex;
+  width:100%;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  margin-top: 8px;
+}
+.module-badge {
+  background: rgba(255,255,255,0.03);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Scenario card spacing helpers */
+.scenario-card {
+  background: var(--surface-1);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.scenario-card .dp-card {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Compact helper for smaller screens */
+@media(max-width:640px) {
+  .module-tile-desc { font-size:12px; min-height:34px; }
+  .coin-tile { padding: 12px; min-height: 140px; border-radius: 14px; }
+}
+
+/* Accessibility focus outline */
+:focus {
+  outline: 3px solid rgba(0,115,230,0.22);
+  outline-offset: 3px;
+}
+
+/* Small utility: center images inside tiles */
+.tile-image {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 9999px;
+}
+
+/* Make code/pre blocks readable for debug pages */
+pre {
+  background: rgba(0,0,0,0.45);
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: 8px;
+  overflow: auto;
 }
