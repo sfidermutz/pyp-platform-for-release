@@ -7,7 +7,7 @@ type Family = { name?: string };
 
 /**
  * Compact ModuleRecord used by ModuleCard.
- * For now, force PYP fallback token for all coins until custom coins are finished.
+ * For now, force PYP fallback token for all coins while custom coins are unfinished.
  */
 export type ModuleRecord = {
   id: string;
@@ -23,10 +23,9 @@ export type ModuleRecord = {
   [key: string]: any;
 };
 
-// Toggle: show PYP fallback for all tiles while custom coins are unfinished.
-// Set to `false` if you want to show module.image_path when present.
+// Force fallback to placeholder.svg in public/coins while final coin assets are not ready.
 const FORCE_PYP_TOKEN = true;
-const PYP_TOKEN_PATH = '/coins/pyp-token.svg';
+const PYP_PLACEHOLDER = '/coins/placeholder.svg';
 
 export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, onOpen: (m: ModuleRecord) => void }) {
   const handleKey = (e: React.KeyboardEvent) => {
@@ -36,11 +35,21 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
     }
   };
 
-  const imageSrc = (() => {
-    if (FORCE_PYP_TOKEN) return PYP_TOKEN_PATH;
-    if (module.image_path) return String(module.image_path);
-    return PYP_TOKEN_PATH;
-  })();
+  // Decide image to display
+  const imageSrc = FORCE_PYP_TOKEN ? PYP_PLACEHOLDER : (module.image_path ? String(module.image_path) : PYP_PLACEHOLDER);
+
+  // Guarded onError that avoids repeatedly setting the same src (no infinite loop/blink)
+  const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    try {
+      const img = e.currentTarget;
+      if (!img) return;
+      // if current src is already placeholder, do nothing
+      if (img.src && img.src.endsWith(PYP_PLACEHOLDER)) return;
+      img.src = PYP_PLACEHOLDER;
+    } catch (err) {
+      // swallow
+    }
+  };
 
   return (
     <article
@@ -51,6 +60,7 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
       onKeyDown={handleKey}
       className="coin-tile"
     >
+      {/* Top: icon + single title */}
       <div>
         <div style={{ width: 84, height: 84 }} className="relative mx-auto">
           <img
@@ -58,20 +68,22 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
             alt={module.name ?? ''}
             className="tile-image"
             loading="lazy"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = PYP_TOKEN_PATH; }}
+            onError={handleImgError}
           />
         </div>
 
+        {/* Single authoritative title (no duplicates) */}
         <div className="module-tile-title mt-3" title={String(module.name ?? '')}>
           {module.name}
         </div>
 
-        {/* single-line short subtitle for compactness */}
+        {/* Compact single-line subtitle for visual consistency */}
         <div className="module-tile-sub">
           {module.description ? String(module.description).slice(0, 64) : ''}
         </div>
       </div>
 
+      {/* Footer: badges + CTA pinned to bottom (fixed footer height ensures CTA visible) */}
       <div className="coin-tile-footer">
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           {module.module_families && module.module_families.length > 0 && module.module_families.slice(0,2).map((f, i) => (
