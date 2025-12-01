@@ -1,8 +1,24 @@
-﻿{
+{
   "scenario_id": "HYB-02",
+  "moduleId": "HYB",
   "title": "Hybrid Disruption on Maritime Lines",
   "role": "Task Force Commander",
   "year": "2026",
+  "metrics": {
+    "core": [
+      "InformationAdvantage",
+      "TrustCalibration",
+      "BiasAwareness",
+      "CognitiveAdaptability",
+      "EscalationRisk"
+    ],
+    "secondary": [
+      "TempoSensitivity",
+      "CoalitionSynchronization",
+      "NarrativeResilience",
+      "RiskAnticipation"
+    ]
+  },
   "narrative": "A merchant vessel transiting a contested strait reports sustained GPS interference and anomalous AIS tracks. Local authorities accuse a non-state proxy; coalition partners report cyber intrusions at nearby ports. You must orchestrate maritime surveillance, synchronize information with partners, and preserve freedom of navigation while attributing effects to an actor.",
   "dp1": {
     "stem": "Initial detection: how do you prioritize immediate action?",
@@ -39,8 +55,8 @@
     "secondary_domain": "affective",
     "bloom_level": "Apply",
     "krathwohl_level": "Valuing",
-    "domains": ["maritime","cyber","information"],
-    "effects": ["physical","virtual","cognitive"],
+    "domains": ["maritime", "cyber", "information"],
+    "effects": ["physical", "virtual", "cognitive"],
     "operational_altitude": "tactical",
     "role_alignment": "Task Force Commander"
   }
