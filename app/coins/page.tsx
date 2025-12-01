@@ -5,26 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import ModuleCard from '@/components/ModuleCard';
-
-type Family = { name?: string; code?: string };
+import type { ModuleRecord } from '@/types/module';
 
 /**
- * Permissive ModuleRecord used by the coins page.
- * Keep fields optional/nullable/undefined to match ModuleCard's ModuleRecord and avoid type incompatibilities.
+ * Coins page — uses shared ModuleRecord type to stay consistent.
+ *
+ * Density and other UI behavior remain unchanged (uses CSS var --coin-tile-height).
  */
-type ModuleRecord = {
-  id: string;
-  name: string;
-  description?: string | null | undefined;
-  shelf_position?: number | null | undefined;
-  is_demo?: boolean | undefined;
-  module_families?: Family[] | undefined;
-  image_path?: string | null | undefined;
-  default_scenario_id?: string | null | undefined;
-  module_code?: string | null | undefined;
-  ects?: number | null | undefined;
-  [key: string]: any;
-};
 
 export default function CoinsPage() {
   const router = useRouter();
@@ -39,7 +26,6 @@ export default function CoinsPage() {
   const [density, setDensity] = useState<'default' | 'dense'>('default');
 
   useEffect(() => {
-    // restore density from localStorage
     try {
       const stored = localStorage.getItem('pyp_tile_density');
       if (stored === 'dense' || stored === 'default') setDensity(stored);
@@ -84,16 +70,7 @@ export default function CoinsPage() {
 
       const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
         const fam = m.module_families;
-        let families: Family[] = [];
-
-        if (Array.isArray(fam)) {
-          families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
-        } else if (fam && typeof fam === 'object') {
-          families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
-        } else {
-          families = [];
-        }
-
+        let families = Array.isArray(fam) ? fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') })) : (fam && typeof fam === 'object' ? [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }] : []);
         return {
           id: String(m.id),
           name: String(m.name ?? ''),
@@ -168,7 +145,6 @@ export default function CoinsPage() {
     });
   }, [modules, activeFamily, search]);
 
-  // density toggle handler
   function toggleDensity() {
     const next = density === 'default' ? 'dense' : 'default';
     setDensity(next);
@@ -182,7 +158,6 @@ export default function CoinsPage() {
   return (
     <main
       className="min-h-screen bg-black text-white px-6 py-12"
-      // apply dynamic CSS var for tile height
       style={{ ['--coin-tile-height' as any]: density === 'dense' ? '300px' : '340px' }}
     >
       <div className="max-w-7xl mx-auto">
@@ -195,7 +170,6 @@ export default function CoinsPage() {
             <div className="text-rose-400 mb-4">Warning: failed to load modules: {fetchError}</div>
           ) : null}
 
-          {/* Controls: search + family + density */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <input
@@ -242,7 +216,6 @@ export default function CoinsPage() {
             </div>
           </div>
 
-          {/* Mobile family tabs */}
           <div className="md:hidden mb-4 overflow-auto">
             <div className="flex gap-2">
               {familyOrder.map(f => (
@@ -257,7 +230,6 @@ export default function CoinsPage() {
             </div>
           </div>
 
-          {/* Modules grid */}
           <div className="coin-grid" role="list" aria-label="Modules">
             {filteredModules.map((m) => (
               <div role="listitem" key={m.id}>
