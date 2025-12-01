@@ -8,7 +8,9 @@ const DEFAULT_IDEAL_CONFIDENCE = 60;
 
 function readJson(file) {
   try {
-    const raw = fs.readFileSync(file, 'utf8');
+    let raw = fs.readFileSync(file, 'utf8');
+    // strip BOM if present
+    if (raw && raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
     return JSON.parse(raw);
   } catch (e) {
     console.error('readJson error', file, e.message);
