@@ -1,4 +1,4 @@
-{
+{ 
   "scenario_id": "HYB-PRE-01",
   "module_id": "HYB",
   "operation_name": "Shaded Signals",
@@ -286,7 +286,6 @@
         }
       ]
     },
-
     {
       "branch": "BA",
       "stem": "After proposing joint pattern analysis, allies ask for near-term evidence products. Cyber reports highlight suspicious data collection at harbour facilities and liaison channels report coordinated narratives in local media. Headquarters asks for a pragmatic next step that balances evidence gathering with coalition unity.",
@@ -326,7 +325,6 @@
         }
       ]
     },
-
     {
       "branch": "BB",
       "stem": "Focusing on cyber and port anomalies narrows the evidence set but risks missing maritime cues. Legal teams want a defensible basis for public language while operational planners want options that protect shipping and partners.",
@@ -366,7 +364,6 @@
         }
       ]
     },
-
     {
       "branch": "BC",
       "stem": "Stepping back from the 'hybrid campaign' term reassures some political leaders but frustrates front-line partners who want clearer guidance. Headquarters asks for a recommended framing that supports both patience and operational readiness.",
@@ -406,7 +403,6 @@
         }
       ]
     },
-
     {
       "branch": "CA",
       "stem": "Your structured assessment proposal earns support but commanders ask how to prioritize indicators across legal and operational lines. They want a short checklist next: which indicators should trigger posture change versus further investigation?",
@@ -446,7 +442,6 @@
         }
       ]
     },
-
     {
       "branch": "CB",
       "stem": "Some staff propose concentrating on a few key incidents to avoid overcomplication. Commanders warn that focusing narrowly could miss a broader pattern. You must advise whether narrow focus or broader view best supports mission assurance.",
@@ -486,7 +481,6 @@
         }
       ]
     },
-
     {
       "branch": "CC",
       "stem": "The task force seeks a clear near-term recommendation. Allies want a coherent approach that preserves unity while addressing legitimate concerns and reducing adversary opportunity.",
