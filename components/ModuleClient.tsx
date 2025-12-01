@@ -23,6 +23,10 @@ type ScenarioMeta = {
   role?: string;
   learningOutcome?: string;
   narrative?: string;
+  // allow order hints
+  shelf_position?: number | null;
+  scenario_order?: number | null;
+  [key: string]: any;
 };
 
 export default function ModuleClient({ module }: { module: ModuleType }) {
@@ -35,6 +39,36 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
   const [repoError, setRepoError] = useState<string | null>(null);
 
   const moduleCode = (module?.module_code || (module?.module_families && module.module_families[0]?.name) || module?.id || '').toString();
+
+  // helper: deterministic sorting per Beth spec
+  function sortScenarios(list: ScenarioMeta[]): ScenarioMeta[] {
+    // stable sort: default scenario first, then numeric order keys, then title
+    const keys = ['shelf_position', 'scenario_order', 'order', 'position', 'index'];
+    return [...list].sort((a, b) => {
+      // default scenario pinned
+      if (module?.default_scenario_id) {
+        if (a.scenario_id === module.default_scenario_id) return -1;
+        if (b.scenario_id === module.default_scenario_id) return 1;
+      }
+      // numeric keys
+      const getNum = (s: ScenarioMeta) => {
+        for (const k of keys) {
+          const v = (s as any)[k];
+          if (typeof v === 'number') return v;
+          if (typeof v === 'string' && /^\d+$/.test(v)) return Number(v);
+        }
+        return null;
+      };
+      const na = getNum(a), nb = getNum(b);
+      if (na !== null && nb !== null) return (na as number) - (nb as number);
+      if (na !== null) return -1;
+      if (nb !== null) return 1;
+      // fallback to title
+      const ta = (a.title ?? a.scenario_id ?? '').toLowerCase();
+      const tb = (b.title ?? b.scenario_id ?? '').toLowerCase();
+      return ta.localeCompare(tb);
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -50,16 +84,18 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         }
         const res = await fetch(`/api/module-scenarios?module=${encodeURIComponent(moduleCode)}`);
         const json = await res.json();
-        let serverScenarios = (json && json.scenarios) ? json.scenarios : [];
+        let serverScenarios: ScenarioMeta[] = (json && json.scenarios) ? json.scenarios : [];
         if (!Array.isArray(serverScenarios)) serverScenarios = [];
 
-        if (serverScenarios.length > 0) {
-          if (active) setScenarios(serverScenarios);
-        } else {
-          // no server scenarios — leave empty and allow user to load from repo
-          if (active) setScenarios([]);
+        // if DB returns few scenarios, auto-run repo fallback for authoring completeness
+        if ((serverScenarios.length === 0 || serverScenarios.length < 4) && active) {
+          // kick off repo fallback automatically (but avoid double-loading)
+          await loadAllRepoScenarios(true, serverScenarios);
+          return;
         }
-      } catch (e) {
+
+        if (active) setScenarios(sortScenarios(serverScenarios));
+      } catch (e: any) {
         setScError(String(e));
         setScenarios([]);
       } finally {
@@ -69,14 +105,24 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
     loadScenarios();
     return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moduleCode, module?.id]);
 
-  // Remote GitHub listing fallback: load all scenario files and filter by module code
-  async function loadAllRepoScenarios() {
+  // dedupe helper by scenario_id
+  function dedupeById(arr: ScenarioMeta[]) {
+    const seen = new Map<string, ScenarioMeta>();
+    for (const s of arr) {
+      const id = String(s.scenario_id ?? s.filename ?? '');
+      if (!seen.has(id)) seen.set(id, s);
+    }
+    return Array.from(seen.values());
+  }
+
+  // load all repo scenarios and filter by moduleCode; optional `seed` array to merge with DB results
+  async function loadAllRepoScenarios(auto = false, seed: ScenarioMeta[] = []) {
     setRepoError(null);
     setRepoLoading(true);
     try {
-      // GitHub contents API listing for the data/scenarios folder
       const listResp = await fetch('https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios');
       if (!listResp.ok) throw new Error(`GitHub listing failed ${listResp.status}`);
       const listing = await listResp.json();
@@ -84,7 +130,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
       const jsonFiles = listing.filter((it: any) => it && it.name && it.name.toLowerCase().endsWith('.json'));
       const results: ScenarioMeta[] = [];
-      // fetch files in small batches to be polite to GitHub
+
       const concurrency = 6;
       for (let i = 0; i < jsonFiles.length; i += concurrency) {
         const batch = jsonFiles.slice(i, i + concurrency);
@@ -101,7 +147,10 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
                 title: parsed?.title ?? parsed?.name ?? '',
                 role: parsed?.role ?? '',
                 learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? '',
-                narrative: parsed?.situation ?? parsed?.narrative ?? ''
+                narrative: parsed?.situation ?? parsed?.narrative ?? '',
+                shelf_position: parsed?.shelf_position ?? parsed?.scenario_order ?? parsed?.order ?? null,
+                // include raw parsed metadata for ordering hints
+                ...parsed
               } as ScenarioMeta;
             }
             return null;
@@ -110,14 +159,17 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           }
         }));
         downloads.forEach(d => { if (d) results.push(d); });
-        // small pause
+        // small delay
         await new Promise(r => setTimeout(r, 60));
       }
 
-      if (results.length === 0) {
+      // merge seed + repo results, dedupe, sort
+      const merged = dedupeById([...(seed ?? []), ...results]);
+      if (merged.length === 0 && !auto) {
         setRepoError('No scenarios found in repository for this module.');
       }
-      setScenarios(results);
+
+      setScenarios(sortScenarios(merged));
     } catch (e: any) {
       setRepoError(String(e?.message ?? e));
     } finally {
@@ -307,10 +359,9 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
               })}
             </div>
 
-            {/* If repo fallback available or desired */}
             <div className="mt-6 flex items-center gap-3">
               <button
-                onClick={() => loadAllRepoScenarios()}
+                onClick={() => loadAllRepoScenarios(false, scenarios)}
                 disabled={repoLoading}
                 className={`px-4 py-2 rounded-md ${repoLoading ? 'bg-slate-600' : 'bg-sky-500 text-black'}`}
                 title="Load all scenarios for this module from the repository"
