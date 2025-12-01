@@ -2,27 +2,14 @@
 'use client';
 
 import React from 'react';
-
-type Family = { name?: string };
-
-export type ModuleRecord = {
-  id: string;
-  name: string;
-  description?: string | null | undefined;
-  image_path?: string | null | undefined;
-  default_scenario_id?: string | null | undefined;
-  module_code?: string | null | undefined;
-  ects?: number | null | undefined;
-  module_families?: Family[] | undefined;
-  shelf_position?: number | null | undefined;
-  is_demo?: boolean | undefined;
-  [key: string]: any;
-};
+import type { ModuleRecord } from '@/types/module';
 
 /**
- * Use NEXT_PUBLIC_FORCE_PYP_TOKEN (env) to control fallback behaviour.
- * Default: true (use placeholder). Set NEXT_PUBLIC_FORCE_PYP_TOKEN=false in Vercel to show module.image_path.
+ * ModuleCard: compact module tile with PYP placeholder fallback.
+ *
+ * Uses shared ModuleRecord type from types/module.ts so types remain consistent across the app.
  */
+
 const envVal = typeof process !== 'undefined' && process.env ? process.env.NEXT_PUBLIC_FORCE_PYP_TOKEN : undefined;
 const FORCE_PYP_TOKEN = envVal !== undefined ? (String(envVal).toLowerCase() === 'true') : true;
 const PYP_PLACEHOLDER = '/coins/placeholder.svg';
@@ -41,12 +28,9 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
     try {
       const img = e.currentTarget;
       if (!img) return;
-      // avoid re-assigning same src (prevents blink/infinite loop)
       if (img.src && img.src.endsWith(PYP_PLACEHOLDER)) return;
       img.src = PYP_PLACEHOLDER;
-    } catch (err) {
-      // swallow
-    }
+    } catch (err) {}
   };
 
   return (
