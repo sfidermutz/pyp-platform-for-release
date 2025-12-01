@@ -6,18 +6,24 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import ModuleCard from '@/components/ModuleCard';
 
-type Family = { name: string; code?: string };
+type Family = { name?: string; code?: string };
+
+/**
+ * Permissive ModuleRecord used by the coins page.
+ * Keep fields optional/nullable/undefined to match ModuleCard's ModuleRecord and avoid type incompatibilities.
+ */
 type ModuleRecord = {
   id: string;
   name: string;
-  description: string | null;
-  shelf_position: number | null;
-  is_demo: boolean;
-  module_families: Family[];
-  image_path?: string | null;
-  default_scenario_id?: string | null;
-  module_code?: string | null;
-  ects?: number | null;
+  description?: string | null | undefined;
+  shelf_position?: number | null | undefined;
+  is_demo?: boolean | undefined;
+  module_families?: Family[] | undefined;
+  image_path?: string | null | undefined;
+  default_scenario_id?: string | null | undefined;
+  module_code?: string | null | undefined;
+  ects?: number | null | undefined;
+  [key: string]: any;
 };
 
 export default function CoinsPage() {
@@ -100,46 +106,42 @@ export default function CoinsPage() {
     }
   }
 
-  function openModuleDashboard(m: ModuleRecord) {
-    // create session and navigate (preserve existing behavior)
-    (async () => {
-      try {
-        let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-        if (!sessionId) {
-          const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
-          if (!token) { router.push('/'); return; }
-          const res = await fetch('/api/create-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-          });
-          if (!res.ok) { router.push('/'); return; }
-          const json = await res.json();
-          sessionId = json?.session?.id || json?.session_id || null;
-          if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
-        }
-
-        await fetch('/api/log-event', {
+  async function openModuleDashboard(m: ModuleRecord) {
+    // preserve existing behavior: ensure session and navigate
+    try {
+      let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+      if (!sessionId) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
+        if (!token) { router.push('/'); return; }
+        const res = await fetch('/api/create-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
-        }).catch(()=>{});
-
-        router.push(`/module/${m.id}`);
-      } catch (e) {
-        console.error('openModuleDashboard failed', e);
-        router.push(`/module/${m.id}`);
+          body: JSON.stringify({ token })
+        });
+        if (!res.ok) { router.push('/'); return; }
+        const json = await res.json();
+        sessionId = json?.session?.id || json?.session_id || null;
+        if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
-    })();
+
+      await fetch('/api/log-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
+      }).catch(()=>{});
+
+      router.push(`/module/${m.id}`);
+    } catch (e) {
+      console.error('openModuleDashboard failed', e);
+      router.push(`/module/${m.id}`);
+    }
   }
 
-  // family list (All + families)
   const familyOrder = useMemo(() => {
     const families = Array.from(new Set(modules.flatMap(m => (m.module_families && m.module_families.length > 0) ? m.module_families.map(f => f.name) : ['Uncategorized'])));
     return ['All', ...families.filter(Boolean)];
   }, [modules]);
 
-  // filter modules by active family & search
   const filteredModules = useMemo(() => {
     const q = (search ?? '').trim().toLowerCase();
     return modules.filter(m => {
@@ -148,7 +150,7 @@ export default function CoinsPage() {
         if (!fams.includes(activeFamily.toLowerCase())) return false;
       }
       if (!q) return true;
-      return (m.name ?? '').toLowerCase().includes(q) || (m.description ?? '').toLowerCase().includes(q) || (m.module_code ?? '').toLowerCase().includes(q);
+      return (m.name ?? '').toLowerCase().includes(q) || ((m.description ?? '') as string).toLowerCase().includes(q) || ((m.module_code ?? '') as string).toLowerCase().includes(q);
     });
   }, [modules, activeFamily, search]);
 
@@ -168,7 +170,7 @@ export default function CoinsPage() {
             <div className="text-rose-400 mb-4">Warning: failed to load modules: {fetchError}</div>
           ) : null}
 
-          {/* Controls: search + family tabs */}
+          {/* Controls */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <input
@@ -200,7 +202,7 @@ export default function CoinsPage() {
             </div>
           </div>
 
-          {/* Family tabs for small screens */}
+          {/* Mobile family tabs */}
           <div className="md:hidden mb-4 overflow-auto">
             <div className="flex gap-2">
               {familyOrder.map(f => (
