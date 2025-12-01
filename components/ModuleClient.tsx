@@ -3,30 +3,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { ScenarioMeta, ModuleRecord } from '@/types/module';
 
 type Family = { name?: string };
-type ModuleType = {
-  id?: string;
-  name?: string;
-  description?: string | null;
-  image_path?: string | null;
-  default_scenario_id?: string;
-  module_families?: Family[];
-  module_code?: string | null;
-  ects?: number | null;
-};
-
-type ScenarioMeta = {
-  filename?: string;
-  scenario_id?: string;
-  title?: string;
-  role?: string;
-  learningOutcome?: string;
-  narrative?: string;
-  shelf_position?: number | null;
-  scenario_order?: number | null;
-  [key: string]: any;
-};
+type ModuleType = ModuleRecord;
 
 export default function ModuleClient({ module }: { module: ModuleType }) {
   const router = useRouter();
@@ -66,6 +46,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
   useEffect(() => {
     let active = true;
+
     async function loadScenarios() {
       setScLoading(true);
       setScError(null);
@@ -80,7 +61,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         let serverScenarios: ScenarioMeta[] = (json && json.scenarios) ? json.scenarios : [];
         if (!Array.isArray(serverScenarios)) serverScenarios = [];
 
-        // Auto-fallback if DB returns few scenarios
+        // Auto-fallback: if DB returned few scenarios, auto-merge with repo
         if ((serverScenarios.length === 0 || serverScenarios.length < 6) && active) {
           await loadAllRepoScenarios(true, serverScenarios);
           return;
@@ -94,6 +75,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         if (active) setScLoading(false);
       }
     }
+
     loadScenarios();
     return () => { active = false; };
   }, [moduleCode, module?.id]);
@@ -107,7 +89,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     return Array.from(seen.values());
   }
 
-  // More robust repo loader: retry listing once to avoid transient failures
   async function loadAllRepoScenarios(auto = false, seed: ScenarioMeta[] = []) {
     setRepoError(null);
     setRepoLoading(true);
@@ -221,7 +202,38 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
 
   return (
     <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
-      {/* header omitted for brevity - unchanged */}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+        <div className="w-28 h-28 flex-shrink-0">
+          {module?.image_path ? (
+            <img src={module.image_path} alt={module.name} className="w-full h-full object-cover rounded-full border border-slate-800" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }} />
+          ) : (
+            <div className="w-28 h-28 rounded-full bg-slate-800 flex items-center justify-center text-white font-semibold text-xl">{module?.name ? module.name.split(' ').slice(0,2).map(s=>s[0]).join('') : 'M'}</div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">{module?.name ?? 'Module'}</h1>
+              <div className="mt-1 text-xs text-slate-400">{module?.module_families && module.module_families.length > 0 ? module.module_families.map(f=>f.name).filter(Boolean).join(' · ') : null}</div>
+              {module?.description ? <p className="mt-3 text-slate-300 text-sm">{module.description}</p> : null}
+            </div>
+
+            <div className="flex flex-col items-end gap-3">
+              <div className="inline-flex items-center gap-2">
+                <div className="module-badge px-3 py-1">{module?.module_code ?? '—'}</div>
+                <div className="module-badge px-3 py-1">Scenario: {module?.default_scenario_id ?? 'TBD'}</div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="module-badge px-3 py-1">{module?.ects ?? '—'} ECTS</div>
+                <button onClick={startDefaultScenario} disabled={starting} className={`px-4 py-2 rounded-md font-semibold ${starting ? 'bg-slate-600' : 'bg-amber-500 text-black'}`}>{starting ? 'Starting…' : 'Start Default Scenario'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Scenarios</h2>
 
@@ -260,10 +272,7 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
               })}
             </div>
 
-            <div className="mt-6 flex items-center gap-3">
-              <button onClick={() => loadAllRepoScenarios(false, scenarios)} disabled={repoLoading} className={`px-4 py-2 rounded-md ${repoLoading ? 'bg-slate-600' : 'bg-sky-500 text-black'}`}>{repoLoading ? 'Loading repo scenarios…' : 'Load all scenarios from repo'}</button>
-              {repoError ? <div className="text-rose-400 text-sm">{repoError}</div> : null}
-            </div>
+            {repoError ? <div className="mt-6 text-rose-400">Repo fallback error: {repoError}</div> : null}
           </div>
         )}
       </div>
