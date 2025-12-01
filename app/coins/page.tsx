@@ -22,6 +22,7 @@ export default function CoinsPage() {
   const router = useRouter();
   const [modules, setModules] = useState<ModuleRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
@@ -39,51 +40,62 @@ export default function CoinsPage() {
         body: JSON.stringify({ session_id: sessionId, event_type: 'page_view', payload: { page: 'coins' } })
       }).catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchModules() {
     setLoading(true);
-    // NOTE: removed `.eq('is_demo', true)` so all modules are shown.
-    const { data, error } = await supabase
-      .from('modules')
-      .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
-      .order('shelf_position', { ascending: true });
+    setFetchError(null);
 
-    setLoading(false);
-    if (error) {
-      console.error('fetch modules error', error);
-      return;
-    }
+    try {
+      // NOTE: do not request `ects` (some installs do not have that column).
+      const { data, error } = await supabase
+        .from('modules')
+        .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
+        .order('shelf_position', { ascending: true });
 
-    const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
-      const fam = m.module_families;
-      let families: Family[] = [];
-
-      if (Array.isArray(fam)) {
-        families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
-      } else if (fam && typeof fam === 'object') {
-        families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
-      } else {
-        families = [];
+      setLoading(false);
+      if (error) {
+        console.error('fetch modules error', error);
+        setFetchError(error.message || 'Failed to fetch modules');
+        setModules([]);
+        return;
       }
 
-      return {
-        id: String(m.id),
-        name: String(m.name ?? ''),
-        description: m.description ?? null,
-        shelf_position: m.shelf_position ?? null,
-        is_demo: Boolean(m.is_demo ?? false),
-        module_families: families,
-        image_path: m.image_path ?? null,
-        default_scenario_id: m.default_scenario_id ?? null,
-        module_code: m.module_code ?? null
-      };
-    });
+      const normalized: ModuleRecord[] = (data ?? []).map((m: any) => {
+        const fam = m.module_families;
+        let families: Family[] = [];
 
-    setModules(normalized);
+        if (Array.isArray(fam)) {
+          families = fam.map((f: any) => ({ name: String(f?.name ?? ''), code: String(f?.code ?? '') }));
+        } else if (fam && typeof fam === 'object') {
+          families = [{ name: String(fam.name ?? ''), code: String(fam.code ?? '') }];
+        } else {
+          families = [];
+        }
+
+        return {
+          id: String(m.id),
+          name: String(m.name ?? ''),
+          description: m.description ?? null,
+          shelf_position: m.shelf_position ?? null,
+          is_demo: Boolean(m.is_demo ?? false),
+          module_families: families,
+          image_path: m.image_path ?? null,
+          default_scenario_id: m.default_scenario_id ?? null,
+          module_code: m.module_code ?? null
+        };
+      });
+
+      setModules(normalized);
+    } catch (e: any) {
+      console.error('fetchModules exception', e);
+      setFetchError(String(e?.message ?? e));
+      setLoading(false);
+      setModules([]);
+    }
   }
 
-  // ALWAYS navigate to module dashboard. ModuleClient handles scenario starts.
   async function openModuleDashboard(m: ModuleRecord) {
     try {
       let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
@@ -101,7 +113,6 @@ export default function CoinsPage() {
         if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
       }
 
-      // Log module enter, then navigate to module dashboard page
       await fetch('/api/log-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,6 +146,10 @@ export default function CoinsPage() {
         </div>
 
         <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
+          {fetchError ? (
+            <div className="text-rose-400 mb-4">Warning: failed to load modules: {fetchError}</div>
+          ) : null}
+
           {familyOrder.map((familyName) => {
             const familyModules = modulesByFamily[familyName] ?? [];
             if (!familyModules.length) return null;
@@ -155,7 +170,15 @@ export default function CoinsPage() {
                       >
                         <div style={{ width: 84, height: 84 }} className="relative">
                           {m.image_path ? (
-                            <img src={m.image_path} alt="" className="tile-image" />
+                            // fallback to placeholder on error
+                            <img
+                              src={m.image_path}
+                              alt={m.name ?? ''}
+                              className="tile-image"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg';
+                              }}
+                            />
                           ) : (
                             <img src="/coins/placeholder.svg" alt="" className="tile-image" />
                           )}
