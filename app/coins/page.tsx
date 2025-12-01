@@ -1,11 +1,12 @@
 // app/coins/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import ModuleCard from '@/components/ModuleCard';
 
-type Family = { name: string; code: string };
+type Family = { name: string; code?: string };
 type ModuleRecord = {
   id: string;
   name: string;
@@ -16,6 +17,7 @@ type ModuleRecord = {
   image_path?: string | null;
   default_scenario_id?: string | null;
   module_code?: string | null;
+  ects?: number | null;
 };
 
 export default function CoinsPage() {
@@ -23,6 +25,9 @@ export default function CoinsPage() {
   const [modules, setModules] = useState<ModuleRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState('');
+  const [activeFamily, setActiveFamily] = useState<string>('All');
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
@@ -46,12 +51,10 @@ export default function CoinsPage() {
   async function fetchModules() {
     setLoading(true);
     setFetchError(null);
-
     try {
-      // NOTE: do not request `ects` (some installs do not have that column).
       const { data, error } = await supabase
         .from('modules')
-        .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code`)
+        .select(`id, name, description, shelf_position, is_demo, image_path, default_scenario_id, module_families ( name, code ), module_code, ects`)
         .order('shelf_position', { ascending: true });
 
       setLoading(false);
@@ -83,7 +86,8 @@ export default function CoinsPage() {
           module_families: families,
           image_path: m.image_path ?? null,
           default_scenario_id: m.default_scenario_id ?? null,
-          module_code: m.module_code ?? null
+          module_code: m.module_code ?? null,
+          ects: (typeof m.ects === 'number') ? m.ects : null
         };
       });
 
@@ -96,115 +100,133 @@ export default function CoinsPage() {
     }
   }
 
-  async function openModuleDashboard(m: ModuleRecord) {
-    try {
-      let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-      if (!sessionId) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
-        if (!token) { router.push('/'); return; }
-        const res = await fetch('/api/create-session', {
+  function openModuleDashboard(m: ModuleRecord) {
+    // create session and navigate (preserve existing behavior)
+    (async () => {
+      try {
+        let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+        if (!sessionId) {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
+          if (!token) { router.push('/'); return; }
+          const res = await fetch('/api/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+          if (!res.ok) { router.push('/'); return; }
+          const json = await res.json();
+          sessionId = json?.session?.id || json?.session_id || null;
+          if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+        }
+
+        await fetch('/api/log-event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-        if (!res.ok) { router.push('/'); return; }
-        const json = await res.json();
-        sessionId = json?.session?.id || json?.session_id || null;
-        if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+          body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
+        }).catch(()=>{});
+
+        router.push(`/module/${m.id}`);
+      } catch (e) {
+        console.error('openModuleDashboard failed', e);
+        router.push(`/module/${m.id}`);
       }
-
-      await fetch('/api/log-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
-      }).catch(()=>{});
-
-      router.push(`/module/${m.id}`);
-    } catch (e) {
-      console.error('openModuleDashboard failed', e);
-      router.push(`/module/${m.id}`);
-    }
+    })();
   }
+
+  // family list (All + families)
+  const familyOrder = useMemo(() => {
+    const families = Array.from(new Set(modules.flatMap(m => (m.module_families && m.module_families.length > 0) ? m.module_families.map(f => f.name) : ['Uncategorized'])));
+    return ['All', ...families.filter(Boolean)];
+  }, [modules]);
+
+  // filter modules by active family & search
+  const filteredModules = useMemo(() => {
+    const q = (search ?? '').trim().toLowerCase();
+    return modules.filter(m => {
+      if (activeFamily && activeFamily !== 'All') {
+        const fams = m.module_families?.map(f => (f.name ?? '').toLowerCase()) ?? [];
+        if (!fams.includes(activeFamily.toLowerCase())) return false;
+      }
+      if (!q) return true;
+      return (m.name ?? '').toLowerCase().includes(q) || (m.description ?? '').toLowerCase().includes(q) || (m.module_code ?? '').toLowerCase().includes(q);
+    });
+  }, [modules, activeFamily, search]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-white bg-black">Loading coins…</div>;
   }
 
-  const familyOrder = Array.from(new Set(modules.map(m => (m.module_families && m.module_families.length > 0) ? m.module_families[0].name : 'Uncategorized')));
-  const modulesByFamily: Record<string, ModuleRecord[]> = {};
-  for (const name of familyOrder) modulesByFamily[name] = [];
-  for (const mod of modules) {
-    const familyName = (mod.module_families && mod.module_families.length > 0) ? mod.module_families[0].name : 'Uncategorized';
-    modulesByFamily[familyName].push(mod);
-  }
-
   return (
     <main className="min-h-screen bg-black text-white px-6 py-12">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-6">
           <h1 className="text-4xl tracking-widest font-bold mt-2">CHALLENGE COINS</h1>
         </div>
 
-        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-8 shadow-inner">
+        <div className="bg-[#0b0f14] border border-[#202933] rounded-3xl p-6 shadow-inner">
           {fetchError ? (
             <div className="text-rose-400 mb-4">Warning: failed to load modules: {fetchError}</div>
           ) : null}
 
-          {familyOrder.map((familyName) => {
-            const familyModules = modulesByFamily[familyName] ?? [];
-            if (!familyModules.length) return null;
+          {/* Controls: search + family tabs */}
+          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="search"
+                placeholder="Search modules, code or description"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm w-64"
+                aria-label="Search modules"
+              />
 
-            return (
-              <section key={familyName} className="py-8">
-                <div className="flex justify-center">
-                  <div className="coin-grid">
-                    {familyModules.map((m) => (
-                      <div
-                        key={m.id}
-                        className="coin-tile"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openModuleDashboard(m)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') openModuleDashboard(m); }}
-                        aria-label={`Open module ${m.name}`}
-                      >
-                        <div style={{ width: 84, height: 84 }} className="relative">
-                          {m.image_path ? (
-                            // fallback to placeholder on error
-                            <img
-                              src={m.image_path}
-                              alt={m.name ?? ''}
-                              className="tile-image"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg';
-                              }}
-                            />
-                          ) : (
-                            <img src="/coins/placeholder.svg" alt="" className="tile-image" />
-                          )}
-                        </div>
+              <div className="hidden md:flex items-center gap-2 text-xs text-slate-400">
+                <span>Filter:</span>
+                <select
+                  value={activeFamily}
+                  onChange={(e) => setActiveFamily(e.target.value)}
+                  className="rounded-md bg-slate-900 border border-slate-700 px-2 py-1 text-sm"
+                >
+                  {familyOrder.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+            </div>
 
-                        <div className="module-tile-title">{m.name}</div>
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center text-xs text-slate-400">
+                {filteredModules.length} modules
+              </div>
+              <button onClick={() => { setSearch(''); setActiveFamily('All'); }} className="px-3 py-2 rounded-md border border-slate-700 text-sm">Reset</button>
+            </div>
+          </div>
 
-                        {m.description ? <div className="module-tile-desc">{m.description}</div> : <div className="module-tile-desc text-muted">No description</div>}
+          {/* Family tabs for small screens */}
+          <div className="md:hidden mb-4 overflow-auto">
+            <div className="flex gap-2">
+              {familyOrder.map(f => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFamily(f)}
+                  className={`px-3 py-1 rounded-full text-xs ${activeFamily === f ? 'bg-sky-500 text-black' : 'bg-transparent border border-slate-700 text-slate-200'}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                        <div className="module-tile-meta">
-                          <div className="module-badge">{m.module_code ?? '—'}</div>
-                          <div className="module-badge">Scenario: {m.default_scenario_id ?? 'TBD'}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          {/* Modules grid */}
+          <div className="coin-grid" role="list" aria-label="Modules">
+            {filteredModules.map((m) => (
+              <div role="listitem" key={m.id}>
+                <ModuleCard module={m} onOpen={openModuleDashboard} />
+              </div>
+            ))}
+          </div>
 
-                <div className="mt-8 text-center">
-                  <div className="inline-block px-4 py-1 bg-transparent text-sm font-semibold tracking-wider uppercase text-slate-200">
-                    {familyName}
-                  </div>
-                </div>
-              </section>
-            );
-          })}
+          {filteredModules.length === 0 && (
+            <div className="mt-6 text-slate-400">No modules match your filters.</div>
+          )}
         </div>
       </div>
     </main>
