@@ -1,5 +1,4 @@
 // scripts/add-default-scores.js
-// Run: node scripts/add-default-scores.js
 const fs = require('fs');
 const path = require('path');
 
@@ -17,23 +16,7 @@ function readJson(file) {
   }
 }
 
-// collect options from a dp node (mirrors validator logic)
-function collectOptionsFromDp(dpRaw) {
-  if (!dpRaw) return [];
-  if (Array.isArray(dpRaw?.options)) return dpRaw.options;
-  if (Array.isArray(dpRaw)) return dpRaw;
-  if (Array.isArray(dpRaw?.default)) return dpRaw.default;
-
-  const arr = [];
-  for (const k of Object.keys(dpRaw)) {
-    if (k === 'narrative' || k === 'stem' || k === 'options' || k === 'default') continue;
-    const v = dpRaw[k];
-    if (Array.isArray(v)) arr.push(...v);
-  }
-  return arr;
-}
-
-function ensureDefaultsOnOptions(options, filename, counters) {
+function ensureDefaultsOnOptions(options, counters) {
   if (!options || !Array.isArray(options)) return;
   for (const opt of options) {
     if (!opt || typeof opt !== 'object') continue;
@@ -56,46 +39,39 @@ function processFile(filePath) {
     return { file: rel, updated: false };
   }
 
-  const counters = { addedScore: 0, addedConfidence: 0, optionsTouched: 0 };
+  const counters = { addedScore: 0, addedConfidence: 0 };
 
   // dp1
   const dp1 = parsed.dp1;
   if (dp1) {
     const opts = Array.isArray(dp1.options) ? dp1.options : (Array.isArray(dp1) ? dp1 : []);
     if (Array.isArray(opts)) {
-      ensureDefaultsOnOptions(opts, filePath, counters);
-      counters.optionsTouched += opts.length;
+      ensureDefaultsOnOptions(opts, counters);
     }
   }
 
-  // dp2 / dp3: could be array, object with keyed branches, or object with 'options'
+  // dp2 / dp3
   for (const dpKey of ['dp2', 'dp3']) {
     const raw = parsed[dpKey];
     if (!raw) continue;
     if (Array.isArray(raw) || Array.isArray(raw?.options)) {
       const opts = Array.isArray(raw) ? raw : raw.options;
-      ensureDefaultsOnOptions(opts, filePath, counters);
-      counters.optionsTouched += (Array.isArray(opts) ? opts.length : 0);
+      ensureDefaultsOnOptions(opts, counters);
     } else if (typeof raw === 'object') {
-      // branches keyed by previous choice
       for (const key of Object.keys(raw)) {
         const v = raw[key];
         if (Array.isArray(v)) {
-          ensureDefaultsOnOptions(v, filePath, counters);
-          counters.optionsTouched += v.length;
+          ensureDefaultsOnOptions(v, counters);
         }
       }
-      // also check raw.default if present
       if (Array.isArray(raw.default)) {
-        ensureDefaultsOnOptions(raw.default, filePath, counters);
-        counters.optionsTouched += raw.default.length;
+        ensureDefaultsOnOptions(raw.default, counters);
       }
     }
   }
 
   const updated = counters.addedScore > 0 || counters.addedConfidence > 0;
   if (updated) {
-    // write back safely
     const formatted = JSON.stringify(parsed, null, 2) + '\n';
     fs.writeFileSync(filePath, formatted, 'utf8');
   }
@@ -130,7 +106,6 @@ function main() {
   console.log('Files updated:', summary.filesUpdated);
   console.log('Total score fields added:', summary.totalAddedScore);
   console.log('Total ideal_confidence fields added:', summary.totalAddedConfidence);
-  console.log('Done. If you want different defaults change DEFAULT_SCORE / DEFAULT_IDEAL_CONFIDENCE in the script.');
 }
 
 main();
