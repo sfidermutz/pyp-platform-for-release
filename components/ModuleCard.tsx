@@ -7,8 +7,7 @@ type Family = { name?: string };
 
 /**
  * Permissive ModuleRecord used by ModuleCard.
- * Note: fields are optional and allow `undefined` to remain compatible with other module shapes
- * returned by Supabase or used in other files. Index signature allows additional metadata without breaking typing.
+ * Note: fields are optional and allow `undefined` to remain compatible with other module shapes.
  */
 export type ModuleRecord = {
   id: string;
@@ -19,7 +18,6 @@ export type ModuleRecord = {
   module_code?: string | null | undefined;
   ects?: number | null | undefined;
   module_families?: Family[] | undefined;
-  // Optional additional fields that other modules may contain
   shelf_position?: number | null | undefined;
   is_demo?: boolean | undefined;
   [key: string]: any;
@@ -42,53 +40,51 @@ export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, o
       onKeyDown={handleKey}
       className="coin-tile"
     >
-      <div style={{ width: 84, height: 84 }} className="relative">
-        {module.image_path ? (
-          <img
-            src={module.image_path}
-            alt={module.name ?? ''}
-            className="tile-image"
-            loading="lazy"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
-          />
-        ) : (
-          <img src="/coins/placeholder.svg" alt="" className="tile-image" loading="lazy" />
-        )}
+      {/* Top: logo / title / description - these occupy the top & middle */}
+      <div>
+        <div style={{ width: 84, height: 84 }} className="relative mx-auto">
+          {module.image_path ? (
+            <img
+              src={String(module.image_path)}
+              alt={module.name ?? ''}
+              className="tile-image"
+              loading="lazy"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
+            />
+          ) : (
+            <img src="/coins/placeholder.svg" alt="" className="tile-image" loading="lazy" />
+          )}
+        </div>
+
+        <div className="module-tile-title" title={String(module.name ?? '')}>
+          {module.name}
+        </div>
+
+        <div className="module-tile-desc" title={String(module.description ?? '')}>
+          {module.description ?? <span className="text-muted">No description</span>}
+        </div>
       </div>
 
-      <div className="module-tile-title" title={String(module.name ?? '')}>
-        {module.name}
-      </div>
+      {/* Footer: badges and CTA - pinned to bottom by parent flex and justify-between */}
+      <div className="coin-tile-footer">
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          {module.module_families && module.module_families.length > 0 && module.module_families.slice(0,2).map((f, i) => (
+            <div key={i} className="module-badge" style={{ fontSize: 11, padding: '4px 6px' }}>{f.name}</div>
+          ))}
+          {typeof module.ects === 'number' ? (
+            <div className="module-badge" style={{ fontSize: 11 }}>ECTS {module.ects}</div>
+          ) : null}
+        </div>
 
-      <div className="module-tile-desc" title={String(module.description ?? '')}>
-        {module.description ?? <span className="text-muted">No description</span>}
-      </div>
-
-      <div className="module-tile-meta" style={{ marginTop: 8 }}>
-        <div className="module-badge">{module.module_code ?? '—'}</div>
-        <div className="module-badge">Scenario: {module.default_scenario_id ?? 'TBD'}</div>
-      </div>
-
-      <div style={{ marginTop: 10, width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            {module.module_families && module.module_families.length > 0 && module.module_families.slice(0,2).map((f, i) => (
-              <div key={i} className="module-badge" style={{ fontSize: 11, padding: '4px 6px' }}>{f.name}</div>
-            ))}
-            {typeof module.ects === 'number' ? (
-              <div className="module-badge" style={{ fontSize: 11 }}>ECTS {module.ects}</div>
-            ) : null}
-          </div>
-
-          <div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpen(module); }}
-              className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
-              aria-label={`Start module ${module.name}`}
-            >
-              Start
-            </button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="module-badge" style={{ marginRight: 8 }}>{module.module_code ?? '—'}</div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onOpen(module); }}
+            className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
+            aria-label={`Start module ${module.name}`}
+          >
+            Start
+          </button>
         </div>
       </div>
     </article>
