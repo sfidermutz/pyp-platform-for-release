@@ -4,7 +4,11 @@
 import React from 'react';
 
 type Family = { name?: string };
-type ModuleRecord = {
+/**
+ * Accept a permissive module shape — keep fields optional to be tolerant of varying DB schemas.
+ * This prevents TypeScript incompatibilities when different files declare slightly different ModuleRecord shapes.
+ */
+export type ModuleRecord = {
   id: string;
   name: string;
   description?: string | null;
@@ -13,6 +17,11 @@ type ModuleRecord = {
   module_code?: string | null;
   ects?: number | null;
   module_families?: Family[];
+  // Extra fields that other files may include — keep optional for compatibility
+  shelf_position?: number | null;
+  is_demo?: boolean;
+  // allow arbitrary additional metadata without breaking typing
+  [key: string]: any;
 };
 
 export default function ModuleCard({ module, onOpen }: { module: ModuleRecord, onOpen: (m: ModuleRecord) => void }) {
