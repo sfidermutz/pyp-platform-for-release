@@ -108,7 +108,6 @@ export default function CoinsPage() {
         body: JSON.stringify({ session_id: sessionId, event_type: 'enter_module', payload: { module_id: m.id, module_code: m.module_code }})
       }).catch(()=>{});
 
-      // Always go to the module page (dashboard), not directly to scenario
       router.push(`/module/${m.id}`);
     } catch (e) {
       console.error('openModuleDashboard failed', e);
@@ -143,33 +142,33 @@ export default function CoinsPage() {
             return (
               <section key={familyName} className="py-8">
                 <div className="flex justify-center">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-10 items-start justify-items-center">
+                  <div className="coin-grid">
                     {familyModules.map((m) => (
-                      <div key={m.id} className="text-center w-44">
-                        <button
-                          onClick={() => openModuleDashboard(m)}
-                          className="w-40 h-40 rounded-full mx-auto border-2 border-slate-700 flex items-center justify-center bg-gradient-to-b from-[#0f1720] to-transparent overflow-hidden relative shadow-sm"
-                          aria-label={m.name}
-                          title={m.name}
-                        >
+                      <div
+                        key={m.id}
+                        className="coin-tile"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openModuleDashboard(m)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') openModuleDashboard(m); }}
+                        aria-label={`Open module ${m.name}`}
+                      >
+                        <div style={{ width: 84, height: 84 }} className="relative">
                           {m.image_path ? (
-                            <img
-                              src={m.image_path}
-                              alt=""
-                              role="presentation"
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/coins/placeholder.svg'; }}
-                            />
+                            <img src={m.image_path} alt="" className="tile-image" />
                           ) : (
-                            <img src="/coins/placeholder.svg" alt="" role="presentation" className="w-full h-full object-cover" />
+                            <img src="/coins/placeholder.svg" alt="" className="tile-image" />
                           )}
+                        </div>
 
-                          <span className="absolute bottom-1 right-2 text-[10px] text-white/80 font-semibold">
-                            {m.shelf_position ?? ''}
-                          </span>
-                        </button>
+                        <div className="module-tile-title">{m.name}</div>
 
-                        <div className="mt-3 text-sm font-semibold break-words">{m.name}</div>
+                        {m.description ? <div className="module-tile-desc">{m.description}</div> : <div className="module-tile-desc text-muted">No description</div>}
+
+                        <div className="module-tile-meta">
+                          <div className="module-badge">{m.module_code ?? '—'}</div>
+                          <div className="module-badge">Scenario: {m.default_scenario_id ?? 'TBD'}</div>
+                        </div>
                       </div>
                     ))}
                   </div>
