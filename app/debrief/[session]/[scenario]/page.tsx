@@ -1,8 +1,18 @@
 // app/debrief/[session]/[scenario]/page.tsx
 'use client';
+
 import React, { useEffect, useState } from 'react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { useRouter } from 'next/navigation';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer
+} from 'recharts';
+
+type Params = { params: { session?: string; scenario?: string } };
 
 function metricLabel(key: string) {
   const mapping: Record<string,string> = {
@@ -18,86 +28,56 @@ function metricLabel(key: string) {
   return mapping[key] ?? key;
 }
 
-export default function FullDebriefPage({ params }: { params: { session?: string, scenario?: string }}) {
+export default function FullDebriefPage({ params }: Params) {
   const router = useRouter();
-
-  // Route params (may be undefined or the literal string "undefined")
   const initialSession = params?.session ?? null;
   const initialScenario = params?.scenario ?? null;
 
-  // Resolved values (we attempt to fallback to localStorage if the route params are missing)
   const [resolvedSession, setResolvedSession] = useState<string | null>(initialSession ?? null);
   const [resolvedScenario, setResolvedScenario] = useState<string | null>(initialScenario ?? null);
 
   const [debrief, setDebrief] = useState<any | null>(null);
   const [scenarioData, setScenarioData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [certificateBusy, setCertificateBusy] = useState(false);
+  const [certificateResult, setCertificateResult] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Treat the literal string "undefined" as missing
   function isMissingValue(v: string | null | undefined) {
     return !v || v === 'undefined';
   }
 
-  // Attempt to resolve missing session/scenario from localStorage or location
+  // try to resolve missing params from localStorage or URL
   useEffect(() => {
-    // If the route params are fine, keep them. Otherwise attempt local fallbacks.
-    let didResolve = false;
-    if (typeof window !== 'undefined') {
-      try {
-        // If session missing/invalid, try pyp_session_id in localStorage
-        if (isMissingValue(resolvedSession)) {
-          const stored = localStorage.getItem('pyp_session_id');
-          if (stored) {
-            setResolvedSession(stored);
-            didResolve = true;
-          }
-        }
-        // If scenario missing/invalid, try to deduce scenario from location path or localStorage keys
-        if (isMissingValue(resolvedScenario)) {
-          // attempt: if URL contains a trailing segment we can use it; otherwise check localStorage keys
-          try {
-            const parts = window.location.pathname.split('/').filter(Boolean);
-            // last segment might be scenario if shape matches
-            if (parts.length >= 3) {
-              // e.g., /debrief/<session>/<scenario>
-              const maybeScenario = parts[parts.length - 1];
-              if (maybeScenario && maybeScenario !== 'undefined') {
-                setResolvedScenario(maybeScenario);
-                didResolve = true;
-              }
-            }
-            // fallback: scan localStorage for a debrief related key
-            if (isMissingValue(resolvedScenario)) {
-              for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if (!k) continue;
-                // keys we store: pyp_debrief_<session>_<scenario>
-                const m = k.match(/^pyp_debrief_[^_]+_(.+)$/);
-                if (m && m[1]) {
-                  setResolvedScenario(m[1]);
-                  didResolve = true;
-                  break;
-                }
-              }
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      } catch (e) {
-        // ignore localStorage errors
+    if (typeof window === 'undefined') return;
+    try {
+      if (isMissingValue(resolvedSession)) {
+        const stored = localStorage.getItem('pyp_session_id');
+        if (stored) setResolvedSession(stored);
       }
-    }
-
-    // If we didn't resolve anything, keep existing resolved values; fetching logic below will handle invalid params.
-    // Force a re-render/attempt to load scenario after resolution attempts.
+      if (isMissingValue(resolvedScenario)) {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        if (parts.length >= 3) {
+          const maybe = parts[parts.length - 1];
+          if (maybe && maybe !== 'undefined') setResolvedScenario(maybe);
+        } else {
+          // scan localStorage for pyp_debrief_<session>_<scenario>
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k) continue;
+            const m = k.match(/^pyp_debrief_[^_]+_(.+)$/);
+            if (m && m[1]) { setResolvedScenario(m[1]); break; }
+          }
+        }
+      }
+    } catch (e) {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Primary effect: load scenario JSON (using resolvedScenario). We wait for resolvedScenario/resolvedSession to stabilize.
+  // load scenario JSON
   useEffect(() => {
     let mounted = true;
-    async function load() {
+    async function loadScenario() {
       setLoading(true);
       setScenarioData(null);
       try {
@@ -107,8 +87,7 @@ export default function FullDebriefPage({ params }: { params: { session?: string
           setLoading(false);
           return;
         }
-
-        // Try local public path first
+        // try local public path
         const rawUrl = `/data/scenarios/${encodeURIComponent(s)}.json`;
         try {
           const r = await fetch(rawUrl);
@@ -119,11 +98,8 @@ export default function FullDebriefPage({ params }: { params: { session?: string
             setLoading(false);
             return;
           }
-        } catch (e) {
-          // fallthrough to raw github
-        }
-
-        // Fallback to raw github
+        } catch (e) {}
+        // fallback to raw github
         try {
           const RAW_BASE = 'https://raw.githubusercontent.com/sfidermutz/pyp-platform-for-release/main';
           const r2 = await fetch(`${RAW_BASE}/data/scenarios/${encodeURIComponent(s)}.json`);
@@ -134,10 +110,7 @@ export default function FullDebriefPage({ params }: { params: { session?: string
             setLoading(false);
             return;
           }
-        } catch (e) {
-          // ignore
-        }
-
+        } catch (e) {}
         if (mounted) setScenarioData(null);
       } catch (e) {
         if (mounted) setScenarioData(null);
@@ -145,84 +118,107 @@ export default function FullDebriefPage({ params }: { params: { session?: string
         if (mounted) setLoading(false);
       }
     }
-    load();
+    loadScenario();
     return () => { mounted = false; };
   }, [resolvedScenario]);
 
-  // If no local debrief snapshot is present, try to fetch persisted debrief from server (using resolvedSession/resolvedScenario)
+  // load debrief (local then server)
   useEffect(() => {
     let mounted = true;
     async function loadDebrief() {
-      if (!mounted) return;
       setDebrief(null);
-      // try snapshot in localStorage if resolvedSession/resolvedScenario are present
-      if (!isMissingValue(resolvedSession) && !isMissingValue(resolvedScenario)) {
-        try {
-          const key = `pyp_debrief_${resolvedSession}_${resolvedScenario}`;
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            try {
-              setDebrief(JSON.parse(raw));
-            } catch (e) {
-              setDebrief(null);
-            }
-          } else {
-            // attempt server fetch
-            const res = await fetch(`/api/debrief?session_id=${encodeURIComponent(resolvedSession!)}&scenario_id=${encodeURIComponent(resolvedScenario!)}`);
-            if (res.ok) {
-              const json = await res.json();
-              const serverDebrief = json?.debrief ?? null;
-              if (serverDebrief) {
-                const composed = {
-                  ...serverDebrief.metrics,
-                  short_feedback: serverDebrief.short_feedback,
-                  selections: serverDebrief.selections,
-                  reflection: serverDebrief.reflection,
-                };
-                if (!mounted) return;
-                setDebrief(composed);
-                try {
-                  const key2 = `pyp_debrief_${resolvedSession}_${resolvedScenario}`;
-                  localStorage.setItem(key2, JSON.stringify(composed));
-                } catch (e) {}
-              }
-            }
-          }
-        } catch (e) {
-          // ignore
+      if (isMissingValue(resolvedSession) || isMissingValue(resolvedScenario)) return;
+      try {
+        const key = `pyp_debrief_${resolvedSession}_${resolvedScenario}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          try {
+            setDebrief(JSON.parse(raw));
+            return;
+          } catch {}
         }
+        const res = await fetch(`/api/debrief?session_id=${encodeURIComponent(resolvedSession!)}&scenario_id=${encodeURIComponent(resolvedScenario!)}`);
+        if (res.ok) {
+          const json = await res.json();
+          const serverDebrief = json?.debrief ?? null;
+          if (serverDebrief) {
+            const composed = {
+              ...serverDebrief.metrics,
+              short_feedback: serverDebrief.short_feedback,
+              selections: serverDebrief.selections,
+              reflection: serverDebrief.reflection
+            };
+            if (!mounted) return;
+            setDebrief(composed);
+            try { localStorage.setItem(key, JSON.stringify(composed)); } catch {}
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore
       }
     }
     loadDebrief();
     return () => { mounted = false; };
   }, [resolvedSession, resolvedScenario]);
 
-  // If the route params arrived as the literal string 'undefined' or are missing,
-  // show a friendly UI that tries to help the user recover.
-  const invalidParams = isMissingValue(resolvedSession) || isMissingValue(resolvedScenario);
-
   useEffect(() => {
     try { const el = document.getElementById('debrief-header'); if (el) el.focus(); } catch (e) {}
   }, []);
+
+  // certificate generation
+  async function onGenerateCertificate() {
+    if (!resolvedSession || !resolvedScenario) return;
+    setCertificateBusy(true);
+    setCertificateResult(null);
+    setError(null);
+    try {
+      const resp = await fetch('/api/generate-certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: resolvedSession, scenario_id: resolvedScenario })
+      });
+      const j = await resp.json().catch(() => ({ ok: false }));
+      if (!resp.ok) {
+        setCertificateResult({ ok: false, payload: j, message: j?.error ?? 'Failed generating certificate' });
+      } else {
+        setCertificateResult({ ok: true, payload: j, message: 'Certificate generated' });
+      }
+    } catch (e: any) {
+      setError(String(e));
+    } finally {
+      setCertificateBusy(false);
+    }
+  }
+
+  // share link
+  function copyShareLink() {
+    try {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url);
+      alert('Debrief link copied to clipboard');
+    } catch (e) {
+      alert('Copy failed — please copy the URL manually.');
+    }
+  }
+
+  const invalidParams = isMissingValue(resolvedSession) || isMissingValue(resolvedScenario);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white">Loading debrief…</div>;
   }
 
   if (invalidParams) {
-    // Offer recovery path: use the locally-stored session (if present) to construct a working debrief URL
     const localSession = (typeof window !== 'undefined') ? (() => {
-      try { return localStorage.getItem('pyp_session_id'); } catch (e) { return null; }
+      try { return localStorage.getItem('pyp_session_id'); } catch { return null; }
     })() : null;
 
     const tryUseLocalSession = () => {
       if (localSession && resolvedScenario && !isMissingValue(resolvedScenario)) {
         router.push(`/debrief/${localSession}/${resolvedScenario}`);
       } else if (localSession && initialScenario && !isMissingValue(initialScenario)) {
-        // initial scenario param might be present even if resolvedScenario wasn't set yet
         router.push(`/debrief/${localSession}/${initialScenario}`);
       } else {
-        // fallback: go to coins
         router.push('/coins');
       }
     };
@@ -232,23 +228,13 @@ export default function FullDebriefPage({ params }: { params: { session?: string
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl font-bold">Invalid Debrief URL</h1>
           <p className="mt-4 text-slate-400">This debrief URL is missing a session or scenario identifier. Please start the scenario from the Coins or Module page.</p>
-
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-sky-500 rounded text-black">Back to Coins</button>
-
             {localSession ? (
-              <button onClick={tryUseLocalSession} className="px-4 py-2 bg-slate-700 rounded text-white">
-                Use my current session
-              </button>
+              <button onClick={tryUseLocalSession} className="px-4 py-2 bg-slate-700 rounded text-white">Use my current session</button>
             ) : (
-              <button onClick={() => router.push('/admin/debug')} className="px-4 py-2 bg-slate-700 rounded text-white">
-                Debug / Start scenario
-              </button>
+              <button onClick={() => router.push('/admin/debug')} className="px-4 py-2 bg-slate-700 rounded text-white">Debug / Start scenario</button>
             )}
-          </div>
-
-          <div className="mt-4 text-xs text-slate-500">
-            Tip: If you recently completed a scenario, your session id may be stored in your browser (used by "Use my current session"). If you want to share a debrief link, start the scenario from the Coins page and copy the debrief link after the run completes.
           </div>
         </div>
       </main>
@@ -269,7 +255,7 @@ export default function FullDebriefPage({ params }: { params: { session?: string
     );
   }
 
-  // Render debrief (unchanged)
+  // prepare metrics for radar
   const metrics = [
     { key: 'decision_quality', value: debrief.decision_quality ?? 0 },
     { key: 'trust_calibration', value: debrief.trust_calibration ?? 0 },
@@ -281,39 +267,32 @@ export default function FullDebriefPage({ params }: { params: { session?: string
   const radarData = metrics.map(m => ({ metric: metricLabel(m.key), value: m.value }));
 
   return (
-    <main className="min-h-screen bg-black text-white p-8">
-      <div id="debrief-header" className="fixed left-0 right-0 top-0 z-40 bg-[#071017] border-b border-slate-800 p-4 flex items-center justify-between" tabIndex={-1}>
+    <main className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr,360px] gap-6">
+        {/* main column */}
         <div>
-          <div className="text-xs text-slate-500">PYP: STRATEGIC EDGE · DEMO</div>
-          <div className="text-lg font-bold mt-1">{scenarioData?.title ?? resolvedScenario}</div>
-          <div className="text-sm text-slate-400 mt-1">{scenarioData?.role ?? ''} · {scenarioData?.year ?? ''}</div>
-        </div>
+          <header className="bg-[#071017] border border-slate-800 rounded-xl p-6 mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold">{scenarioData?.title ?? resolvedScenario}</h1>
+                <div className="text-sm text-slate-400 mt-1">{scenarioData?.role ?? ''} · {scenarioData?.year ?? ''}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-slate-300">Mission Score</div>
+                <div className="text-4xl font-extrabold text-sky-400">{debrief.mission_score}</div>
+                <div className="text-xs text-slate-400 mt-1">{debrief.short_feedback?.line1}</div>
+              </div>
+            </div>
+          </header>
 
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/coins')} className="px-4 py-2 bg-slate-700 rounded">Back to Coins</button>
-          <a href="/demo_certificate.pdf" className="px-4 py-2 bg-green-500 rounded text-black" target="_blank" rel="noopener noreferrer">Download Placeholder Cert</a>
-        </div>
-      </div>
-
-      <div style={{ height: 96 }} />
-      <div className="max-w-5xl mx-auto mt-4">
-        <div className="flex items-center justify-between mb-8">
-          <div />
-          <div className="text-right">
-            <div className="text-sm text-slate-300">Mission Score</div>
-            <div className="text-5xl font-extrabold text-sky-400">{debrief.mission_score}</div>
-            <div className="text-sm text-slate-300 mt-1">{debrief.short_feedback?.line1}</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="col-span-2 bg-[#071017] rounded-xl border border-slate-800 p-6">
-            <h2 className="text-xl font-semibold">Scenario Summary</h2>
+          <section className="bg-[#071017] border border-slate-800 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold">Scenario Summary</h2>
             <p className="mt-3 text-slate-300">{scenarioData?.situation ?? scenarioData?.narrative}</p>
 
             <div className="mt-6 space-y-4">
               {[1,2,3].map((i)=> {
                 const dp = i === 1 ? scenarioData?.dp1 : i === 2 ? scenarioData?.dp2 : scenarioData?.dp3;
+                const locked = true;
                 return (
                   <div key={i} className="rounded-md p-4 border border-slate-700 bg-[#071016]">
                     <div className="flex items-center justify-between">
@@ -326,7 +305,10 @@ export default function FullDebriefPage({ params }: { params: { session?: string
                         const isSelected = (debrief?.selections && Object.values(debrief?.selections).find((s:any) => s?.optionId === opt.id));
                         return (
                           <div key={opt.id} className={`text-left w-full px-3 py-3 rounded-md border ${isSelected ? 'border-sky-500 bg-sky-700/10' : 'border-slate-700'}`}>
-                            <div className="text-sm">{opt.text}</div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="text-sm">{opt.text}</div>
+                              <div className="text-xs text-slate-400">Score: {typeof opt.score === 'number' ? opt.score : '—'}</div>
+                            </div>
                           </div>
                         );
                       })}
@@ -335,11 +317,30 @@ export default function FullDebriefPage({ params }: { params: { session?: string
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-[#071017] rounded-xl border border-slate-800 p-6">
-            <h2 className="text-xl font-semibold">Core Metrics</h2>
-            <div className="w-full h-64 mt-4">
+          <section className="bg-[#071017] border border-slate-800 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold">Reflection</h2>
+            <div className="mt-3 text-slate-300">
+              <p className="whitespace-pre-wrap">{(debrief?.reflection ?? '')}</p>
+            </div>
+
+            <div className="mt-6 text-sm text-slate-400">
+              <div>{debrief?.short_feedback?.line1}</div>
+              <div className="mt-1">{debrief?.short_feedback?.line2}</div>
+            </div>
+          </section>
+        </div>
+
+        {/* right-hand metrics panel */}
+        <aside className="sticky top-6">
+          <div className="bg-[#071017] border border-slate-800 rounded-xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Core Metrics</h3>
+              <button onClick={copyShareLink} className="text-xs text-slate-400 underline">Share</button>
+            </div>
+
+            <div className="w-full h-56 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                   <PolarGrid />
@@ -358,20 +359,37 @@ export default function FullDebriefPage({ params }: { params: { session?: string
                 </div>
               ))}
             </div>
-          </div>
-        </div>
 
-        <div className="bg-[#071017] rounded-xl border border-slate-800 p-6">
-          <h2 className="text-xl font-semibold">Reflection</h2>
-          <div className="mt-3 text-slate-300">
-            <p className="whitespace-pre-wrap">{(debrief?.reflection ?? '')}</p>
+            <div className="mt-4">
+              <button
+                onClick={onGenerateCertificate}
+                disabled={certificateBusy}
+                className={`w-full px-4 py-2 rounded-md font-semibold ${certificateBusy ? 'bg-slate-600' : 'bg-green-400 text-black'}`}
+              >
+                {certificateBusy ? 'Generating…' : 'Generate Certificate'}
+              </button>
+
+              {certificateResult ? (
+                <div className="mt-3 text-sm">
+                  {certificateResult.ok ? (
+                    <div className="text-sm text-slate-200">Certificate generated. <a href={certificateResult.payload?.url ?? '/demo_certificate.pdf'} target="_blank" rel="noreferrer" className="underline text-sky-300">Open</a></div>
+                  ) : (
+                    <div className="text-rose-400">Failed: {certificateResult.message ?? 'unknown'}</div>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          <div className="mt-6 text-sm text-slate-400">
-            <div>{debrief?.short_feedback?.line1}</div>
-            <div className="mt-1">{debrief?.short_feedback?.line2}</div>
+          <div className="bg-[#071017] border border-slate-800 rounded-xl p-4">
+            <h4 className="text-sm font-semibold">Improve next time</h4>
+            <ul className="mt-3 text-sm text-slate-300 space-y-2">
+              <li>- Increase decision evidence sharing with coalition partners earlier.</li>
+              <li>- Be explicit about attribution confidence before public statements.</li>
+              <li>- Check biases: did you favour action bias under pressure?</li>
+            </ul>
           </div>
-        </div>
+        </aside>
       </div>
     </main>
   );
