@@ -1,0 +1,97 @@
+name: Smoke Test - PYP End-to-End
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_url:
+        description: 'Full deployed base URL (e.g. https://my-site.vercel.app). Leave empty to use secret DEPLOY_URL'
+        required: false
+
+jobs:
+  smoke:
+    name: End-to-end smoke test
+    runs-on: ubuntu-latest
+    env:
+      # Uses workflow input deploy_url or falls back to repository secret DEPLOY_URL
+      DEPLOY_URL: ${{ github.event.inputs.deploy_url || secrets.DEPLOY_URL }}
+      # Demo token used by the smoke test - override in repo secrets if different
+      DEMO_TOKEN: 'demo-token-123'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run smoke script
+        shell: bash
+        run: |
+          cat > smoke.js <<'JS'
+          (async () => {
+            try {
+              const base = process.env.DEPLOY_URL;
+              if (!base) {
+                console.error('DEPLOY_URL not set (either pass inputs.deploy_url or set secret DEPLOY_URL)');
+                process.exit(2);
+              }
+              const headers = {'Content-Type':'application/json'};
+
+              console.log('Using DEPLOY_URL:', base);
+
+              // 1) create-session
+              const r1 = await fetch(`${base}/api/create-session`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ token: process.env.DEMO_TOKEN })
+              });
+              const j1 = await r1.json().catch(()=>null);
+              console.log('create-session status', r1.status, j1);
+              if (r1.status !== 200 || !j1?.session?.id) {
+                console.error('create-session failed');
+                process.exit(3);
+              }
+              const sid = j1.session.id;
+
+              // 2) store-scenario-metrics
+              const metricsPayload = {
+                session_id: sid,
+                scenario_id: 'HYB-PRE-01',
+                metrics: { mission_score: 65, decision_quality: 80, trust_calibration: 86 }
+              };
+              const r2 = await fetch(`${base}/api/store-scenario-metrics`, {
+                method: 'POST',
+                headers: { ...headers, 'x-debug':'true' },
+                body: JSON.stringify(metricsPayload)
+              });
+              const j2 = await r2.json().catch(()=>null);
+              console.log('store-scenario-metrics', r2.status, j2);
+              if (r2.status !== 200 || !j2?.success) {
+                console.error('store-scenario-metrics failed');
+                process.exit(4);
+              }
+
+              // 3) compute-debrief
+              const r3 = await fetch(`${base}/api/compute-debrief`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ session_id: sid, scenario_id: 'HYB-PRE-01' })
+              });
+              const j3 = await r3.json().catch(()=>null);
+              console.log('compute-debrief', r3.status, j3);
+              if (r3.status !== 200 || !j3) {
+                console.error('compute-debrief failed');
+                process.exit(5);
+              }
+
+              console.log('Smoke test PASS — session:', sid);
+              process.exit(0);
+            } catch (err) {
+              console.error('Smoke test script error', err);
+              process.exit(10);
+            }
+          })();
+          JS
+
+          node smoke.js
