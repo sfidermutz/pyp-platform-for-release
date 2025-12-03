@@ -56,3 +56,40 @@ Same keys; post-phase scenario.
 ---
 
 ## Exact per-option fields (example)
+
+dp1:
+stem: "Decide the initial posture..."
+options:
+- id: "1A"
+text: "..."
+metric_weights:
+DecisionQuality: 2
+InformationAdvantage: 1
+score: 85
+ideal_confidence: 80
+todo_beth: false
+
+
+---
+
+## Editor checklist (deliverables for each scenario)
+- [ ] Final `title`
+- [ ] Final `role`
+- [ ] Final `year`
+- [ ] Final `primary_domain` / `primary_level`
+- [ ] Final `situation` (75–125 words)
+- [ ] Final `dp1.stem` and `dp1.options[*].text`
+- [ ] Final `dp2` stems and options text (all branches)
+- [ ] Final `dp3` stems and options text (all branches, total 27)
+- [ ] Final `metric_weights` for each option (or scenario-level weights)
+- [ ] Final numeric `score` and `ideal_confidence` for each option
+- [ ] Final `reflection_pre.prompt` and `reflection_post.prompt`
+- [ ] Any image/asset files referenced under `public/assets/`
+- [ ] Confirm `todo_beth` flags are removed or set to false
+
+---
+
+## Notes for Beth
+- Please supply final text and numeric weights for the above keys.
+- If you need us to draft suggested metric weights and scores for review, reply and I will produce conservative recommended values for each option.
+
