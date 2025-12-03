@@ -183,14 +183,3 @@ function processFiles() {
 if (require.main === module) {
   processFiles();
 }
-
-Final notes to Codex operator / human
-
-This process is intentionally conservative: backup branch is created and public files moved there before deleting from main.
-
-All generated numeric fields are flagged "todo_beth": true.
-
-If the validator finds issues after the merge, stop and paste the results here. I will triage any remaining validation errors quickly.
-
-After this runs, the canonical scenario files in data/scenarios/ should contain both narrative and scoring intent; the website will serve full scenarios only via /api/scenario/<id>. 
-
