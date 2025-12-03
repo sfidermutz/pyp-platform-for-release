@@ -88,7 +88,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
                     shelf_position: parsed?.shelf_position ?? parsed?.scenario_order ?? null,
                   });
                 } else {
-                  // can't fetch scenario details due to auth / not found — skip but note
                   console.warn('secure scenario fetch failed', scenId, r.status);
                 }
               } catch (e) {
@@ -275,7 +274,10 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
               {scenarios.map((s) => {
                 const idForStart = s.scenario_id ?? s.filename ?? undefined;
                 return (
-                  <article key={s.scenario_id || s.filename} className="bg-[#0b1114] border border-slate-800 rounded-xl p-4 flex flex-col">
+                  <article
+                    key={s.scenario_id || s.filename}
+                    className="scenario-card flex flex-col h-full"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-sky-300 truncate">{s.title ?? s.scenario_id}</div>
@@ -283,7 +285,14 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
                         {s.learningOutcome ? <div className="text-xs text-slate-300 mt-2 italic line-clamp-2">{s.learningOutcome}</div> : null}
                       </div>
                       <div className="flex-shrink-0">
-                        <button onClick={() => ensureSessionAndNavigate(idForStart)} className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold" disabled={!idForStart} title={!idForStart ? 'No scenario id available' : `Start ${s.title ?? idForStart}`}>Start</button>
+                        <button
+                          onClick={() => ensureSessionAndNavigate(idForStart)}
+                          className="px-3 py-2 rounded-md bg-sky-500 text-black font-semibold"
+                          disabled={!idForStart}
+                          title={!idForStart ? 'No scenario id available' : `Start ${s.title ?? idForStart}`}
+                        >
+                          Start
+                        </button>
                       </div>
                     </div>
 
