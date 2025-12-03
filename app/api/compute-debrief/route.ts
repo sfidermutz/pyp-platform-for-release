@@ -138,7 +138,8 @@ export async function POST(req: Request) {
     let debriefSaved = false, debriefId = null;
     try {
       if (supabaseAdmin && session_hint) {
-        const insertPayload = {
+        // Use `any` for insertPayload to allow adding meta.scenario_snapshot dynamically
+        const insertPayload: any = {
           session_id: session_hint,
           scenario_id,
           selections: selections ?? {},
