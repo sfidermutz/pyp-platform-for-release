@@ -136,8 +136,26 @@ body {
 
 /* helpers */
 .text-muted { color: var(--text-muted); }
-.scenario-card { background: #071017; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; }
 
+/* Scenario card: consistent card for module scenario tiles
+   Make the card a full-height flex column so title/narrative/footer distribute.
+*/
+.scenario-card {
+  background: #071017;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 18px;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  min-height: 220px; /* ensures cards look uniform */
+  height: 100%;       /* allow grid items to match column height when using h-full on article */
+  overflow: visible;
+}
+
+/* small screens adjustments */
 @media(max-width:640px) {
   .coin-tile { padding: 12px; border-radius: 14px; }
   .module-tile-title { font-size: 14px; }
