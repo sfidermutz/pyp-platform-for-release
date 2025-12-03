@@ -42,7 +42,7 @@ function buildIndex() {
       module: parsed.module ?? parsed.module_id ?? parsed.moduleId ?? null,
       role: parsed.role ?? null,
       year: parsed.year ?? null,
-      default_scenario_id: parsed.default_scenario_id ?? null,
+      default_scenario_id: parsed.default_scenario_id ?? null
     };
     list.push(item);
   }
