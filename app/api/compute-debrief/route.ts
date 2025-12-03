@@ -1,16 +1,20 @@
 // app/api/compute-debrief/route.ts
-import { NextResponse, NextRequest } from 'next/server';
+// Server-side compute route: reads canonical scenario from data/scenarios/<id>.json if client omits scenario.
+// Accepts session_id as fallback for session_hint.
+//
+// Keep runtime=nodejs and use supabase service role for DB persistence.
+
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs/promises';
 import path from 'path';
 
 export const runtime = 'nodejs';
-
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const session_hint = body.session_hint ?? body.session_id ?? null;
@@ -19,24 +23,20 @@ export async function POST(req: NextRequest) {
     const reflection = body.reflection ?? '';
     const incomingScenario = body.scenario ?? null;
 
-    // Use provided scenario if present, otherwise attempt to read canonical scenario JSON server-side
+    // server-side canonical scenario resolution
     let sc = incomingScenario;
     if (!sc && scenario_id) {
       try {
-        const filePath = path.join(process.cwd(), 'data', 'scenarios', `${scenario_id}.json`);
-        try {
-          const raw = await fs.readFile(filePath, 'utf8');
-          sc = JSON.parse(raw);
-        } catch (e: any) {
-          if (e.code !== 'ENOENT') console.error('compute-debrief: error reading canonical scenario', e);
-          // continue without sc
-        }
-      } catch (fetchErr) {
-        console.error('compute-debrief: error fetching canonical scenario', fetchErr);
+        const file = path.join(process.cwd(), 'data', 'scenarios', `${scenario_id}.json`);
+        const raw = await fs.readFile(file, 'utf8');
+        sc = JSON.parse(raw);
+      } catch (e: any) {
+        // log but continue; compute will use best-effort
+        console.error('compute-debrief: failed to load canonical scenario', e?.message ?? e);
       }
     }
 
-    // (rest of compute logic unchanged) ...
+    // helper to extract options and compute metrics (kept minimal & robust)
     function getOptionsFromDp(dpRaw: any): any[] {
       if (!dpRaw) return [];
       if (Array.isArray(dpRaw?.options)) return dpRaw.options;
@@ -79,11 +79,9 @@ export async function POST(req: NextRequest) {
       return null;
     }
 
-    const dpIndices = [1, 2, 3];
-    let decisionQualitySum = 0;
-    let confidenceAlignmentSum = 0;
-    let count = 0;
-
+    // compute simple metrics
+    const dpIndices = [1,2,3];
+    let decisionQualitySum = 0, confidenceAlignmentSum = 0, count = 0;
     for (const idx of dpIndices) {
       const sel = selections[idx];
       if (!sel) continue;
@@ -106,13 +104,11 @@ export async function POST(req: NextRequest) {
     }
 
     const CRI = Math.min(100, 20 + 0.2 * decision_quality + 0.3 * reflectionQuality + 30);
-
     const bias_awareness = Math.min(100, Math.max(0, (reflectionQuality * 0.5) + (confidence_alignment * 0.2)));
     const trust_calibration = Math.min(100, Math.max(0, (decision_quality * 0.35) + (confidence_alignment * 0.35)));
     const information_advantage = Math.min(100, Math.max(0, (decision_quality * 0.4) + (reflectionQuality * 0.1)));
     const cognitive_adaptability = Math.min(100, Math.max(0, (CRI * 0.5) + (reflectionQuality * 0.2)));
     const escalation_tendency = Math.min(100, Math.max(0, 100 - decision_quality));
-
     const mission_score = Math.round(
       (0.40 * decision_quality) +
       (0.20 * confidence_alignment) +
@@ -122,8 +118,8 @@ export async function POST(req: NextRequest) {
     );
 
     const short_feedback = {
-      line1: `Mission Score: ${mission_score} — ${mission_score >= 75 ? 'Strong decision alignment' : (mission_score >= 50 ? 'Competent with growth areas' : 'Significant gaps to address')}`,
-      line2: `Decision Quality ${Math.round(decision_quality)} · CRI ${Math.round(CRI)} · Reflection ${Math.round(reflectionQuality)}`
+      line1: `Mission Score: ${mission_score}`,
+      line2: `Decision Quality ${Math.round(decision_quality)} · CRI ${Math.round(CRI)}`
     };
 
     const metrics = {
@@ -139,11 +135,10 @@ export async function POST(req: NextRequest) {
       reflection_quality: Math.round(reflectionQuality)
     };
 
-    let debriefSaved = false;
-    let debriefId: string | null = null;
+    let debriefSaved = false, debriefId = null;
     try {
       if (supabaseAdmin && session_hint) {
-        const insertPayload: any = {
+        const insertPayload = {
           session_id: session_hint,
           scenario_id,
           selections: selections ?? {},
@@ -152,10 +147,7 @@ export async function POST(req: NextRequest) {
           short_feedback,
           meta: { computed_at: new Date().toISOString() }
         };
-
-        if (sc && sc.id) {
-          insertPayload.meta.scenario_snapshot = { id: sc.id, title: sc.title ?? null };
-        }
+        if (sc && sc.scenario_id) insertPayload.meta.scenario_snapshot = { id: sc.scenario_id, title: sc.title ?? null };
 
         const { data: inserted, error: insertErr } = await supabaseAdmin
           .from('debriefs')
@@ -163,20 +155,22 @@ export async function POST(req: NextRequest) {
           .select('*')
           .single();
 
-        if (insertErr) {
-          console.error('debrief insert err', insertErr);
-        } else {
+        if (!insertErr && inserted) {
           debriefSaved = true;
-          debriefId = inserted?.id ?? null;
+          debriefId = inserted.id ?? null;
+        } else if (insertErr) {
+          console.error('debrief insert err', insertErr);
         }
       }
     } catch (dbErr) {
       console.error('debrief persist exception', dbErr);
     }
 
-    return NextResponse.json({ ...metrics, short_feedback, debrief_saved: debriefSaved, debrief_id: debriefId });
+    return new Response(JSON.stringify({ ...metrics, short_feedback, debrief_saved: debriefSaved, debrief_id: debriefId }), {
+      status: 200, headers: { 'Content-Type': 'application/json' }
+    });
   } catch (e) {
     console.error('compute-debrief error', e);
-    return NextResponse.json({ error: 'server error' }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
