@@ -3,21 +3,20 @@
 
 /**
  * scripts/check_markers.js
- * Minimal, robust checker used in prebuild step.
- * - Lists tracked files via `git ls-files`
- * - Scans for merge conflict markers, codex/confirm markers, and standalone "main" lines
- * - Reports findings and exits non-zero if any found (so CI fails early)
- *
- * This file intentionally avoids duplicate declarations and uses safe APIs.
+ * Minimal checker used in prebuild.
+ * Reports occurrences of:
+ *  - merge conflict markers (<<<<<<<, =======, >>>>>>>)
+ *  - 'codex/confirm' patterns
+ *  - standalone 'main' lines
+ * Exits 1 if any found.
  */
 
 const child = require('child_process');
 const fs = require('fs');
 
-function listGitFiles() {
+function gitFiles() {
   try {
-    const out = child.execSync('git ls-files', { encoding: 'utf8' });
-    return out.split(/\r?\n/).filter(Boolean);
+    return child.execSync('git ls-files', { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
   } catch (e) {
     console.error('git ls-files failed:', e && e.message);
     process.exit(1);
@@ -25,42 +24,39 @@ function listGitFiles() {
 }
 
 const patterns = [
-  { name: 'merge-conflict-start', rex: /^<{7}/ },
-  { name: 'merge-conflict-middle', rex: /^={7}/ },
-  { name: 'merge-conflict-end', rex: /^>{7}/ },
+  { name: 'merge-start', rex: /^<{7}/ },
+  { name: 'merge-mid', rex: /^={7}/ },
+  { name: 'merge-end', rex: /^>{7}/ },
   { name: 'codex-marker', rex: /codex\/confirm/ },
   { name: 'main-standalone', rex: /^\s*main\s*$/ },
 ];
 
-let found = 0;
+let count = 0;
 
-for (const file of listGitFiles()) {
-  // Skip large/binary files and node_modules
-  if (file.startsWith('node_modules/') || file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.lock')) {
-    continue;
-  }
-  let text;
+for (const file of gitFiles()) {
+  if (file.startsWith('node_modules/') || file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.lock')) continue;
+  let content;
   try {
-    text = fs.readFileSync(file, 'utf8');
+    content = fs.readFileSync(file, 'utf8');
   } catch (e) {
     continue;
   }
-  const lines = text.split(/\r?\n/);
+  const lines = content.split(/\r?\n/);
   lines.forEach((line, idx) => {
     for (const p of patterns) {
       if (p.rex.test(line)) {
-        console.error(`${file}:${idx + 1} [${p.name}] ${line.trim()}`);
-        found += 1;
+        console.error(`${file}:${idx+1} [${p.name}] ${line.trim()}`);
+        count++;
         break;
       }
     }
   });
 }
 
-if (found > 0) {
-  console.error(`\nFound ${found} marker(s) that should be removed. Exiting with code 1.`);
+if (count > 0) {
+  console.error(`\nFound ${count} marker(s). Please remove them before build.`);
   process.exit(1);
 }
 
-console.log('No conflict markers or codex markers found.');
+console.log('No markers found.');
 process.exit(0);
