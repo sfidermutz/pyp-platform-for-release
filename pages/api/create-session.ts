@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -13,8 +13,8 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { token } = req.body || {};
-    if (!token || typeof token !== 'string') return res.status(400).json({ error: 'token required' });
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'token required' });
 
     const { data: tkn, error: tkErr } = await supabaseAdmin
       .from('tokens')
