@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "seed_personas": [
+    {
+      "persona_id": "persona_alpha",
+      "display_name": "Analytical Alpha",
+      "is_synthetic": true,
+      "metric_sensitivity": {
+        "DecisionQuality": 0.8,
+        "TrustCalibration": 0.7,
+        "InformationAdvantage": 0.6,
+        "BiasAwareness": 0.5,
+        "CognitiveAdaptability": 0.65,
+        "MissionScore": 0.7,
+        "CRI": 0.6,
+        "RedTeamAwareness": 0.4
+      },
+      "behavioural_parameters": {
+        "dp_option_change_rate": 0.25,
+        "use_back_button_rate": 0.1,
+        "reflection_wordcount_mean": 140
+      },
+      "notes": "Seed persona emphasizing decision quality and trust calibration."
+    },
+    {
+      "persona_id": "persona_bravo",
+      "display_name": "Balanced Bravo",
+      "is_synthetic": true,
+      "metric_sensitivity": {
+        "DecisionQuality": 0.65,
+        "TrustCalibration": 0.6,
+        "InformationAdvantage": 0.7,
+        "BiasAwareness": 0.55,
+        "CognitiveAdaptability": 0.6,
+        "MissionScore": 0.65,
+        "CRI": 0.55,
+        "RedTeamAwareness": 0.5
+      },
+      "behavioural_parameters": {
+        "dp_option_change_rate": 0.2,
+        "use_back_button_rate": 0.12,
+        "reflection_wordcount_mean": 125
+      },
+      "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+    },
+    {
+      "persona_id": "persona_charlie",
+      "display_name": "Creative Charlie",
+      "is_synthetic": true,
+      "metric_sensitivity": {
+        "DecisionQuality": 0.55,
+        "TrustCalibration": 0.6,
+        "InformationAdvantage": 0.65,
+        "BiasAwareness": 0.6,
+        "CognitiveAdaptability": 0.8,
+        "MissionScore": 0.6,
+        "CRI": 0.65,
+        "RedTeamAwareness": 0.55
+      },
+      "behavioural_parameters": {
+        "dp_option_change_rate": 0.3,
+        "use_back_button_rate": 0.15,
+        "reflection_wordcount_mean": 150
+      },
+      "notes": "Higher adaptability seed to encourage diverse decision paths."
+    }
+  ]
+}
