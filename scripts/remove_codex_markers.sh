@@ -1,29 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Finding files with 'codex/confirm'..."
-FILES=$(git grep -l "codex/confirm" || true)
+echo "Searching for files with the marker..."
+PAT_PART1="codex"
+PAT_PART2="/confirm"
+PAT="$PAT_PART1$PAT_PART2"
 
+FILES=$(git grep -l "$PAT" || true)
 if [ -z "$FILES" ]; then
-  echo "No codex markers found."
+  echo "No files found with pattern $PAT"
   exit 0
 fi
 
-echo "Found these files:"
+echo "Files to clean:"
 echo "$FILES"
 
-read -p "Remove codex lines and standalone 'main' lines from these files? (y/N) " RESP
+read -p "Remove lines with '$PAT' and standalone 'main' from these files? (y/N) " RESP
 if [[ "$RESP" != "y" && "$RESP" != "Y" ]]; then
-  echo "Aborted by user. No files changed."
+  echo "Aborting; no files modified."
   exit 0
 fi
 
 for f in $FILES; do
-  echo "Processing $f..."
+  echo "Cleaning $f (backup -> $f.bak)"
   cp "$f" "$f.bak"
-  awk '!/codex\/confirm/ && !/^[[:space:]]*main[[:space:]]*$/' "$f.bak" > "$f"
+  # remove lines containing the pattern and lines that are just 'main'
+  awk -v pat="$PAT" '!index($0, pat) && !/^[[:space:]]*main[[:space:]]*$/' "$f.bak" > "$f"
+  # collapse extra blank lines
   awk 'NF{p=1; print; next} p{print; p=0}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-  echo "Backed up to $f.bak and cleaned $f"
 done
 
-echo "Done. Please inspect the *.bak files if you want to restore any content."
+echo "Done. Backups saved as *.bak"
