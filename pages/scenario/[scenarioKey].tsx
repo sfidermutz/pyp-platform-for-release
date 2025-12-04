@@ -7,16 +7,28 @@ import { computeScenarioMetrics, computeMissionScore } from '../../lib/metrics';
 export default function ScenarioPage() {
   const router = useRouter();
   const { scenarioKey } = router.query;
+ codex/confirm-repository-access-permissions-08od5l
+  const keyValue = Array.isArray(scenarioKey) ? scenarioKey[0] : scenarioKey;
+
+ main
   const [scenario, setScenario] = useState<any>(null);
   const [debriefOpen, setDebriefOpen] = useState(false);
   const [debriefData, setDebriefData] = useState<any>(null);
 
   useEffect(() => {
+ codex/confirm-repository-access-permissions-08od5l
+    if (!keyValue) return;
+    fetch(`/api/scenario/${keyValue}`)
+      .then(r=>r.json())
+      .then(d => setScenario(d));
+  }, [keyValue]);
+
     if (!scenarioKey) return;
     fetch(`/api/scenario/${scenarioKey}`)
       .then(r=>r.json())
       .then(d => setScenario(d));
   }, [scenarioKey]);
+ main
 
   function handleComplete(run:any) {
     const chosenOptions = [run.decisions[0], run.decisions[1], run.decisions[2]];
@@ -30,7 +42,11 @@ export default function ScenarioPage() {
       scenario_run_id: `run-${Date.now()}`,
       persona_id: 'synthetic-unknown',
       session_id: `sess-${Date.now()}`,
+ codex/confirm-repository-access-permissions-08od5l
+      scenario_id: keyValue,
+
       scenario_id: scenarioKey,
+ main
       decisions: run.decisions.map((d:any)=>(
         {
           option_id_initial: d.id,
