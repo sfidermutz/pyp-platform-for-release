@@ -16,7 +16,14 @@ const patterns = [
   { name: 'conflict-mid', regex: /^={7}/ },
   { name: 'conflict-end', regex: /^>{7}/ },
   { name: 'codex-marker', regex: /codex\/confirm/ },
+ codex/confirm-repository-access-permissions-08od5l
   { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ codex/confirm-repository-access-permissions-hkc44l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ main
+ main
 ];
 
 let issues = [];
