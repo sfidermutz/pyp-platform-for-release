@@ -9,9 +9,23 @@ export default function ModulePage() {
   const router = useRouter();
   const { moduleKey } = router.query;
   const moduleKeyValue = Array.isArray(moduleKey) ? moduleKey[0] : moduleKey;
+  const defaultMetrics = [
+    { metric: 'DecisionQuality', value: 60 },
+    { metric: 'InformationAdvantage', value: 55 },
+    { metric: 'TrustCalibration', value: 65 },
+    { metric: 'CognitiveAdaptability', value: 50 }
+  ];
+
   const [moduleData, setModuleData] = useState<any>(null);
-  const [selectedMetrics, setSelectedMetrics] = useState<any[]>([]);
-  const [missionScore, setMissionScore] = useState<number>(0);
+  const [selectedMetrics, setSelectedMetrics] = useState<any[]>(defaultMetrics);
+  const [missionScore, setMissionScore] = useState<number>(
+    computeMissionScore({
+      DecisionQuality: defaultMetrics[0].value,
+      InformationAdvantage: defaultMetrics[1].value,
+      TrustCalibration: defaultMetrics[2].value,
+      CognitiveAdaptability: defaultMetrics[3].value
+    })
+  );
 
   useEffect(() => {
     if (!moduleKeyValue) return;
@@ -20,14 +34,15 @@ export default function ModulePage() {
       .then(r => r.json())
       .then(d => {
         setModuleData(d);
-        const metrics = [
-          {metric: 'DecisionQuality', value: 60},
-          {metric: 'InformationAdvantage', value: 55},
-          {metric: 'TrustCalibration', value: 65},
-          {metric: 'CognitiveAdaptability', value: 50}
-        ];
-        setSelectedMetrics(metrics);
-        setMissionScore(computeMissionScore({DecisionQuality:60, InformationAdvantage:55, TrustCalibration:65, CognitiveAdaptability:50}));
+        setSelectedMetrics(defaultMetrics);
+        setMissionScore(
+          computeMissionScore({
+            DecisionQuality: defaultMetrics[0].value,
+            InformationAdvantage: defaultMetrics[1].value,
+            TrustCalibration: defaultMetrics[2].value,
+            CognitiveAdaptability: defaultMetrics[3].value
+          })
+        );
       });
   }, [moduleKeyValue]);
 
@@ -40,8 +55,8 @@ export default function ModulePage() {
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
             <MetricTile label="Mission Score" value={missionScore} tooltip="Aggregated mission score" color="#7da9ff"/>
-            <MetricTile label="Decision Quality" value={selectedMetrics[0].value} />
-            <MetricTile label="Trust Calibration" value={selectedMetrics[2].value} />
+            <MetricTile label="Decision Quality" value={selectedMetrics[0]?.value ?? 0} />
+            <MetricTile label="Trust Calibration" value={selectedMetrics[2]?.value ?? 0} />
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
