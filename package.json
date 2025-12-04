@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "npm run check:markers",
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/validate-scenarios.js",
-    "ci": "npm run test && npm run build"
+    "ci": "npm run test && npm run build",
+    "check:markers": "node scripts/check_markers.js"
   },
   "engines": {
     "node": ">=18"
