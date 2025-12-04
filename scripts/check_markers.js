@@ -6,6 +6,9 @@
 
 const { execSync } = require('child_process');
 const fs = require('fs');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 function listFiles() {
   const out = execSync('git ls-files', { encoding: 'utf8' });
@@ -21,12 +24,24 @@ const patterns = [
 ];
 
 const issues = [];
+ codex/confirm-repository-access-permissions-08od5l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ codex/confirm-repository-access-permissions-hkc44l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ main
+ main
+];
+
+let issues = [];
 for (const file of listFiles()) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch (e) {
     // Skip unreadable/binary files
+    // Skip files we can't read as utf8 (likely binary)
     continue;
   }
   const lines = text.split(/\r?\n/);
