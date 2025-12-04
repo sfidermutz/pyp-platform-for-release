@@ -1,66 +1,66 @@
 #!/usr/bin/env node
+// scripts/check_markers.js
+// Scan tracked files for conflict markers or stray codex markers that can break builds.
+
 'use strict';
 
-/**
- * scripts/check_markers.js
- * Minimal, robust checker used during prebuild.
- * - Scans all tracked files for conflict markers and codex markers and
- *   reports them (exit code 1 if any found).
- * - Does NOT redeclare identifiers. Compatible with Node 18+.
- */
-
-const child = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
-function listGitFiles() {
-  // Use git ls-files for tracked files
-  try {
-    const out = child.execSync('git ls-files', { encoding: 'utf8' });
-    return out.split(/\r?\n/).filter(Boolean);
-  } catch (e) {
-    console.error('git ls-files failed:', e && e.message);
-    process.exit(1);
-  }
+function listFiles() {
+  const out = execSync('git ls-files', { encoding: 'utf8' });
+  return out.split('\n').filter(Boolean);
 }
 
-const fileList = listGitFiles();
-
 const patterns = [
-  { name: 'merge-conflict-start', regex: /^<{7}/ },
-  { name: 'merge-conflict-middle', regex: /^={7}/ },
-  { name: 'merge-conflict-end', regex: /^>{7}/ },
+  { name: 'conflict-start', regex: /^<{7}/ },
+  { name: 'conflict-mid', regex: /^={7}/ },
+  { name: 'conflict-end', regex: /^>{7}/ },
   { name: 'codex-marker', regex: /codex\/confirm/ },
-  { name: 'main-standalone', regex: /^\s*main\s*$/ },
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
 ];
 
-let problemCount = 0;
+const issues = [];
+ codex/confirm-repository-access-permissions-08od5l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
 
-for (const file of fileList) {
-  // limit to text files of interest (skip node_modules etc.)
-  if (file.startsWith('node_modules/') || file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.lock')) continue;
+ codex/confirm-repository-access-permissions-hkc44l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
 
+ main
+ main
+];
+
+let issues = [];
+for (const file of listFiles()) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch (e) {
-    // skip unreadable files
+    // Skip unreadable/binary files
+    // Skip files we can't read as utf8 (likely binary)
     continue;
   }
   const lines = text.split(/\r?\n/);
   lines.forEach((line, idx) => {
     for (const pat of patterns) {
       if (pat.regex.test(line)) {
-        console.error(`${file}:${idx+1} [${pat.name}] ${line.trim()}`);
-        problemCount += 1;
+        issues.push({ file, line: line.trim(), lineNumber: idx + 1, type: pat.name });
+        break;
       }
     }
   });
 }
 
-if (problemCount > 0) {
-  console.error(`\nFound ${problemCount} problem(s). Please inspect the reported files or run the automated cleanup script.`);
+if (issues.length) {
+  console.error('Found markers that should be removed:');
+  for (const i of issues) {
+    console.error(`- ${i.file}:${i.lineNumber} [${i.type}] ${i.line}`);
+  }
   process.exit(1);
 }
 
 console.log('No conflict or codex markers found.');
-process.exit(0);

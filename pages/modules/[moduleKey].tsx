@@ -8,6 +8,7 @@ import { computeMissionScore } from '../../lib/metrics';
 export default function ModulePage() {
   const router = useRouter();
   const { moduleKey } = router.query;
+ codex/confirm-repository-access-permissions-08od5l
   const moduleKeyValue = Array.isArray(moduleKey) ? moduleKey[0] : moduleKey;
   const defaultMetrics = [
     { metric: 'DecisionQuality', value: 60 },
@@ -46,17 +47,51 @@ export default function ModulePage() {
       });
   }, [moduleKeyValue]);
 
+  const [moduleData, setModuleData] = useState<any>(null);
+  const [selectedMetrics, setSelectedMetrics] = useState<any[]>([]);
+  const [missionScore, setMissionScore] = useState<number>(0);
+
+  useEffect(() => {
+    if (!moduleKey) return;
+    fetch(`/api/scenarios/${moduleKey}`)
+      .then(r => r.json())
+      .then(d => {
+        setModuleData(d);
+        const metrics = [
+          {metric: 'DecisionQuality', value: 60},
+          {metric: 'InformationAdvantage', value: 55},
+          {metric: 'TrustCalibration', value: 65},
+          {metric: 'CognitiveAdaptability', value: 50}
+        ];
+        setSelectedMetrics(metrics);
+        setMissionScore(computeMissionScore({DecisionQuality:60, InformationAdvantage:55, TrustCalibration:65, CognitiveAdaptability:50}));
+      });
+  }, [moduleKey]);
+ main
+
   if (!moduleData) return <div className="p-8">Loading...</div>;
 
   return (
     <div className="p-8">
       <h1 className="h1 text-2xl">{moduleData.module_title || moduleKeyValue} — Module Dashboard</h1>
+ codex/confirm-repository-access-permissions-08od5l
+      <h1 className="h1 text-2xl">{moduleData.module_title || moduleKeyValue} — Module Dashboard</h1>
+
+      <h1 className="h1 text-2xl">{moduleData.module_title || moduleKey} — Module Dashboard</h1>
+ main
       <div className="mt-4 grid grid-cols-3 gap-4">
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
             <MetricTile label="Mission Score" value={missionScore} tooltip="Aggregated mission score" color="#7da9ff"/>
             <MetricTile label="Decision Quality" value={selectedMetrics[0]?.value ?? 0} />
             <MetricTile label="Trust Calibration" value={selectedMetrics[2]?.value ?? 0} />
+ codex/confirm-repository-access-permissions-08od5l
+            <MetricTile label="Decision Quality" value={selectedMetrics[0]?.value ?? 0} />
+            <MetricTile label="Trust Calibration" value={selectedMetrics[2]?.value ?? 0} />
+
+            <MetricTile label="Decision Quality" value={selectedMetrics[0].value} />
+            <MetricTile label="Trust Calibration" value={selectedMetrics[2].value} />
+ main
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
