@@ -1,5 +1,9 @@
 import type { AppProps } from 'next/app';
 import '../styles/globals.css';
+ codex/confirm-repository-access-permissions-ozx30k
+import Layout from '../components/Layout';
+
+
  codex/confirm-repository-access-permissions-lardjd
 import Layout from '../components/Layout';
 
@@ -17,12 +21,15 @@ import Layout from '../components/Layout';
 
  main
  main
+ main
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <Layout>
       <Component {...pageProps} />
     </Layout>
   );
+ codex/confirm-repository-access-permissions-ozx30k
+
  codex/confirm-repository-access-permissions-lardjd
 
  codex/confirm-repository-access-permissions-kksgv9
@@ -33,6 +40,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
 export default function App({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
+ main
  main
  main
  main
