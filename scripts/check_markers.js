@@ -2,10 +2,9 @@
 // scripts/check_markers.js
 // Scan tracked files for conflict markers or stray codex markers that can break builds.
 
-'use strict';
-
 const { execSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 function listFiles() {
   const out = execSync('git ls-files', { encoding: 'utf8' });
@@ -17,16 +16,23 @@ const patterns = [
   { name: 'conflict-mid', regex: /^={7}/ },
   { name: 'conflict-end', regex: /^>{7}/ },
   { name: 'codex-marker', regex: /codex\/confirm/ },
+ codex/confirm-repository-access-permissions-08od5l
   { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ codex/confirm-repository-access-permissions-hkc44l
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+
+ main
+ main
 ];
 
-const issues = [];
+let issues = [];
 for (const file of listFiles()) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch (e) {
-    // Skip unreadable/binary files
+    // Skip files we can't read as utf8 (likely binary)
     continue;
   }
   const lines = text.split(/\r?\n/);
