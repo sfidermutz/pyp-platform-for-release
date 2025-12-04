@@ -1,0 +1,2522 @@
+[
+  {
+    "persona_id": "persona_alpha_pvu0n",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8325062939478177,
+      "TrustCalibration": 0.6689891647788127,
+      "InformationAdvantage": 0.6078435357543249,
+      "BiasAwareness": 0.5162855035262337,
+      "CognitiveAdaptability": 0.6241750717293982,
+      "MissionScore": 0.7318931969796627,
+      "CRI": 0.5623150104540993,
+      "RedTeamAwareness": 0.3909748393471824
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21716907269539298,
+      "use_back_button_rate": 0.0885622315850193,
+      "reflection_wordcount_mean": 92.3640599783439
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_mgufm",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6256126526203828,
+      "TrustCalibration": 0.5520549914415804,
+      "InformationAdvantage": 0.7321849177925905,
+      "BiasAwareness": 0.5851380593525454,
+      "CognitiveAdaptability": 0.5617630610965867,
+      "MissionScore": 0.6137623535851546,
+      "CRI": 0.5383643194596855,
+      "RedTeamAwareness": 0.49180940585305116
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.23263476159693733,
+      "use_back_button_rate": 0.1385698861453056,
+      "reflection_wordcount_mean": 85.45085558548203
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_gcf2m",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.512356468318125,
+      "TrustCalibration": 0.5786327200315241,
+      "InformationAdvantage": 0.6230715802865757,
+      "BiasAwareness": 0.587224986268746,
+      "CognitiveAdaptability": 0.8246180159677231,
+      "MissionScore": 0.6437771685595776,
+      "CRI": 0.686405641685733,
+      "RedTeamAwareness": 0.50337292130597
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.28939372518386064,
+      "use_back_button_rate": 0.15340419256862156,
+      "reflection_wordcount_mean": 190.20437313068908
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_dvbl0",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.842082258292799,
+      "TrustCalibration": 0.7316775921774061,
+      "InformationAdvantage": 0.6478922814235486,
+      "BiasAwareness": 0.4936397822670677,
+      "CognitiveAdaptability": 0.6082709491255305,
+      "MissionScore": 0.6529192148654432,
+      "CRI": 0.5610045559003387,
+      "RedTeamAwareness": 0.4304892758547218
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.24364224443519455,
+      "use_back_button_rate": 0.13826012302941595,
+      "reflection_wordcount_mean": 151.13968169579144
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_vzcdz",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6755569003961408,
+      "TrustCalibration": 0.5795915638293869,
+      "InformationAdvantage": 0.7173311370868304,
+      "BiasAwareness": 0.54974619861584,
+      "CognitiveAdaptability": 0.6382263684113983,
+      "MissionScore": 0.66098339569798,
+      "CRI": 0.5918931554532233,
+      "RedTeamAwareness": 0.46557954925865497
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20600330513109485,
+      "use_back_button_rate": 0.12968656516945146,
+      "reflection_wordcount_mean": 125.84238016753771
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_nsi2r",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5409441508082741,
+      "TrustCalibration": 0.6209354143405511,
+      "InformationAdvantage": 0.6610075146608546,
+      "BiasAwareness": 0.5525285862293341,
+      "CognitiveAdaptability": 0.8310037890933312,
+      "MissionScore": 0.5959852544880101,
+      "CRI": 0.6135055612985735,
+      "RedTeamAwareness": 0.542223360912669
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.34798019274750996,
+      "use_back_button_rate": 0.14962958273252114,
+      "reflection_wordcount_mean": 203.83573874876396
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_6s5c0",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7942354751723696,
+      "TrustCalibration": 0.6525927202129798,
+      "InformationAdvantage": 0.6248028967944117,
+      "BiasAwareness": 0.4975698798943544,
+      "CognitiveAdaptability": 0.652682152408684,
+      "MissionScore": 0.7400995028083802,
+      "CRI": 0.6232027513492177,
+      "RedTeamAwareness": 0.36485604624205886
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21597851641151347,
+      "use_back_button_rate": 0.11834618025738597,
+      "reflection_wordcount_mean": 129.51036273874647
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_g48sz",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6639624714160578,
+      "TrustCalibration": 0.5576537352256179,
+      "InformationAdvantage": 0.7389776507337493,
+      "BiasAwareness": 0.554254823677843,
+      "CognitiveAdaptability": 0.5818015482402803,
+      "MissionScore": 0.6268510415772557,
+      "CRI": 0.5616234723518422,
+      "RedTeamAwareness": 0.5489429371532913
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2579968905403212,
+      "use_back_button_rate": 0.1123429849543357,
+      "reflection_wordcount_mean": 88.04920019793255
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_2tpc2",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.54615713197292,
+      "TrustCalibration": 0.6340638049308984,
+      "InformationAdvantage": 0.6407023309628527,
+      "BiasAwareness": 0.6339224987275552,
+      "CognitiveAdaptability": 0.769924730709385,
+      "MissionScore": 0.5778372601878248,
+      "CRI": 0.6839810566393418,
+      "RedTeamAwareness": 0.5228815039236748
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3379782243853555,
+      "use_back_button_rate": 0.19653848424946296,
+      "reflection_wordcount_mean": 128.25136473512825
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_qh7zh",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7652390336450213,
+      "TrustCalibration": 0.7022903116682134,
+      "InformationAdvantage": 0.5766939151351335,
+      "BiasAwareness": 0.4897437291316172,
+      "CognitiveAdaptability": 0.6527147728533884,
+      "MissionScore": 0.7024239348934609,
+      "CRI": 0.629024467363128,
+      "RedTeamAwareness": 0.4259335703263789
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.23257827794778377,
+      "use_back_button_rate": 0.0711126504286442,
+      "reflection_wordcount_mean": 196.79708866237092
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_aeu8m",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6196574118367186,
+      "TrustCalibration": 0.6429212541748626,
+      "InformationAdvantage": 0.7196970990798368,
+      "BiasAwareness": 0.5964002688074529,
+      "CognitiveAdaptability": 0.6378346996613193,
+      "MissionScore": 0.6751317600846808,
+      "CRI": 0.572881312394463,
+      "RedTeamAwareness": 0.4878624213002012
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.23169554108161425,
+      "use_back_button_rate": 0.12319628437510617,
+      "reflection_wordcount_mean": 165.93379191448508
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_yml3e",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5144486218306737,
+      "TrustCalibration": 0.6100498622023433,
+      "InformationAdvantage": 0.6802317313914948,
+      "BiasAwareness": 0.5809602392657081,
+      "CognitiveAdaptability": 0.7969549533944844,
+      "MissionScore": 0.5751834447987424,
+      "CRI": 0.6959614134344553,
+      "RedTeamAwareness": 0.514998240196309
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3486855967126637,
+      "use_back_button_rate": 0.118064676925241,
+      "reflection_wordcount_mean": 163.23295089533698
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_yyr0b",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7596614677169552,
+      "TrustCalibration": 0.6518525380056358,
+      "InformationAdvantage": 0.6473641263912517,
+      "BiasAwareness": 0.5320899628031136,
+      "CognitiveAdaptability": 0.6212228669411134,
+      "MissionScore": 0.7089007431051233,
+      "CRI": 0.6402124337396685,
+      "RedTeamAwareness": 0.43159246387900996
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.26355695005549934,
+      "use_back_button_rate": 0.09193905038772272,
+      "reflection_wordcount_mean": 144.12128128386504
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_c64ma",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6088454652746028,
+      "TrustCalibration": 0.5826665226598808,
+      "InformationAdvantage": 0.6691374833683665,
+      "BiasAwareness": 0.5577113263716724,
+      "CognitiveAdaptability": 0.563313013377184,
+      "MissionScore": 0.6289181349651598,
+      "CRI": 0.549321163739696,
+      "RedTeamAwareness": 0.488198975732457
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.18132552086238893,
+      "use_back_button_rate": 0.10120444381268871,
+      "reflection_wordcount_mean": 131.840044330077
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_oy4w4",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5221590006599088,
+      "TrustCalibration": 0.5976280466581563,
+      "InformationAdvantage": 0.6517459603578574,
+      "BiasAwareness": 0.6382931604781441,
+      "CognitiveAdaptability": 0.7612100419961921,
+      "MissionScore": 0.6217495833103178,
+      "CRI": 0.672648180411069,
+      "RedTeamAwareness": 0.5503705448772341
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3373361466332365,
+      "use_back_button_rate": 0.07337558401230536,
+      "reflection_wordcount_mean": 141.2270637656243
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_holnb",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.846532125672168,
+      "TrustCalibration": 0.7033424878116785,
+      "InformationAdvantage": 0.5584436108380759,
+      "BiasAwareness": 0.4904635784458902,
+      "CognitiveAdaptability": 0.6250908874993957,
+      "MissionScore": 0.6705642589850472,
+      "CRI": 0.6112461436694628,
+      "RedTeamAwareness": 0.3536552861895705
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2854159288536331,
+      "use_back_button_rate": 0.08296257999209031,
+      "reflection_wordcount_mean": 123.36259825290064
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_coomh",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.648506558819284,
+      "TrustCalibration": 0.6391865494400591,
+      "InformationAdvantage": 0.6845138043235619,
+      "BiasAwareness": 0.58751331996234,
+      "CognitiveAdaptability": 0.6421614089858789,
+      "MissionScore": 0.6033185483699539,
+      "CRI": 0.5715182820579626,
+      "RedTeamAwareness": 0.48267519384657825
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.12689070307383832,
+      "use_back_button_rate": 0.14200122700151177,
+      "reflection_wordcount_mean": 119.13623811414244
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_sqv65",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5539879621300614,
+      "TrustCalibration": 0.6386912647311098,
+      "InformationAdvantage": 0.6933460775672342,
+      "BiasAwareness": 0.6204921093562573,
+      "CognitiveAdaptability": 0.8067793464215758,
+      "MissionScore": 0.6397852987500299,
+      "CRI": 0.6126720944862731,
+      "RedTeamAwareness": 0.5683352162758077
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2716671146026007,
+      "use_back_button_rate": 0.10559317580410249,
+      "reflection_wordcount_mean": 162.38932594379907
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_w60b1",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7949519995115425,
+      "TrustCalibration": 0.7046570745894899,
+      "InformationAdvantage": 0.5980896653556145,
+      "BiasAwareness": 0.5120589069175486,
+      "CognitiveAdaptability": 0.6497785163425392,
+      "MissionScore": 0.679660089796798,
+      "CRI": 0.649259230988228,
+      "RedTeamAwareness": 0.4171978247326594
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2616511454357377,
+      "use_back_button_rate": 0.12582207779532345,
+      "reflection_wordcount_mean": 135.50859668428834
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_9f4vc",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6535829668757465,
+      "TrustCalibration": 0.6054086776662835,
+      "InformationAdvantage": 0.6678949732906684,
+      "BiasAwareness": 0.5863241730683961,
+      "CognitiveAdaptability": 0.6122459582248132,
+      "MissionScore": 0.6426807663824659,
+      "CRI": 0.5205925557146132,
+      "RedTeamAwareness": 0.4876409557488851
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2317743332400659,
+      "use_back_button_rate": 0.11781565054003909,
+      "reflection_wordcount_mean": 125.50590957618407
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_in7ng",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5738755058559565,
+      "TrustCalibration": 0.6242335842853286,
+      "InformationAdvantage": 0.6437058857157599,
+      "BiasAwareness": 0.5604849910010155,
+      "CognitiveAdaptability": 0.7572442222269836,
+      "MissionScore": 0.6353789427690734,
+      "CRI": 0.6717589676223636,
+      "RedTeamAwareness": 0.5665997598023541
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3008394832786854,
+      "use_back_button_rate": 0.15098537216119506,
+      "reflection_wordcount_mean": 115.1633862768999
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_5eewv",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8484404525045258,
+      "TrustCalibration": 0.6828028317337725,
+      "InformationAdvantage": 0.5669879259783814,
+      "BiasAwareness": 0.498954427514109,
+      "CognitiveAdaptability": 0.6036068006920862,
+      "MissionScore": 0.6860223431312354,
+      "CRI": 0.5531934900734219,
+      "RedTeamAwareness": 0.4178959128350592
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.27724115138303596,
+      "use_back_button_rate": 0.09449108036107963,
+      "reflection_wordcount_mean": 128.6675403671852
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_u1i32",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6292284659557182,
+      "TrustCalibration": 0.5694983327112623,
+      "InformationAdvantage": 0.6786503338431787,
+      "BiasAwareness": 0.5855878071700844,
+      "CognitiveAdaptability": 0.560622770034285,
+      "MissionScore": 0.6470352973909053,
+      "CRI": 0.5324523471433122,
+      "RedTeamAwareness": 0.5023453435620324
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20177235823855744,
+      "use_back_button_rate": 0.13324403480673622,
+      "reflection_wordcount_mean": 127.267284335139
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_4z77f",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5833601668968509,
+      "TrustCalibration": 0.5750205512505966,
+      "InformationAdvantage": 0.6651751303905218,
+      "BiasAwareness": 0.6424587135387972,
+      "CognitiveAdaptability": 0.8336535645793477,
+      "MissionScore": 0.5743990900403562,
+      "CRI": 0.663845542591417,
+      "RedTeamAwareness": 0.5949170999220662
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.37439946064600155,
+      "use_back_button_rate": 0.1530947555283031,
+      "reflection_wordcount_mean": 99.59693733674084
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_31nqb",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7548299356486874,
+      "TrustCalibration": 0.7427141074055899,
+      "InformationAdvantage": 0.6410117750043896,
+      "BiasAwareness": 0.4891260192521757,
+      "CognitiveAdaptability": 0.6703014999243059,
+      "MissionScore": 0.7119069491357265,
+      "CRI": 0.6188127710328737,
+      "RedTeamAwareness": 0.40042087655778147
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22122072496639428,
+      "use_back_button_rate": 0.086868424371224,
+      "reflection_wordcount_mean": 159.0376797292237
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_uhpg9",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6176669249516269,
+      "TrustCalibration": 0.5558170381321752,
+      "InformationAdvantage": 0.729153274441979,
+      "BiasAwareness": 0.5717552729851607,
+      "CognitiveAdaptability": 0.5524933493145324,
+      "MissionScore": 0.6193176448650493,
+      "CRI": 0.5242136006670436,
+      "RedTeamAwareness": 0.49704750128906433
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.16792101359971728,
+      "use_back_button_rate": 0.12516857281759325,
+      "reflection_wordcount_mean": 109.92835752103854
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_457em",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5198283586389691,
+      "TrustCalibration": 0.6416087021255868,
+      "InformationAdvantage": 0.6717788271385072,
+      "BiasAwareness": 0.6331734363762624,
+      "CognitiveAdaptability": 0.8033515443894812,
+      "MissionScore": 0.6086417173224143,
+      "CRI": 0.6481433558139869,
+      "RedTeamAwareness": 0.5832857158075084
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.15265639210791845,
+      "use_back_button_rate": 0.14138372023323212,
+      "reflection_wordcount_mean": 166.0651558849412
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_l6zht",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7670458152993479,
+      "TrustCalibration": 0.7352956385759691,
+      "InformationAdvantage": 0.5519716496092143,
+      "BiasAwareness": 0.5050312915682947,
+      "CognitiveAdaptability": 0.6533738732945861,
+      "MissionScore": 0.6833594598407458,
+      "CRI": 0.6075474418043617,
+      "RedTeamAwareness": 0.42343252290900324
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2372621814839262,
+      "use_back_button_rate": 0.07804933424111778,
+      "reflection_wordcount_mean": 147.0578153017896
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_9mz44",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6660484877128795,
+      "TrustCalibration": 0.649850956278384,
+      "InformationAdvantage": 0.7089814752554794,
+      "BiasAwareness": 0.566583404088378,
+      "CognitiveAdaptability": 0.5718208795105215,
+      "MissionScore": 0.6639845638718179,
+      "CRI": 0.5514190923280995,
+      "RedTeamAwareness": 0.49357748403563795
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2410140491125974,
+      "use_back_button_rate": 0.11181063562616705,
+      "reflection_wordcount_mean": 178.31070768398342
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_850hk",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5480951436617129,
+      "TrustCalibration": 0.619877562586374,
+      "InformationAdvantage": 0.6539084108539739,
+      "BiasAwareness": 0.5954608237608623,
+      "CognitiveAdaptability": 0.7800890290831407,
+      "MissionScore": 0.6449807022815554,
+      "CRI": 0.6034741725199885,
+      "RedTeamAwareness": 0.5051150115956484
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.44023376576386775,
+      "use_back_button_rate": 0.194873158704017,
+      "reflection_wordcount_mean": 188.4126442647522
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_3yvzr",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7878396273510306,
+      "TrustCalibration": 0.6745505363347856,
+      "InformationAdvantage": 0.6122832626785097,
+      "BiasAwareness": 0.5270401167017263,
+      "CognitiveAdaptability": 0.6119316371513143,
+      "MissionScore": 0.6892894118628411,
+      "CRI": 0.592112172479698,
+      "RedTeamAwareness": 0.3545285107942383
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.33154037819286314,
+      "use_back_button_rate": 0.06975081372527339,
+      "reflection_wordcount_mean": 163.9362465077212
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_1fd22",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6401594047080825,
+      "TrustCalibration": 0.6047190069444307,
+      "InformationAdvantage": 0.6610016222548518,
+      "BiasAwareness": 0.5951014088137987,
+      "CognitiveAdaptability": 0.646303619157391,
+      "MissionScore": 0.6306671892987968,
+      "CRI": 0.5369168031280548,
+      "RedTeamAwareness": 0.4815644771235098
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21433007388518446,
+      "use_back_button_rate": 0.11858827297119828,
+      "reflection_wordcount_mean": 151.42487062937548
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_5f2rx",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5513954867695112,
+      "TrustCalibration": 0.6178276697261949,
+      "InformationAdvantage": 0.6852677935952781,
+      "BiasAwareness": 0.6389547655511347,
+      "CognitiveAdaptability": 0.7986008557308072,
+      "MissionScore": 0.5995112643310844,
+      "CRI": 0.6175933621760581,
+      "RedTeamAwareness": 0.5908834306114352
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.33118259514360027,
+      "use_back_button_rate": 0.13567716246714684,
+      "reflection_wordcount_mean": 82.81414382277713
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_o13ip",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.773549398479474,
+      "TrustCalibration": 0.6620647393154735,
+      "InformationAdvantage": 0.6331356282564631,
+      "BiasAwareness": 0.4562233063333395,
+      "CognitiveAdaptability": 0.6224020109694367,
+      "MissionScore": 0.7413773044643652,
+      "CRI": 0.6168882069905215,
+      "RedTeamAwareness": 0.4305750673904762
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22124868123343444,
+      "use_back_button_rate": 0.07978078384524294,
+      "reflection_wordcount_mean": 70.90894108923536
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_5tyur",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6995476205000286,
+      "TrustCalibration": 0.5774379458654957,
+      "InformationAdvantage": 0.729514067777966,
+      "BiasAwareness": 0.513071497379339,
+      "CognitiveAdaptability": 0.5690172058689708,
+      "MissionScore": 0.6849268529884666,
+      "CRI": 0.5404938406508876,
+      "RedTeamAwareness": 0.4969455692418268
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.222172576912007,
+      "use_back_button_rate": 0.11971521786964054,
+      "reflection_wordcount_mean": 161.77478973888725
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_icsdd",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5913085075897129,
+      "TrustCalibration": 0.6106701265771658,
+      "InformationAdvantage": 0.6626343348396456,
+      "BiasAwareness": 0.5860457468454363,
+      "CognitiveAdaptability": 0.8380102171244114,
+      "MissionScore": 0.579568230673814,
+      "CRI": 0.6525517007553681,
+      "RedTeamAwareness": 0.5465416160463921
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2489742816379981,
+      "use_back_button_rate": 0.12752118310485847,
+      "reflection_wordcount_mean": 112.24035254841212
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_cwuax",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8351391446988021,
+      "TrustCalibration": 0.662760425246175,
+      "InformationAdvantage": 0.6235232266317695,
+      "BiasAwareness": 0.45899570638241716,
+      "CognitiveAdaptability": 0.648979852644784,
+      "MissionScore": 0.7140829540049367,
+      "CRI": 0.642356553161641,
+      "RedTeamAwareness": 0.4462887852504256
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3252212598584496,
+      "use_back_button_rate": 0.06677356447376967,
+      "reflection_wordcount_mean": 187.1788447066207
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_znkw3",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6393180217584616,
+      "TrustCalibration": 0.6147326560225048,
+      "InformationAdvantage": 0.665797256369984,
+      "BiasAwareness": 0.5346103171522623,
+      "CognitiveAdaptability": 0.5642315427081745,
+      "MissionScore": 0.6516483541950056,
+      "CRI": 0.5444597341833252,
+      "RedTeamAwareness": 0.5278872155841233
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19139689127552453,
+      "use_back_button_rate": 0.1390533159932453,
+      "reflection_wordcount_mean": 140.9057743771005
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_pxavl",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5231790578891445,
+      "TrustCalibration": 0.5915534470306157,
+      "InformationAdvantage": 0.6267848263333318,
+      "BiasAwareness": 0.6185172260547288,
+      "CognitiveAdaptability": 0.8014504362014551,
+      "MissionScore": 0.6025001963002842,
+      "CRI": 0.6170762560517823,
+      "RedTeamAwareness": 0.52803335087704
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3211151464093617,
+      "use_back_button_rate": 0.17440561736494234,
+      "reflection_wordcount_mean": 97.22414318587391
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_c2w3x",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8419924591657582,
+      "TrustCalibration": 0.724043639772022,
+      "InformationAdvantage": 0.5597017086509647,
+      "BiasAwareness": 0.5455131092036112,
+      "CognitiveAdaptability": 0.6118417494940401,
+      "MissionScore": 0.6877140824857372,
+      "CRI": 0.6285027708006019,
+      "RedTeamAwareness": 0.4175575496878185
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.25873366499972295,
+      "use_back_button_rate": 0.08765443526978314,
+      "reflection_wordcount_mean": 156.56141099565153
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_r636m",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6048669504525251,
+      "TrustCalibration": 0.607977461662224,
+      "InformationAdvantage": 0.6821403836071628,
+      "BiasAwareness": 0.5366887880386687,
+      "CognitiveAdaptability": 0.5697256355467708,
+      "MissionScore": 0.6921662988317774,
+      "CRI": 0.5002759796206748,
+      "RedTeamAwareness": 0.4853183113585192
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1955208203778802,
+      "use_back_button_rate": 0.0939028647605517,
+      "reflection_wordcount_mean": 77.7026702545067
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_9wecf",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5075632669680704,
+      "TrustCalibration": 0.5866303178713487,
+      "InformationAdvantage": 0.6493673943441416,
+      "BiasAwareness": 0.6242143585511137,
+      "CognitiveAdaptability": 0.8424687884348351,
+      "MissionScore": 0.6227893461972301,
+      "CRI": 0.6934307304097342,
+      "RedTeamAwareness": 0.5891836129693838
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19961148606920295,
+      "use_back_button_rate": 0.1495442277437377,
+      "reflection_wordcount_mean": 104.07376892022515
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_zyc59",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8443212762001584,
+      "TrustCalibration": 0.6920013686195519,
+      "InformationAdvantage": 0.5687447632220457,
+      "BiasAwareness": 0.5177629460121642,
+      "CognitiveAdaptability": 0.6476842348979842,
+      "MissionScore": 0.6585476318767867,
+      "CRI": 0.5571396051768976,
+      "RedTeamAwareness": 0.4105480386246233
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.27959812743710666,
+      "use_back_button_rate": 0.14522692210962673,
+      "reflection_wordcount_mean": 126.66164439208178
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_meyc9",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6329366273723411,
+      "TrustCalibration": 0.6490048665220676,
+      "InformationAdvantage": 0.7104466462326923,
+      "BiasAwareness": 0.5064511354689607,
+      "CognitiveAdaptability": 0.5933375703542767,
+      "MissionScore": 0.6235706002519468,
+      "CRI": 0.5676343321571863,
+      "RedTeamAwareness": 0.5216103809946074
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.13267181685301244,
+      "use_back_button_rate": 0.11002208934410469,
+      "reflection_wordcount_mean": 90.22203143147456
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_vbinm",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5343237632893298,
+      "TrustCalibration": 0.5596388317218778,
+      "InformationAdvantage": 0.6142949869817976,
+      "BiasAwareness": 0.5712236886090162,
+      "CognitiveAdaptability": 0.7907501754641014,
+      "MissionScore": 0.5660511549126163,
+      "CRI": 0.6806786961760677,
+      "RedTeamAwareness": 0.5392576994318469
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.34693864806828945,
+      "use_back_button_rate": 0.1511036133292364,
+      "reflection_wordcount_mean": 90.47042534940252
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_rh1ru",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8226144851568741,
+      "TrustCalibration": 0.6769169151569784,
+      "InformationAdvantage": 0.6257633356830133,
+      "BiasAwareness": 0.4630143242097499,
+      "CognitiveAdaptability": 0.602412556415985,
+      "MissionScore": 0.6923894440741247,
+      "CRI": 0.6263050873760614,
+      "RedTeamAwareness": 0.4183228850938264
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.31879321222372975,
+      "use_back_button_rate": 0.11838421526830538,
+      "reflection_wordcount_mean": 117.60437636890026
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_4aj98",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6079774551252392,
+      "TrustCalibration": 0.5633531931448151,
+      "InformationAdvantage": 0.6947718413951486,
+      "BiasAwareness": 0.5329841377568064,
+      "CognitiveAdaptability": 0.6179155414547288,
+      "MissionScore": 0.6276405423617011,
+      "CRI": 0.5936153056435501,
+      "RedTeamAwareness": 0.5098131679220895
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.28266943785150067,
+      "use_back_button_rate": 0.15319941381828217,
+      "reflection_wordcount_mean": 138.32203436467424
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_lbkfi",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5844855295099095,
+      "TrustCalibration": 0.584724015948394,
+      "InformationAdvantage": 0.6112343980199566,
+      "BiasAwareness": 0.6120997411605725,
+      "CognitiveAdaptability": 0.7865078434025649,
+      "MissionScore": 0.6273740294214475,
+      "CRI": 0.6054322193635678,
+      "RedTeamAwareness": 0.5128162970397135
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.25435978448823493,
+      "use_back_button_rate": 0.17548407553444073,
+      "reflection_wordcount_mean": 198.00883425195917
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_fwvvv",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.792928360484113,
+      "TrustCalibration": 0.7332519496873469,
+      "InformationAdvantage": 0.6193673734288943,
+      "BiasAwareness": 0.49521895755495193,
+      "CognitiveAdaptability": 0.6939049148095019,
+      "MissionScore": 0.7213467026599941,
+      "CRI": 0.6181884277756726,
+      "RedTeamAwareness": 0.40537951690780055
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.27706013001550384,
+      "use_back_button_rate": 0.09015752074501267,
+      "reflection_wordcount_mean": 170.29443789410695
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_5jyub",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6564608963079082,
+      "TrustCalibration": 0.6050817694289476,
+      "InformationAdvantage": 0.7208478052559331,
+      "BiasAwareness": 0.5354747102850717,
+      "CognitiveAdaptability": 0.5950661017007572,
+      "MissionScore": 0.6766196361588903,
+      "CRI": 0.5096528611985762,
+      "RedTeamAwareness": 0.4650201199053436
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2648055766046263,
+      "use_back_button_rate": 0.08665407371608108,
+      "reflection_wordcount_mean": 109.31660482408469
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_6l99r",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5108654734974236,
+      "TrustCalibration": 0.5850985168589139,
+      "InformationAdvantage": 0.6659395088799775,
+      "BiasAwareness": 0.58222029970196,
+      "CognitiveAdaptability": 0.7880103660740111,
+      "MissionScore": 0.6235548205428862,
+      "CRI": 0.6254044724649985,
+      "RedTeamAwareness": 0.5632523102992353
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3291242198836781,
+      "use_back_button_rate": 0.13097298352196887,
+      "reflection_wordcount_mean": 146.04476385404152
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_rndlz",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7523807147184056,
+      "TrustCalibration": 0.6731394075409608,
+      "InformationAdvantage": 0.6319956770538144,
+      "BiasAwareness": 0.47959569250664036,
+      "CognitiveAdaptability": 0.6034601995227794,
+      "MissionScore": 0.7314146468160734,
+      "CRI": 0.5780004813856545,
+      "RedTeamAwareness": 0.4017067083905742
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2555544601960039,
+      "use_back_button_rate": 0.06910181530216364,
+      "reflection_wordcount_mean": 155.32300268437635
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_3ktug",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6952826230977304,
+      "TrustCalibration": 0.6314034482392655,
+      "InformationAdvantage": 0.6939489760920966,
+      "BiasAwareness": 0.5534395832642167,
+      "CognitiveAdaptability": 0.5688706014311218,
+      "MissionScore": 0.6683208952846539,
+      "CRI": 0.5415674800402763,
+      "RedTeamAwareness": 0.5350284589984338
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.29883752473263786,
+      "use_back_button_rate": 0.12008164219305884,
+      "reflection_wordcount_mean": 164.46150559260786
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_ngofy",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5150951137216071,
+      "TrustCalibration": 0.6064008405213214,
+      "InformationAdvantage": 0.625514721478869,
+      "BiasAwareness": 0.5741365900717528,
+      "CognitiveAdaptability": 0.7856025475890805,
+      "MissionScore": 0.561792629625053,
+      "CRI": 0.6531074614672816,
+      "RedTeamAwareness": 0.5469469890892544
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19017269047424984,
+      "use_back_button_rate": 0.10237747069705586,
+      "reflection_wordcount_mean": 195.86576020215986
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_oj7lu",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7794831463850567,
+      "TrustCalibration": 0.7250390012362834,
+      "InformationAdvantage": 0.634700516784242,
+      "BiasAwareness": 0.5463484636701157,
+      "CognitiveAdaptability": 0.6631234832070202,
+      "MissionScore": 0.6849225766186474,
+      "CRI": 0.6297802830469585,
+      "RedTeamAwareness": 0.3816689463464793
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.30191941536514877,
+      "use_back_button_rate": 0.117160822605156,
+      "reflection_wordcount_mean": 143.80589261944968
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_18wj6",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6302912520037571,
+      "TrustCalibration": 0.6020204943224465,
+      "InformationAdvantage": 0.6916898053617152,
+      "BiasAwareness": 0.5594726141386653,
+      "CognitiveAdaptability": 0.5550224780275718,
+      "MissionScore": 0.6999880959796483,
+      "CRI": 0.5716541202878844,
+      "RedTeamAwareness": 0.4991488719950413
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2609597999924837,
+      "use_back_button_rate": 0.11853225298871874,
+      "reflection_wordcount_mean": 136.85389335586106
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_yqmg2",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.524368267329384,
+      "TrustCalibration": 0.6224907482535793,
+      "InformationAdvantage": 0.6331507185094906,
+      "BiasAwareness": 0.5662839265950523,
+      "CognitiveAdaptability": 0.8421234916263087,
+      "MissionScore": 0.6213453108847526,
+      "CRI": 0.6258321061416918,
+      "RedTeamAwareness": 0.5291099040769993
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.27028289116390447,
+      "use_back_button_rate": 0.17585232973366305,
+      "reflection_wordcount_mean": 163.1458853863565
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_d095e",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7636184673285642,
+      "TrustCalibration": 0.7114738339443699,
+      "InformationAdvantage": 0.604514160196001,
+      "BiasAwareness": 0.5488576045147519,
+      "CognitiveAdaptability": 0.6672686559453975,
+      "MissionScore": 0.7179380892218781,
+      "CRI": 0.5549511200490177,
+      "RedTeamAwareness": 0.43908466423344367
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1975484262686415,
+      "use_back_button_rate": 0.10073556577147594,
+      "reflection_wordcount_mean": 133.2767661633621
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_fcfdn",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6687850668801498,
+      "TrustCalibration": 0.6020289422752576,
+      "InformationAdvantage": 0.6933573884820157,
+      "BiasAwareness": 0.508832895631314,
+      "CognitiveAdaptability": 0.6170453289408931,
+      "MissionScore": 0.6866043016566964,
+      "CRI": 0.5573298560844078,
+      "RedTeamAwareness": 0.4696095882573434
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1823094428173775,
+      "use_back_button_rate": 0.11193573086036802,
+      "reflection_wordcount_mean": 137.19562370895787
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_0lvmo",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5000878004566421,
+      "TrustCalibration": 0.5755097219728346,
+      "InformationAdvantage": 0.6073639431818602,
+      "BiasAwareness": 0.5744457295631809,
+      "CognitiveAdaptability": 0.7854836519153301,
+      "MissionScore": 0.6316300787115267,
+      "CRI": 0.6786644653044975,
+      "RedTeamAwareness": 0.5695678552407887
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3509491728006098,
+      "use_back_button_rate": 0.12485843913169978,
+      "reflection_wordcount_mean": 156.50813042756428
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_d93e4",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8043530334486513,
+      "TrustCalibration": 0.7288484815626146,
+      "InformationAdvantage": 0.6443626248946586,
+      "BiasAwareness": 0.5208898848477705,
+      "CognitiveAdaptability": 0.6275347353232179,
+      "MissionScore": 0.7089492845316657,
+      "CRI": 0.6070647032236011,
+      "RedTeamAwareness": 0.39469804123830343
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2706598086016035,
+      "use_back_button_rate": 0.11554721637891252,
+      "reflection_wordcount_mean": 125.9478628423629
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_4vpfs",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6151555885599782,
+      "TrustCalibration": 0.57645515930232,
+      "InformationAdvantage": 0.7236337167191549,
+      "BiasAwareness": 0.5989495874598711,
+      "CognitiveAdaptability": 0.6291214888570056,
+      "MissionScore": 0.6207628728308284,
+      "CRI": 0.5131699307875035,
+      "RedTeamAwareness": 0.5231048785015748
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19535578663749853,
+      "use_back_button_rate": 0.1181255688292693,
+      "reflection_wordcount_mean": 168.5938500515061
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_my7pj",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5385405019144137,
+      "TrustCalibration": 0.6107431548139176,
+      "InformationAdvantage": 0.6009610769973508,
+      "BiasAwareness": 0.5743987876690497,
+      "CognitiveAdaptability": 0.7840450455972987,
+      "MissionScore": 0.5827072647824049,
+      "CRI": 0.6272227079222634,
+      "RedTeamAwareness": 0.585980067125691
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2959641311725782,
+      "use_back_button_rate": 0.12302160535652593,
+      "reflection_wordcount_mean": 191.10481614897049
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_poah5",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7682079756842235,
+      "TrustCalibration": 0.6567904544838622,
+      "InformationAdvantage": 0.6145231319043948,
+      "BiasAwareness": 0.5354939393034818,
+      "CognitiveAdaptability": 0.6432483442723737,
+      "MissionScore": 0.6837659106638931,
+      "CRI": 0.587469260728569,
+      "RedTeamAwareness": 0.3916287468300404
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22520325013727205,
+      "use_back_button_rate": 0.09935454502349485,
+      "reflection_wordcount_mean": 110.50568174250358
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_4jjoz",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6643119375571863,
+      "TrustCalibration": 0.5835178800693106,
+      "InformationAdvantage": 0.7177191300407113,
+      "BiasAwareness": 0.5030601858757721,
+      "CognitiveAdaptability": 0.5770529858667557,
+      "MissionScore": 0.6293494825118042,
+      "CRI": 0.5454194960251827,
+      "RedTeamAwareness": 0.529721974742083
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.16643132159844723,
+      "use_back_button_rate": 0.11304144961719874,
+      "reflection_wordcount_mean": 105.98730281362056
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_2rgqk",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5349273741236815,
+      "TrustCalibration": 0.6390269995379296,
+      "InformationAdvantage": 0.6889187019847919,
+      "BiasAwareness": 0.619017418515841,
+      "CognitiveAdaptability": 0.7601577792810836,
+      "MissionScore": 0.5665993273637678,
+      "CRI": 0.604191770905993,
+      "RedTeamAwareness": 0.5989726288992108
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.39885199683021755,
+      "use_back_button_rate": 0.15187048426829594,
+      "reflection_wordcount_mean": 147.01886086103943
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_9kis2",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7939288752911783,
+      "TrustCalibration": 0.6796186727856381,
+      "InformationAdvantage": 0.581038754657912,
+      "BiasAwareness": 0.5106438711098187,
+      "CognitiveAdaptability": 0.6982475660643015,
+      "MissionScore": 0.7357778397933503,
+      "CRI": 0.5667982821855098,
+      "RedTeamAwareness": 0.36901703775961936
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.24994228378827668,
+      "use_back_button_rate": 0.07579100783925853,
+      "reflection_wordcount_mean": 103.54934960818153
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_50x6s",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6543295281009899,
+      "TrustCalibration": 0.6440790843336548,
+      "InformationAdvantage": 0.73378932090761,
+      "BiasAwareness": 0.502573086356619,
+      "CognitiveAdaptability": 0.6300972356043595,
+      "MissionScore": 0.6818825257018316,
+      "CRI": 0.5500894738667991,
+      "RedTeamAwareness": 0.45410335488362485
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20966615184891904,
+      "use_back_button_rate": 0.1004703378778517,
+      "reflection_wordcount_mean": 154.7233138490681
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_36mxo",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5930842978536031,
+      "TrustCalibration": 0.6461600203947583,
+      "InformationAdvantage": 0.6692697484606958,
+      "BiasAwareness": 0.6405802920746977,
+      "CognitiveAdaptability": 0.7858049875647676,
+      "MissionScore": 0.6329024601933623,
+      "CRI": 0.6952359615065332,
+      "RedTeamAwareness": 0.5384518417342388
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2645556125294386,
+      "use_back_button_rate": 0.14066958857192624,
+      "reflection_wordcount_mean": 179.6418635585807
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_19hyp",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8013439683133772,
+      "TrustCalibration": 0.6596633879140302,
+      "InformationAdvantage": 0.5741499501336105,
+      "BiasAwareness": 0.4757938671577451,
+      "CognitiveAdaptability": 0.6107140945603566,
+      "MissionScore": 0.6881910588885338,
+      "CRI": 0.5886107456169609,
+      "RedTeamAwareness": 0.3981303867021205
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3320623885092317,
+      "use_back_button_rate": 0.14154074998147034,
+      "reflection_wordcount_mean": 159.92602650429478
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_i6egs",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6636964453571822,
+      "TrustCalibration": 0.5867738633008898,
+      "InformationAdvantage": 0.7047757082178038,
+      "BiasAwareness": 0.530055279979705,
+      "CognitiveAdaptability": 0.5627573594625577,
+      "MissionScore": 0.682592043243879,
+      "CRI": 0.5799287944729195,
+      "RedTeamAwareness": 0.4876303970647969
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.14894541910775003,
+      "use_back_button_rate": 0.10784368454794344,
+      "reflection_wordcount_mean": 125.1243955481915
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_ubc7y",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5540355808274877,
+      "TrustCalibration": 0.6104745781299511,
+      "InformationAdvantage": 0.6823434443345472,
+      "BiasAwareness": 0.6266274517501544,
+      "CognitiveAdaptability": 0.8107820099911086,
+      "MissionScore": 0.6287772367759009,
+      "CRI": 0.6392175938157205,
+      "RedTeamAwareness": 0.5237314768626964
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.32109992817719557,
+      "use_back_button_rate": 0.142738116036885,
+      "reflection_wordcount_mean": 138.89210358021762
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_9nh8x",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7987349392666878,
+      "TrustCalibration": 0.6809144140955736,
+      "InformationAdvantage": 0.6086220677134215,
+      "BiasAwareness": 0.5316818073975902,
+      "CognitiveAdaptability": 0.627044868571909,
+      "MissionScore": 0.6644950830024584,
+      "CRI": 0.6165783380317698,
+      "RedTeamAwareness": 0.35760267507821647
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2052541066736142,
+      "use_back_button_rate": 0.09465604215640865,
+      "reflection_wordcount_mean": 155.97059770394122
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_kcz7k",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6698069318231494,
+      "TrustCalibration": 0.5999836547968302,
+      "InformationAdvantage": 0.675982017058794,
+      "BiasAwareness": 0.512642539905879,
+      "CognitiveAdaptability": 0.5989949002722855,
+      "MissionScore": 0.6713335743023232,
+      "CRI": 0.5309849681627933,
+      "RedTeamAwareness": 0.48917001027319673
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1654560522953936,
+      "use_back_button_rate": 0.13781226049616008,
+      "reflection_wordcount_mean": 152.6757181148499
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_l2lus",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5675780650196327,
+      "TrustCalibration": 0.6101013398330951,
+      "InformationAdvantage": 0.6790781736059722,
+      "BiasAwareness": 0.6102568958852231,
+      "CognitiveAdaptability": 0.8366896576185534,
+      "MissionScore": 0.612347910934735,
+      "CRI": 0.6897701818378359,
+      "RedTeamAwareness": 0.5998052301736585
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.30305366846023674,
+      "use_back_button_rate": 0.10234633657970735,
+      "reflection_wordcount_mean": 177.944111293957
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_oved1",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.785239795930666,
+      "TrustCalibration": 0.691830383873584,
+      "InformationAdvantage": 0.5918503087945576,
+      "BiasAwareness": 0.51765757412702,
+      "CognitiveAdaptability": 0.6835705647200889,
+      "MissionScore": 0.6726217777085449,
+      "CRI": 0.5967329455414468,
+      "RedTeamAwareness": 0.42732378895039147
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2868425819959859,
+      "use_back_button_rate": 0.10142578066432223,
+      "reflection_wordcount_mean": 151.45996513093897
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_dzxpg",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6652545127835586,
+      "TrustCalibration": 0.5836608963453117,
+      "InformationAdvantage": 0.679321428862997,
+      "BiasAwareness": 0.509580230979663,
+      "CognitiveAdaptability": 0.5507465758593696,
+      "MissionScore": 0.6171703600606737,
+      "CRI": 0.5790605398397208,
+      "RedTeamAwareness": 0.5092585113464746
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1845888386102905,
+      "use_back_button_rate": 0.11387454020414182,
+      "reflection_wordcount_mean": 114.38044556709131
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_lid6h",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5260437838741467,
+      "TrustCalibration": 0.6232650778831689,
+      "InformationAdvantage": 0.6229875059788175,
+      "BiasAwareness": 0.6395302223225042,
+      "CognitiveAdaptability": 0.7603316875918659,
+      "MissionScore": 0.6404768955368019,
+      "CRI": 0.600024819280262,
+      "RedTeamAwareness": 0.5342450104719428
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.34595327050109936,
+      "use_back_button_rate": 0.16566639305039427,
+      "reflection_wordcount_mean": 171.17104753740315
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_68uqn",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7542063454045304,
+      "TrustCalibration": 0.6829304434191945,
+      "InformationAdvantage": 0.6391258207442093,
+      "BiasAwareness": 0.4957978578914616,
+      "CognitiveAdaptability": 0.6389865153863991,
+      "MissionScore": 0.6627651239916171,
+      "CRI": 0.5700669936946332,
+      "RedTeamAwareness": 0.4465702759470508
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20172281519650131,
+      "use_back_button_rate": 0.0961622551082037,
+      "reflection_wordcount_mean": 99.38098701150557
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_t5a9q",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6205549222491437,
+      "TrustCalibration": 0.6022497320089479,
+      "InformationAdvantage": 0.7077392236597227,
+      "BiasAwareness": 0.5000448475622699,
+      "CognitiveAdaptability": 0.5526984403482207,
+      "MissionScore": 0.6398030684824809,
+      "CRI": 0.5292072554017637,
+      "RedTeamAwareness": 0.47983128295713856
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1489905955651339,
+      "use_back_button_rate": 0.13325798129993996,
+      "reflection_wordcount_mean": 92.37289748273423
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_0uuug",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5865863426090158,
+      "TrustCalibration": 0.647403581120208,
+      "InformationAdvantage": 0.6117672113200575,
+      "BiasAwareness": 0.5613062737372196,
+      "CognitiveAdaptability": 0.7646710533359032,
+      "MissionScore": 0.613118286100928,
+      "CRI": 0.6059009497520693,
+      "RedTeamAwareness": 0.5690100207059369
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20786007190549047,
+      "use_back_button_rate": 0.1686136998986594,
+      "reflection_wordcount_mean": 148.80526437070384
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_d66sg",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.81852073094658,
+      "TrustCalibration": 0.7265044828648392,
+      "InformationAdvantage": 0.6200733646668969,
+      "BiasAwareness": 0.5322915629513069,
+      "CognitiveAdaptability": 0.6692167260204211,
+      "MissionScore": 0.670696834818335,
+      "CRI": 0.6042734034000915,
+      "RedTeamAwareness": 0.380837845102862
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2346560527418044,
+      "use_back_button_rate": 0.12208024276876611,
+      "reflection_wordcount_mean": 133.56342528054319
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_c2qpu",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6414658753388526,
+      "TrustCalibration": 0.5624668233176551,
+      "InformationAdvantage": 0.6800673392233009,
+      "BiasAwareness": 0.5635771506384898,
+      "CognitiveAdaptability": 0.5790325956615106,
+      "MissionScore": 0.6307855921966562,
+      "CRI": 0.5473072110453662,
+      "RedTeamAwareness": 0.540386364642363
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21416784031004027,
+      "use_back_button_rate": 0.09339646700408824,
+      "reflection_wordcount_mean": 88.0001597108909
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_imiga",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5881887835489538,
+      "TrustCalibration": 0.5746687860415877,
+      "InformationAdvantage": 0.6749071762501988,
+      "BiasAwareness": 0.6051114208036488,
+      "CognitiveAdaptability": 0.7684885277184135,
+      "MissionScore": 0.5769891965826025,
+      "CRI": 0.6177668962264792,
+      "RedTeamAwareness": 0.5293175236965292
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.23978823956614306,
+      "use_back_button_rate": 0.12427425936352086,
+      "reflection_wordcount_mean": 171.16385081619046
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_1bhqy",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.75664128420253,
+      "TrustCalibration": 0.6769368084152346,
+      "InformationAdvantage": 0.6206683740536755,
+      "BiasAwareness": 0.5111524513254734,
+      "CognitiveAdaptability": 0.6868878002298934,
+      "MissionScore": 0.6728169974193281,
+      "CRI": 0.6369012383017402,
+      "RedTeamAwareness": 0.39084278999653865
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3139655667133276,
+      "use_back_button_rate": 0.09144045426784904,
+      "reflection_wordcount_mean": 179.3130417179663
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_3as5j",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6146226188269398,
+      "TrustCalibration": 0.6452222544055347,
+      "InformationAdvantage": 0.7484894653101336,
+      "BiasAwareness": 0.5010286933402261,
+      "CognitiveAdaptability": 0.5783207858912791,
+      "MissionScore": 0.638268234386709,
+      "CRI": 0.5283108160392469,
+      "RedTeamAwareness": 0.5275152198968425
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20263613024529872,
+      "use_back_button_rate": 0.11830407839327806,
+      "reflection_wordcount_mean": 93.41071291191457
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_98yes",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5335416094076619,
+      "TrustCalibration": 0.6401032692543057,
+      "InformationAdvantage": 0.6680898679989652,
+      "BiasAwareness": 0.6138991346324016,
+      "CognitiveAdaptability": 0.7959367331238482,
+      "MissionScore": 0.6272970089653896,
+      "CRI": 0.6609177609692882,
+      "RedTeamAwareness": 0.5371240139524115
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2608352454693202,
+      "use_back_button_rate": 0.13790310231045605,
+      "reflection_wordcount_mean": 149.48554345466832
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_fj0f2",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7615345136687416,
+      "TrustCalibration": 0.7120296485355182,
+      "InformationAdvantage": 0.6151616829266683,
+      "BiasAwareness": 0.5263183949274246,
+      "CognitiveAdaptability": 0.6247995657287561,
+      "MissionScore": 0.699364572868818,
+      "CRI": 0.6491518585461081,
+      "RedTeamAwareness": 0.3670325238289641
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2621313105828319,
+      "use_back_button_rate": 0.05079020637716205,
+      "reflection_wordcount_mean": 117.43039667819323
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_6ev72",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6115756787530227,
+      "TrustCalibration": 0.6274042832650849,
+      "InformationAdvantage": 0.7108351737364572,
+      "BiasAwareness": 0.5600832792136033,
+      "CognitiveAdaptability": 0.6317517140480176,
+      "MissionScore": 0.6684105027338358,
+      "CRI": 0.5012707410921803,
+      "RedTeamAwareness": 0.464185673379987
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21212054447446782,
+      "use_back_button_rate": 0.141155843742623,
+      "reflection_wordcount_mean": 126.16806164113315
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_5myfv",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5809596876143519,
+      "TrustCalibration": 0.6229556964966483,
+      "InformationAdvantage": 0.6565153467076671,
+      "BiasAwareness": 0.642837239065961,
+      "CognitiveAdaptability": 0.8353156115156117,
+      "MissionScore": 0.6148754545410133,
+      "CRI": 0.6605439651063751,
+      "RedTeamAwareness": 0.5648700786280753
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2817189660301742,
+      "use_back_button_rate": 0.11707087633542221,
+      "reflection_wordcount_mean": 219.0738086272708
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_77sov",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7621680322953266,
+      "TrustCalibration": 0.7397356721242673,
+      "InformationAdvantage": 0.5569588651559855,
+      "BiasAwareness": 0.5203916460439365,
+      "CognitiveAdaptability": 0.6721881045578255,
+      "MissionScore": 0.7004528469329997,
+      "CRI": 0.6470128149608573,
+      "RedTeamAwareness": 0.3861373084568813
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.26596284868824277,
+      "use_back_button_rate": 0.12624490063264043,
+      "reflection_wordcount_mean": 140.1043452081303
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_zm1h0",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6845487716156069,
+      "TrustCalibration": 0.6434964098754806,
+      "InformationAdvantage": 0.6984304583084547,
+      "BiasAwareness": 0.5862773929017115,
+      "CognitiveAdaptability": 0.5839984051964622,
+      "MissionScore": 0.6317147714506314,
+      "CRI": 0.5785515047228094,
+      "RedTeamAwareness": 0.4592101044815927
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19567795922739853,
+      "use_back_button_rate": 0.12219001916623491,
+      "reflection_wordcount_mean": 109.01677866219842
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_q6bp9",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5627176093682512,
+      "TrustCalibration": 0.6028838613643118,
+      "InformationAdvantage": 0.6200747022658679,
+      "BiasAwareness": 0.6056132701391476,
+      "CognitiveAdaptability": 0.7948304034767357,
+      "MissionScore": 0.6436024913108792,
+      "CRI": 0.6795736949393341,
+      "RedTeamAwareness": 0.5320579941493024
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.35770417423983286,
+      "use_back_button_rate": 0.11827040569247116,
+      "reflection_wordcount_mean": 202.27174528700763
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_v9m8q",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8062461612824187,
+      "TrustCalibration": 0.7234173727585691,
+      "InformationAdvantage": 0.6319864976185309,
+      "BiasAwareness": 0.4900245553068429,
+      "CognitiveAdaptability": 0.6207373322225784,
+      "MissionScore": 0.7307572557527575,
+      "CRI": 0.5974343956807607,
+      "RedTeamAwareness": 0.4295107697645657
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19705289235365253,
+      "use_back_button_rate": 0.1048474141309138,
+      "reflection_wordcount_mean": 133.77840504868382
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_wxtt1",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6215789722634423,
+      "TrustCalibration": 0.5563681387290881,
+      "InformationAdvantage": 0.7340346925106991,
+      "BiasAwareness": 0.5579422751079581,
+      "CognitiveAdaptability": 0.6406425555932099,
+      "MissionScore": 0.6710572575085553,
+      "CRI": 0.5820908374976561,
+      "RedTeamAwareness": 0.4870117929325994
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.18215780886786964,
+      "use_back_button_rate": 0.14019083158321644,
+      "reflection_wordcount_mean": 159.34499536375074
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_xlcrp",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.586280516787491,
+      "TrustCalibration": 0.6140094544969813,
+      "InformationAdvantage": 0.6485355498031917,
+      "BiasAwareness": 0.5895868030745154,
+      "CognitiveAdaptability": 0.8222173289380498,
+      "MissionScore": 0.5886097997137751,
+      "CRI": 0.6094962210612869,
+      "RedTeamAwareness": 0.5236781510534764
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3147677734275952,
+      "use_back_button_rate": 0.1787699067529749,
+      "reflection_wordcount_mean": 146.525406541133
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_6l8ze",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7607785667169927,
+      "TrustCalibration": 0.6585642232702863,
+      "InformationAdvantage": 0.5535376552239586,
+      "BiasAwareness": 0.538018798720651,
+      "CognitiveAdaptability": 0.6436162773500932,
+      "MissionScore": 0.6929905638545607,
+      "CRI": 0.5688302420811854,
+      "RedTeamAwareness": 0.3554598012824159
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21753919805455182,
+      "use_back_button_rate": 0.11574291422580246,
+      "reflection_wordcount_mean": 159.91226050523434
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_pi22e",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6719493359428844,
+      "TrustCalibration": 0.6105343031751418,
+      "InformationAdvantage": 0.6845468578263115,
+      "BiasAwareness": 0.5552729047821501,
+      "CognitiveAdaptability": 0.6072815570826423,
+      "MissionScore": 0.672315736440115,
+      "CRI": 0.594960473133963,
+      "RedTeamAwareness": 0.4501534496603492
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21071569439087698,
+      "use_back_button_rate": 0.12829421970171856,
+      "reflection_wordcount_mean": 119.96251239148152
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_h5br0",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5908937995838458,
+      "TrustCalibration": 0.5557177226851547,
+      "InformationAdvantage": 0.6649291902847027,
+      "BiasAwareness": 0.571187610861855,
+      "CognitiveAdaptability": 0.7912355777622113,
+      "MissionScore": 0.5760465516243749,
+      "CRI": 0.6722847172149027,
+      "RedTeamAwareness": 0.5509722885610373
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.310430304809304,
+      "use_back_button_rate": 0.15654281111507465,
+      "reflection_wordcount_mean": 143.47997699163176
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_ebi6a",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8003437579360726,
+      "TrustCalibration": 0.6587340138482818,
+      "InformationAdvantage": 0.6187559503467186,
+      "BiasAwareness": 0.4740602446604087,
+      "CognitiveAdaptability": 0.6615220793007464,
+      "MissionScore": 0.6792164196340469,
+      "CRI": 0.6205240295848078,
+      "RedTeamAwareness": 0.36963928695901666
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.24240167531467996,
+      "use_back_button_rate": 0.11845033220404735,
+      "reflection_wordcount_mean": 136.41814013763252
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_hzvl0",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6728186838875475,
+      "TrustCalibration": 0.6484356562503466,
+      "InformationAdvantage": 0.7143081533352219,
+      "BiasAwareness": 0.5083554064036125,
+      "CognitiveAdaptability": 0.6469853316221184,
+      "MissionScore": 0.6436586679395657,
+      "CRI": 0.577740482265677,
+      "RedTeamAwareness": 0.48719519339361744
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.19012301068226364,
+      "use_back_button_rate": 0.1026640639677492,
+      "reflection_wordcount_mean": 155.89654450668456
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_jrx8g",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5024211104766059,
+      "TrustCalibration": 0.5947586762826421,
+      "InformationAdvantage": 0.6670495137110399,
+      "BiasAwareness": 0.6376022604039367,
+      "CognitiveAdaptability": 0.8290534079785638,
+      "MissionScore": 0.606409129234664,
+      "CRI": 0.652564440509142,
+      "RedTeamAwareness": 0.5185528662765463
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.20241054874470388,
+      "use_back_button_rate": 0.15561104745273602,
+      "reflection_wordcount_mean": 136.85397830716457
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_s97gk",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7869652420870277,
+      "TrustCalibration": 0.6896095844167305,
+      "InformationAdvantage": 0.604206653731627,
+      "BiasAwareness": 0.5014334013702451,
+      "CognitiveAdaptability": 0.6373163025317151,
+      "MissionScore": 0.7003999634257587,
+      "CRI": 0.6310887821527482,
+      "RedTeamAwareness": 0.40198774093420186
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.28151013312249545,
+      "use_back_button_rate": 0.11511695762875539,
+      "reflection_wordcount_mean": 147.32508838609056
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_snxl2",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6613114142931126,
+      "TrustCalibration": 0.6365332370528627,
+      "InformationAdvantage": 0.6900088328459678,
+      "BiasAwareness": 0.5100574688209711,
+      "CognitiveAdaptability": 0.6209883664926816,
+      "MissionScore": 0.6093600837491547,
+      "CRI": 0.5722226155309442,
+      "RedTeamAwareness": 0.46653772021010687
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22903968305640804,
+      "use_back_button_rate": 0.0938477221149484,
+      "reflection_wordcount_mean": 121.75344996127441
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_kecfo",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5236243775217014,
+      "TrustCalibration": 0.6341362115306254,
+      "InformationAdvantage": 0.6136524652092327,
+      "BiasAwareness": 0.558456896255475,
+      "CognitiveAdaptability": 0.8056836930034127,
+      "MissionScore": 0.6102347851311883,
+      "CRI": 0.6812094432932587,
+      "RedTeamAwareness": 0.5032446666432107
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2598659443932964,
+      "use_back_button_rate": 0.15283930148119218,
+      "reflection_wordcount_mean": 193.26258141758342
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_tk5p4",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8494607510464485,
+      "TrustCalibration": 0.7186922216124815,
+      "InformationAdvantage": 0.6232717146558188,
+      "BiasAwareness": 0.45366103784585726,
+      "CognitiveAdaptability": 0.6573634162585199,
+      "MissionScore": 0.6788160422006173,
+      "CRI": 0.6047436873999564,
+      "RedTeamAwareness": 0.3806999390697135
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22597302894055613,
+      "use_back_button_rate": 0.09817409157326283,
+      "reflection_wordcount_mean": 93.73411815687325
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_x8kli",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6818183424098195,
+      "TrustCalibration": 0.6445046962051902,
+      "InformationAdvantage": 0.7042732437334863,
+      "BiasAwareness": 0.5191520844632844,
+      "CognitiveAdaptability": 0.5811964837137088,
+      "MissionScore": 0.6961646109314267,
+      "CRI": 0.5000584331262038,
+      "RedTeamAwareness": 0.5316761631109402
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.22486736407585625,
+      "use_back_button_rate": 0.11202491184384852,
+      "reflection_wordcount_mean": 103.3363142946511
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_5ytrl",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5795750855608621,
+      "TrustCalibration": 0.5967183656106156,
+      "InformationAdvantage": 0.6672999985703305,
+      "BiasAwareness": 0.5967958888091129,
+      "CognitiveAdaptability": 0.8206514052748236,
+      "MissionScore": 0.6258752108172815,
+      "CRI": 0.6388260016928539,
+      "RedTeamAwareness": 0.5731422317401159
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3172483007720047,
+      "use_back_button_rate": 0.1529294994195396,
+      "reflection_wordcount_mean": 176.311841507283
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_blhjb",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.8264676365682448,
+      "TrustCalibration": 0.7183476752437026,
+      "InformationAdvantage": 0.5840836671400477,
+      "BiasAwareness": 0.5328718087461126,
+      "CognitiveAdaptability": 0.6780086310966348,
+      "MissionScore": 0.6595733766952273,
+      "CRI": 0.5845802847163839,
+      "RedTeamAwareness": 0.3906258124865668
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2891808630824253,
+      "use_back_button_rate": 0.10913431716231368,
+      "reflection_wordcount_mean": 167.54283899556364
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_qylfg",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6989830069795641,
+      "TrustCalibration": 0.5966578464031982,
+      "InformationAdvantage": 0.667850275693889,
+      "BiasAwareness": 0.5389351037067825,
+      "CognitiveAdaptability": 0.5789440991368224,
+      "MissionScore": 0.6201534641040087,
+      "CRI": 0.5835226020016163,
+      "RedTeamAwareness": 0.5395441652969115
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.17865900258055448,
+      "use_back_button_rate": 0.09603699838569235,
+      "reflection_wordcount_mean": 114.80124588791622
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_zdrqq",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5972320562752956,
+      "TrustCalibration": 0.635516789744651,
+      "InformationAdvantage": 0.6775786148674701,
+      "BiasAwareness": 0.5698847315539787,
+      "CognitiveAdaptability": 0.8411992205784228,
+      "MissionScore": 0.5639203544817522,
+      "CRI": 0.6876071592146864,
+      "RedTeamAwareness": 0.5998604444903365
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2887278468376564,
+      "use_back_button_rate": 0.12351041083142732,
+      "reflection_wordcount_mean": 124.72054105080187
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_ta2fo",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7691601249922704,
+      "TrustCalibration": 0.7440684664473178,
+      "InformationAdvantage": 0.5936389885106435,
+      "BiasAwareness": 0.5383757172782095,
+      "CognitiveAdaptability": 0.6860107102266596,
+      "MissionScore": 0.726573455058156,
+      "CRI": 0.6040709086816053,
+      "RedTeamAwareness": 0.4329242539660974
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.26122722800414905,
+      "use_back_button_rate": 0.06583817822180757,
+      "reflection_wordcount_mean": 150.17385764762318
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_kd1z5",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6938549998590224,
+      "TrustCalibration": 0.5889999445401396,
+      "InformationAdvantage": 0.7198730126627904,
+      "BiasAwareness": 0.5772076377962309,
+      "CognitiveAdaptability": 0.5676240009443271,
+      "MissionScore": 0.6413289726460703,
+      "CRI": 0.5902437047955491,
+      "RedTeamAwareness": 0.4824707253797915
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.21302967250042124,
+      "use_back_button_rate": 0.1411757725892859,
+      "reflection_wordcount_mean": 169.3859478262667
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_s0ynp",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5872779195616168,
+      "TrustCalibration": 0.5692202873723453,
+      "InformationAdvantage": 0.6316123812792813,
+      "BiasAwareness": 0.6378899038374581,
+      "CognitiveAdaptability": 0.8287314710032367,
+      "MissionScore": 0.5602149868072225,
+      "CRI": 0.6576632648803423,
+      "RedTeamAwareness": 0.5029953069088215
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1753737209766391,
+      "use_back_button_rate": 0.13659704723018815,
+      "reflection_wordcount_mean": 93.65408748121959
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_5c0c2",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.7925853892859194,
+      "TrustCalibration": 0.7364192744109944,
+      "InformationAdvantage": 0.6240604883830079,
+      "BiasAwareness": 0.5180250860065255,
+      "CognitiveAdaptability": 0.6354551945578811,
+      "MissionScore": 0.6567954289497782,
+      "CRI": 0.6310863079594167,
+      "RedTeamAwareness": 0.3574495173007961
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.16723026680112865,
+      "use_back_button_rate": 0.0818340134540663,
+      "reflection_wordcount_mean": 119.68666130958941
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_5eqyo",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.659971702544214,
+      "TrustCalibration": 0.6169615471107737,
+      "InformationAdvantage": 0.6580466288355725,
+      "BiasAwareness": 0.50531811352985,
+      "CognitiveAdaptability": 0.5975379392836297,
+      "MissionScore": 0.6163110776772861,
+      "CRI": 0.540362158004473,
+      "RedTeamAwareness": 0.48442270860787007
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.17388499674682154,
+      "use_back_button_rate": 0.14244725129863628,
+      "reflection_wordcount_mean": 66.37002258561449
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_0wjei",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5879836091879741,
+      "TrustCalibration": 0.5667707750345737,
+      "InformationAdvantage": 0.6604649581524656,
+      "BiasAwareness": 0.6232899552086818,
+      "CognitiveAdaptability": 0.7532885093820642,
+      "MissionScore": 0.6169829380025131,
+      "CRI": 0.6658011322553476,
+      "RedTeamAwareness": 0.5103019249316104
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.2494500282283107,
+      "use_back_button_rate": 0.2038941420296922,
+      "reflection_wordcount_mean": 135.1110104754377
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  },
+  {
+    "persona_id": "persona_alpha_gzy8b",
+    "display_name": "Analytical Alpha",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.757297974221324,
+      "TrustCalibration": 0.7372947136685026,
+      "InformationAdvantage": 0.5841990065927274,
+      "BiasAwareness": 0.5372993390792354,
+      "CognitiveAdaptability": 0.6450893042429315,
+      "MissionScore": 0.7173549294697602,
+      "CRI": 0.5982266264250263,
+      "RedTeamAwareness": 0.3603833771101146
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.220419469132326,
+      "use_back_button_rate": 0.10689452319839503,
+      "reflection_wordcount_mean": 134.91834611792908
+    },
+    "notes": "Seed persona emphasizing decision quality and trust calibration."
+  },
+  {
+    "persona_id": "persona_bravo_w9qxq",
+    "display_name": "Balanced Bravo",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.6431207827102872,
+      "TrustCalibration": 0.5994047765603002,
+      "InformationAdvantage": 0.7457095848917525,
+      "BiasAwareness": 0.5944417891428733,
+      "CognitiveAdaptability": 0.6453440063090529,
+      "MissionScore": 0.6537690466487993,
+      "CRI": 0.5303316257931644,
+      "RedTeamAwareness": 0.49792525464147136
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.1257234132461303,
+      "use_back_button_rate": 0.10823061887950645,
+      "reflection_wordcount_mean": 167.96982396432185
+    },
+    "notes": "Balanced sensitivity across core metrics with moderate back-button usage."
+  },
+  {
+    "persona_id": "persona_charlie_68oer",
+    "display_name": "Creative Charlie",
+    "is_synthetic": true,
+    "metric_sensitivity": {
+      "DecisionQuality": 0.5448092058676194,
+      "TrustCalibration": 0.5733319014351768,
+      "InformationAdvantage": 0.6326258696976824,
+      "BiasAwareness": 0.6193744403147239,
+      "CognitiveAdaptability": 0.7691058018691987,
+      "MissionScore": 0.6355285210308793,
+      "CRI": 0.6584624111512858,
+      "RedTeamAwareness": 0.5011800563136485
+    },
+    "behavioural_parameters": {
+      "dp_option_change_rate": 0.3404168952840071,
+      "use_back_button_rate": 0.11763801610610547,
+      "reflection_wordcount_mean": 108.24654121418592
+    },
+    "notes": "Higher adaptability seed to encourage diverse decision paths."
+  }
+]
