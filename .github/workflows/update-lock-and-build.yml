@@ -1,0 +1,60 @@
+name: Update deps, install, test & build
+
+# Run manually or on pushes to main (so it runs once you commit package.json changes)
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  install_and_build:
+    name: Install, Test & Build, and Update lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true   # so the action can push back with GITHUB_TOKEN
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies (ci)
+        run: npm ci
+
+      - name: Lint (non-fatal)
+        run: npm run lint || echo "lint returned non-zero (allowed)"
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check for package-lock changes and commit
+        env:
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          # configure git for commit
+          git config user.name "$GIT_COMMITTER_NAME"
+          git config user.email "$GIT_COMMITTER_EMAIL"
+
+          # stage lockfile if present
+          git add package-lock.json || true
+
+          # if there are staged changes, commit and push
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(ci): update package-lock.json after dependency upgrade (auto)"
+            echo "Pushing updated package-lock.json to branch '${GITHUB_REF##refs/heads/}'..."
+            git push origin HEAD:"${GITHUB_REF##refs/heads/}"
+          else
+            echo "No changes to package-lock.json detected."
+          fi
+
+      - name: Output success
+        if: ${{ success() }}
+        run: echo "Install/test/build finished. If package-lock changed it was pushed back."
