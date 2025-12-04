@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "npm run check:markers",
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/validate-scenarios.js",
