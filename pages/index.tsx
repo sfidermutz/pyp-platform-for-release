@@ -1,31 +1,99 @@
-import React from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Home() {
+  const router = useRouter();
+  const [token, setToken] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const t = token.trim();
+    if (!t) return setError('Please enter your access token.');
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: t }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || 'Invalid token or server error');
+        setLoading(false);
+        return;
+      }
+      // Save session locally (opaque token)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pyp_session_id', json.session?.id || '');
+        localStorage.setItem('pyp_token', t);
+      }
+      // Redirect to a safe landing, e.g., /coins or modules list
+      router.push('/coins');
+    } catch (err) {
+      console.error('create-session error', err);
+      setError('Server error - try again');
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="p-8">
-      <div className="panel mb-6">
-        <h1 className="h1 text-3xl">Pick Your Path — Strategic Edge</h1>
-        <p className="muted small mt-2">Welcome. Use the Module dashboard to explore scenarios, run pilots and view debriefs. Beth's canonical SOT lives in <code>docs/MASTER_REQUIREMENTS.md</code>.</p>
-      </div>
+    <main className="min-h-screen bg-black text-white flex items-start justify-start pt-12 px-6">
+      <div className="w-full max-w-6xl">
+        <header className="panel rounded-2xl p-8 mb-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <h1 className="h1 text-3xl">Pick Your Path — Strategic Edge</h1>
+              <p className="muted small mt-2">
+                Token-gated pilot access. Enter your token to start the TRL-4 pilot experience.
+              </p>
+            </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="panel">
-          <h2 className="text-xl font-semibold">Quick Links</h2>
-          <ul className="mt-3 space-y-2">
-            <li><Link href="/modules/HYB-RED-01"><a className="text-accent">Hybrid Module Dashboard (HYB-RED-01)</a></Link></li>
-            <li><Link href="/modules/HYB"><a className="text-accent">HYB (alias)</a></Link></li>
-            <li><Link href="/docs/MASTER_REQUIREMENTS.md"><a className="text-accent">Master Requirements (SOT)</a></Link></li>
-          </ul>
-        </div>
-
-        <div className="panel">
-          <h2 className="text-xl font-semibold">Status</h2>
-          <div className="mt-3 muted small">
-            The system now exposes the Module Dashboard and Scenario pages. Use the Quick Links to open the HYB module. If pages look unsubtle, run the preview and navigate to the module path explicitly.
+            <div className="w-full md:w-96 bg-[#071820] panel">
+              <h2 className="text-lg font-semibold">Enter access token</h2>
+              <form onSubmit={handleSubmit} className="mt-4">
+                <label className="block text-xs font-medium muted mb-2">Access Token</label>
+                <input
+                  type="text"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
+                  placeholder="Enter token"
+                  autoComplete="off"
+                />
+                {error && <p className="text-sm text-rose-400 mt-2">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-4 w-full rounded-md bg-accent py-2 text-sm font-semibold text-black"
+                >
+                  {loading ? 'Validating…' : 'Enter'}
+                </button>
+                <p className="text-[11px] muted mt-3">TRL-4 Pilot · Token-gated access</p>
+              </form>
+            </div>
           </div>
-        </div>
+        </header>
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="panel">
+            <h3 className="text-lg font-semibold">Why PYP</h3>
+            <p className="mt-2 muted small">Measure decision quality, bias awareness and cognitive readiness across realistic hybrid scenarios.</p>
+          </div>
+          <div className="panel">
+            <h3 className="text-lg font-semibold">For Instructors</h3>
+            <p className="mt-2 muted small">Author scenarios, run cohorts and review debriefs with actionable metrics.</p>
+          </div>
+          <div className="panel">
+            <h3 className="text-lg font-semibold">For Practitioners</h3>
+            <p className="mt-2 muted small">Practice hard decisions, see where you can improve, and track progress.</p>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
