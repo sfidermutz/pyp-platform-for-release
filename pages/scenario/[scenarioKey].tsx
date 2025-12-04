@@ -7,6 +7,7 @@ import { computeScenarioMetrics, computeMissionScore } from '../../lib/metrics';
 export default function ScenarioPage() {
   const router = useRouter();
   const { scenarioKey } = router.query;
+  const keyValue = Array.isArray(scenarioKey) ? scenarioKey[0] : scenarioKey;
  codex/confirm-repository-access-permissions-08od5l
   const keyValue = Array.isArray(scenarioKey) ? scenarioKey[0] : scenarioKey;
 
@@ -42,6 +43,7 @@ export default function ScenarioPage() {
       scenario_run_id: `run-${Date.now()}`,
       persona_id: 'synthetic-unknown',
       session_id: `sess-${Date.now()}`,
+      scenario_id: keyValue,
  codex/confirm-repository-access-permissions-08od5l
       scenario_id: keyValue,
 

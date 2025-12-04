@@ -2,6 +2,10 @@
 // scripts/check_markers.js
 // Scan tracked files for conflict markers or stray codex markers that can break builds.
 
+'use strict';
+
+const { execSync } = require('child_process');
+const fs = require('fs');
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -16,6 +20,10 @@ const patterns = [
   { name: 'conflict-mid', regex: /^={7}/ },
   { name: 'conflict-end', regex: /^>{7}/ },
   { name: 'codex-marker', regex: /codex\/confirm/ },
+  { name: 'stray-main-line', regex: /^\s*main\s*$/ },
+];
+
+const issues = [];
  codex/confirm-repository-access-permissions-08od5l
   { name: 'stray-main-line', regex: /^\s*main\s*$/ },
 
@@ -32,6 +40,7 @@ for (const file of listFiles()) {
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch (e) {
+    // Skip unreadable/binary files
     // Skip files we can't read as utf8 (likely binary)
     continue;
   }

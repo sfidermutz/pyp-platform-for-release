@@ -73,6 +73,7 @@ export default function ModulePage() {
 
   return (
     <div className="p-8">
+      <h1 className="h1 text-2xl">{moduleData.module_title || moduleKeyValue} — Module Dashboard</h1>
  codex/confirm-repository-access-permissions-08od5l
       <h1 className="h1 text-2xl">{moduleData.module_title || moduleKeyValue} — Module Dashboard</h1>
 
@@ -82,6 +83,8 @@ export default function ModulePage() {
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
             <MetricTile label="Mission Score" value={missionScore} tooltip="Aggregated mission score" color="#7da9ff"/>
+            <MetricTile label="Decision Quality" value={selectedMetrics[0]?.value ?? 0} />
+            <MetricTile label="Trust Calibration" value={selectedMetrics[2]?.value ?? 0} />
  codex/confirm-repository-access-permissions-08od5l
             <MetricTile label="Decision Quality" value={selectedMetrics[0]?.value ?? 0} />
             <MetricTile label="Trust Calibration" value={selectedMetrics[2]?.value ?? 0} />

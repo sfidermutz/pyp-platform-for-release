@@ -1,5 +1,7 @@
 import type { AppProps } from 'next/app';
 import '../styles/globals.css';
+import Layout from '../components/Layout';
+
  codex/confirm-repository-access-permissions-08od5l
 import Layout from '../components/Layout';
 
