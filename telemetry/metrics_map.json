@@ -1,0 +1,6 @@
+{
+  "DecisionQuality": {"weight": 0.4},
+  "InformationAdvantage": {"weight": 0.25},
+  "TrustCalibration": {"weight": 0.15},
+  "CognitiveAdaptability": {"weight": 0.2}
+}
