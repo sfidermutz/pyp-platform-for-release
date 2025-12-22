@@ -16,6 +16,8 @@
     "node": ">=18"
   },
   "dependencies": {
+    "ajv": "file:tools/vendor/ajv",
+    "ajv-formats": "file:tools/vendor/ajv-formats",
     "@supabase/supabase-js": "^2.84.0",
     "next": "16.0.7",
     "react": "19.2.1",
