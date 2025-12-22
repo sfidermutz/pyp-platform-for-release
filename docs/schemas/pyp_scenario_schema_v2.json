@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyp.beth/schemas/pyp_scenario_schema_v2.json",
+  "title": "PYP Scenario Schema v2",
+  "type": "object",
+  "description": "Canonical scenario schema implementing MASTER_REQUIREMENTS with decision points, reflections, telemetry guardrails, and provenance.",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "Schema version must be 2.0 per Beth's SOT."
+    },
+    "scenario_id": {
+      "type": "string",
+      "description": "Unique scenario identifier (UUID-like).",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "scenarioId": {
+      "type": "string",
+      "description": "Legacy camelCase scenario id accepted for backwards compatibility.",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "module_id": {
+      "type": "string",
+      "description": "Module identifier aligned to canon modules."
+    },
+    "moduleId": {
+      "type": "string",
+      "description": "Legacy module id."
+    },
+    "canon_version": {
+      "type": "string",
+      "description": "Canonical content version for the scenario."
+    },
+    "canonVersion": {
+      "type": "string",
+      "description": "Legacy canon version field."
+    },
+    "title": {
+      "type": "string",
+      "description": "Scenario title for authors and learners."
+    },
+    "role": {
+      "type": "string",
+      "description": "Target learner role (e.g., Tactical Liaison Officer)."
+    },
+    "year": {
+      "type": "string",
+      "description": "Scenario year."
+    },
+    "learning_outcome_id": {
+      "type": "string",
+      "description": "Module-aligned learning outcome identifier."
+    },
+    "learningOutcomeId": {
+      "type": "string",
+      "description": "Legacy LO identifier accepted for migration."
+    },
+    "scenario_lo": {
+      "type": "string",
+      "description": "Scenario learning outcome text (must be referenced by reflection 2)."
+    },
+    "learningOutcome": {
+      "type": "string",
+      "description": "Legacy scenario learning outcome text."
+    },
+    "scenario_lo_tags": {
+      "type": "object",
+      "description": "Optional metadata tagging Bloom/Krathwohl levels.",
+      "additionalProperties": true
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Metrics catalog with core and secondary metric arrays.",
+      "properties": {
+        "core": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "secondary": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["core"],
+      "additionalProperties": true
+    },
+    "metric_weights": {
+      "$ref": "#/definitions/metricWeights",
+      "description": "Optional scenario-level default metric weights."
+    },
+    "bias_catalog": {
+      "type": "array",
+      "description": "Bias catalog used for tagging options.",
+      "items": { "type": "string" }
+    },
+    "effects_model": {
+      "type": "object",
+      "description": "Effects model mapping decisions to cognitive/physical/virtual dimensions.",
+      "additionalProperties": true
+    },
+    "situation": {
+      "type": "string",
+      "description": "Narrative situation text (100-200 words recommended)."
+    },
+    "decision_points": {
+      "type": "array",
+      "description": "Ordered decision points (DP1-3) with narrative, prompt/stem, and options.",
+      "minItems": 3,
+      "items": { "$ref": "#/definitions/decisionPoint" }
+    },
+    "dp1": { "$ref": "#/definitions/legacyDecisionPoint" },
+    "dp2": { "$ref": "#/definitions/legacyDecisionPoint" },
+    "dp3": { "$ref": "#/definitions/legacyDecisionPoint" },
+    "reflection1_prompt": {
+      "type": "string",
+      "description": "Reflection 1 prompt (minimum 50 words as per SOT)."
+    },
+    "reflection2_prompt": {
+      "type": "string",
+      "description": "Reflection 2 prompt (50-250 words, must reference scenario LO)."
+    },
+    "source_references": {
+      "type": "array",
+      "description": "Provenance references for each authored field or migration step.",
+      "items": {
+        "type": "object",
+        "required": ["field", "source"],
+        "properties": {
+          "field": { "type": "string" },
+          "source": { "type": "string" },
+          "author": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ai_audit": {
+      "type": "object",
+      "description": "Optional run-level AI audit payload stored with scenario runs.",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "model_name": { "type": "string" },
+              "prompt_hash": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "confidence": { "type": "number" },
+              "explanation": { "type": "string" }
+            },
+            "required": ["model_name", "prompt_hash", "timestamp"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "title",
+    "role",
+    "year",
+    "canon_version",
+    "module_id",
+    "learning_outcome_id",
+    "scenario_lo",
+    "metrics",
+    "bias_catalog",
+    "effects_model",
+    "situation",
+    "decision_points",
+    "reflection1_prompt",
+    "reflection2_prompt"
+  ],
+  "allOf": [
+    { "anyOf": [ { "required": ["scenario_id"] }, { "required": ["scenarioId"] } ] },
+    { "anyOf": [ { "required": ["module_id"] }, { "required": ["moduleId"] } ] },
+    { "anyOf": [ { "required": ["canon_version"] }, { "required": ["canonVersion"] } ] },
+    { "anyOf": [ { "required": ["learning_outcome_id"] }, { "required": ["learningOutcomeId"] } ] },
+    { "anyOf": [ { "required": ["scenario_lo"] }, { "required": ["learningOutcome"] } ] }
+  ],
+  "definitions": {
+    "metricWeights": {
+      "type": "object",
+      "description": "Metric weight object with required fields and strategic edge breakdown.",
+      "properties": {
+        "overall": { "type": "number" },
+        "cri": { "type": "number" },
+        "bias": { "type": "number" },
+        "confidence_alignment": { "type": "number" },
+        "escalation_tendency": { "type": "number" },
+        "strategic_edge": {
+          "type": "object",
+          "description": "Strategic edge subweights.",
+          "patternProperties": {
+            ".*": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "overall",
+        "cri",
+        "bias",
+        "confidence_alignment",
+        "escalation_tendency",
+        "strategic_edge"
+      ],
+      "additionalProperties": true
+    },
+    "option": {
+      "type": "object",
+      "description": "Decision option with scoring, bias tags, and metric weights.",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "metric_weights": { "$ref": "#/definitions/metricWeights" },
+        "score": { "type": "number" },
+        "ideal_confidence": { "type": "number" },
+        "bias_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "insight_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "effects": {
+          "type": "object",
+          "description": "Effects mapping for the option.",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "metric_weights",
+        "score",
+        "ideal_confidence",
+        "bias_tags"
+      ],
+      "additionalProperties": true
+    },
+    "decisionPoint": {
+      "type": "object",
+      "description": "Decision point with prompt/stem and options (minimum two options).",
+      "properties": {
+        "dp_index": { "type": "integer", "minimum": 1 },
+        "narrative": { "type": "string" },
+        "prompt": { "type": "string" },
+        "stem": { "type": "string" },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/definitions/option" }
+        }
+      },
+      "required": ["dp_index", "narrative", "options"],
+      "anyOf": [ { "required": ["prompt"] }, { "required": ["stem"] } ],
+      "additionalProperties": true
+    },
+    "legacyDecisionPoint": {
+      "type": "object",
+      "description": "Legacy DP format used for migration (dp1/dp2/dp3).",
+      "properties": {
+        "narrative": { "type": "string" },
+        "prompt": { "type": "string" },
+        "stem": { "type": "string" },
+        "options": { "type": "array", "items": { "$ref": "#/definitions/option" } },
+        "default": { "type": "array", "items": { "$ref": "#/definitions/option" } },
+        "1": { "type": "array", "items": { "$ref": "#/definitions/option" } },
+        "2": { "type": "array", "items": { "$ref": "#/definitions/option" } }
+      },
+      "additionalProperties": true
+    }
+  }
+}

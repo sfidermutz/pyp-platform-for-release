@@ -1,6 +1,6 @@
 {
-  "generated_at": "2025-12-01T00:00:00Z",
-  "count": 3,
+  "generated_at": "2025-12-22T13:07:41.411Z",
+  "count": 4,
   "items": [
     {
       "filename": "HYB-01.json",
@@ -27,6 +27,15 @@
       "module": "HYB",
       "role": "Staff Officer (J5 Plans)",
       "year": null,
+      "default_scenario_id": null
+    },
+    {
+      "filename": "_SCENARIO_TEMPLATE.json",
+      "id": "HYB-XXX",
+      "title": "Short descriptive title of scenario",
+      "module": "HYB",
+      "role": "Role (e.g., Tactical Liaison Officer)",
+      "year": "2026",
       "default_scenario_id": null
     }
   ]
