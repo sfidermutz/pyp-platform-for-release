@@ -10,7 +10,8 @@ export const runtime = 'nodejs';
 
 // Load schema at startup (server runtime). This is static file IO; fine for server runtime.
 const SCHEMA_PATH = path.join(process.cwd(), 'docs', 'schemas', 'pyp_scenario_schema_v2.json');
-let validateFn: ReturnType<Ajv['compile']> | null = null;
+// Make validateFn `any` so we can safely check `.errors` without TypeScript complaining.
+let validateFn: any = null;
 try {
   const raw = fs.readFileSync(SCHEMA_PATH, 'utf8');
   const schema = JSON.parse(raw);
@@ -19,7 +20,6 @@ try {
   validateFn = ajv.compile(schema);
 } catch (e) {
   // Log and keep validateFn null. Route will return helpful error.
-  // During build this will be examined but will not trigger dynamic require issues.
   console.error('validate_scenario: failed to load/compile schema at', SCHEMA_PATH, e);
 }
 
@@ -114,8 +114,8 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (!ajvValid && Array.isArray(validateFn.errors)) {
-      validateFn.errors.forEach(err => {
+    if (!ajvValid && Array.isArray((validateFn as any).errors)) {
+      (validateFn as any).errors.forEach((err: any) => {
         errors.push(`${err.instancePath || '(root)'} ${err.message}`);
       });
     }
