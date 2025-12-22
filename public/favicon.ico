@@ -1,0 +1,8 @@
+<!--
+  Placeholder favicon served as text to avoid binary diffs in CI/PR tooling.
+  Replace with a proper ICO if needed. For now, simple SVG content renders a dark square with P.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <rect width="16" height="16" fill="#0f172a" />
+  <text x="4" y="12" font-family="Arial, sans-serif" font-size="10" fill="#f8fafc">P</text>
+</svg>
