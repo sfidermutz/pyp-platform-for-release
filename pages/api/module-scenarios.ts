@@ -1,4 +1,3 @@
-// pages/api/module-scenarios.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -8,6 +7,7 @@ async function tryGithubScanForModule(moduleId: string) {
     const apiUrl = 'https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios';
     console.log('[api] github listing url', apiUrl);
     const res = await fetch(apiUrl);
+    console.log('[api] github listing status', res.status);
     if (!res.ok) return [];
     const listing = await res.json();
     if (!Array.isArray(listing)) return [];
@@ -24,7 +24,7 @@ async function tryGithubScanForModule(moduleId: string) {
         }
         const raw = await r.text();
         const parsed = JSON.parse(raw);
-        const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.moduleCode;
+        const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.modulecode;
         if (mid && String(mid).toLowerCase() === String(moduleId).toLowerCase()) {
           matches.push({
             filename: item.name,
@@ -47,55 +47,68 @@ async function tryGithubScanForModule(moduleId: string) {
   }
 }
 
+async function scanLocal(moduleId: string) {
+  const repoRoot = process.cwd();
+  const scenariosDir = path.join(repoRoot, 'data', 'scenarios');
+  let files: string[] = [];
+  try {
+    files = await fs.readdir(scenariosDir);
+  } catch (err) {
+    console.warn('[api] scenarios dir not found locally, will attempt remote scan', String(err));
+    return { files: [], results: [] };
+  }
+
+  const results: any[] = [];
+  for (const f of files) {
+    if (!f.toLowerCase().endsWith('.json')) continue;
+    try {
+      const raw = await fs.readFile(path.join(scenariosDir, f), 'utf8');
+      const parsed = JSON.parse(raw);
+      const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.modulecode;
+      if (mid && String(mid).toLowerCase() === String(moduleId).toLowerCase()) {
+        results.push({
+          filename: f,
+          scenario_id: parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null,
+          title: parsed?.title ?? parsed?.name ?? '',
+          role: parsed?.role ?? '',
+          learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? parsed?.scenarioLO ?? '',
+          narrative: parsed?.narrative ?? parsed?.situation ?? ''
+        });
+      }
+    } catch (e) {
+      console.warn('[api] skipping scenario file due to parse error', f, String(e));
+      continue;
+    }
+  }
+
+  return { files, results };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
+  const moduleQ = (req.query.module as string)
+    || (req.query.moduleId as string)
+    || (req.query.module_id as string);
+  if (!moduleQ || Array.isArray(moduleQ)) {
+    res.status(400).json({ error: 'missing module query parameter' });
+    return;
+  }
+  const moduleId = moduleQ;
+  console.log('[api] module-scenarios requested module=', moduleId);
+
   try {
-    const moduleQ = (req.query.module as string) || (req.query.moduleId as string) || (req.query.module_id as string);
-    if (!moduleQ) return res.status(400).json({ error: 'missing module query parameter' });
-    const moduleId = moduleQ;
-
-    const repoRoot = process.cwd();
-    const scenariosDir = path.join(repoRoot, 'data', 'scenarios');
-
-    let files: string[] = [];
-    try {
-      files = await fs.readdir(scenariosDir);
-    } catch (err) {
-      console.warn('[api] scenarios dir not found locally, will attempt remote scan', String(err));
+    const { files, results } = await scanLocal(moduleId);
+    if (files.length === 0 || results.length === 0) {
+      console.log('[api] no local results, trying remote scan');
       const remoteMatches = await tryGithubScanForModule(moduleId);
-      return res.status(200).json({ scenarios: remoteMatches });
-    }
-
-    const results: any[] = [];
-    for (const f of files) {
-      if (!f.toLowerCase().endsWith('.json')) continue;
-      try {
-        const raw = await fs.readFile(path.join(scenariosDir, f), 'utf8');
-        const parsed = JSON.parse(raw);
-        const mid = parsed?.moduleId ?? parsed?.module_id ?? parsed?.module ?? parsed?.moduleCode ?? parsed?.moduleCode;
-        if (mid && String(mid).toLowerCase() === String(moduleId).toLowerCase()) {
-          results.push({
-            filename: f,
-            scenario_id: parsed?.scenario_id ?? parsed?.scenarioId ?? parsed?.id ?? null,
-            title: parsed?.title ?? parsed?.name ?? '',
-            role: parsed?.role ?? '',
-            learningOutcome: parsed?.learningOutcome ?? parsed?.scenario_LO ?? parsed?.scenarioLO ?? '',
-            narrative: parsed?.narrative ?? parsed?.situation ?? ''
-          });
-        }
-      } catch (e) {
-        console.warn('[api] skipping scenario file due to parse error', f, String(e));
-        continue;
-      }
-    }
-
-    if (results.length === 0) {
-      const remoteMatches = await tryGithubScanForModule(moduleId);
-      return res.status(200).json({ scenarios: remoteMatches });
+      console.log('[api] remoteMatches count', remoteMatches.length);
+      res.status(200).json({ scenarios: remoteMatches });
+      return;
     }
 
     results.sort((a, b) => {
@@ -107,9 +120,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return ai.localeCompare(bi);
     });
 
-    return res.status(200).json({ scenarios: results });
+    console.log('[api] returning local results count', results.length);
+    res.status(200).json({ scenarios: results });
   } catch (e) {
     console.error('[api] module-scenarios error', String(e));
-    return res.status(500).json({ error: 'server error' });
+    res.status(500).json({ error: 'server error' });
   }
 }
