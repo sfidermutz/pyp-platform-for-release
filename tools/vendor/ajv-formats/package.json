@@ -1,0 +1,9 @@
+{
+  "name": "ajv-formats",
+  "version": "3.0.1-stub",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "file:../ajv"
+  }
+}

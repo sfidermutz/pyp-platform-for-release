@@ -1,142 +1,161 @@
 {
-  "scenarioId": "HYB-XXX",
-  "moduleId": "HYB",
-  "canonVersion": "1.0",
-  "scenarioSchemaVersion": "1.0",
+  "schema_version": "2.0",
+  "scenario_id": "HYB-XXX",
+  "module_id": "HYB",
+  "canon_version": "2.0",
   "title": "Short descriptive title of scenario",
   "role": "Role (e.g., Tactical Liaison Officer)",
-  "year": "YYYY",
-  "warfareLevel": "Tactical / Operational / Strategic",
-  "geoRegionCluster": "RegionClusterName",
-  "locationName": "Location name",
-  "isFictional": true,
-  "primaryEffectDimension": "Cognitive",
-  "secondaryEffectDimensions": ["Physical", "Virtual"],
-  "communities": ["Joint", "Maritime", "NGO-partners"],
-  "domains": ["Maritime", "Cyber", "Information"],
-  "timeframe": "Near-term",
-  "learningOutcomeId": "HYB-XXX-LO",
-  "learningOutcome": "Single-line module-aligned learning outcome for Scenario 10 (or scenario-specific LO).",
+  "year": "2026",
+  "learning_outcome_id": "HYB-XXX-LO",
+  "scenario_lo": "Single-line module-aligned learning outcome for the scenario.",
   "metrics": {
-    "core": [
-      "InformationAdvantage",
-      "TrustCalibration",
-      "BiasAwareness",
-      "CognitiveAdaptability",
-      "EscalationRisk"
-    ],
-    "secondary": [
-      "CoalitionSynchronization",
-      "NarrativeResilience",
-      "TempoSensitivity"
-    ]
+    "core": ["InformationAdvantage", "TrustCalibration", "BiasAwareness", "CognitiveAdaptability", "CRI"],
+    "secondary": ["NarrativeResilience", "CoalitionSynchronization"]
   },
-  "biasCatalog": [
-    "AnchoringBias",
-    "AvailabilityBias",
-    "ConfirmationBias",
-    "AuthorityBias",
-    "OverconfidenceBias",
-    "StatusQuoBias",
-    "Groupthink",
-    "FramingBias"
-  ],
-  "effectsModel": {
+  "metric_weights": {
+    "overall": 0.5,
+    "cri": 0.2,
+    "bias": 0.1,
+    "confidence_alignment": 0.1,
+    "escalation_tendency": 0.1,
+    "strategic_edge": {
+      "information_advantage": 0.1,
+      "tempo": 0.1
+    }
+  },
+  "bias_catalog": ["AnchoringBias", "AuthorityBias", "OverconfidenceBias"],
+  "effects_model": {
     "dimensions": ["Physical", "Virtual", "Cognitive"],
     "note": "Describe how the scenario maps decisions to intended/likely effects across dimensions."
   },
-  "situation": "Full narrative situation text (longer paragraph describing the scenario context).",
-  "dp1": {
-    "narrative": "DP1 narrative (50-65 words recommended).",
-    "stem": "DP1 stem question.",
-    "options": [
-      {
-        "id": "dp1a",
-        "text": "Option A text.",
-        "insightTags": ["InformationAdvantage"],
-        "biasTags": ["AnchoringBias"],
-        "effects": { "intendedEffect": "Virtual", "likelyEffect": "Cognitive", "effectDirection": "stabilizing" },
-        "score": 75,
-        "ideal_confidence": 70
-      },
-      {
-        "id": "dp1b",
-        "text": "Option B text.",
-        "insightTags": ["TrustCalibration"],
-        "biasTags": ["StatusQuoBias"],
-        "effects": { "intendedEffect": "Physical", "likelyEffect": "Cognitive", "effectDirection": "ambiguous" },
-        "score": 45,
-        "ideal_confidence": 55
-      },
-      {
-        "id": "dp1c",
-        "text": "Option C text.",
-        "insightTags": ["EscalationRisk"],
-        "biasTags": ["OverconfidenceBias"],
-        "effects": { "intendedEffect": "Cognitive", "likelyEffect": "Physical", "effectDirection": "stabilizing" },
-        "score": 60,
-        "ideal_confidence": 65
-      }
-    ]
-  },
-  "dp2": {
-    "narrative": "DP2 narrative (locked DP1 content displayed).",
-    "stem": "DP2 stem question.",
-    "default": [
-      {
-        "id": "dp2a",
-        "text": "DP2 Option A (default branch).",
-        "insightTags": ["CoalitionSynchronization"],
-        "biasTags": ["AuthorityBias"],
-        "effects": { "intendedEffect": "Cognitive", "likelyEffect": "Cognitive", "effectDirection": "stabilizing" },
-        "score": 80,
-        "ideal_confidence": 70
-      },
-      {
-        "id": "dp2b",
-        "text": "DP2 Option B (default branch).",
-        "insightTags": ["NarrativeResilience"],
-        "biasTags": ["ConfirmationBias"],
-        "effects": { "intendedEffect": "Virtual", "likelyEffect": "Cognitive", "effectDirection": "ambiguous" },
-        "score": 50,
-        "ideal_confidence": 60
-      }
-    ]
-  },
-  "dp3": {
-    "narrative": "DP3 narrative (locked DP1/DP2 content displayed).",
-    "stem": "DP3 stem question.",
-    "default": [
-      {
-        "id": "dp3a",
-        "text": "DP3 Option A (summative).",
-        "insightTags": ["CognitiveAdaptability"],
-        "biasTags": ["Groupthink"],
-        "effects": { "intendedEffect": "Cognitive", "likelyEffect": "Physical", "effectDirection": "stabilizing" },
-        "score": 85,
-        "ideal_confidence": 75
-      },
-      {
-        "id": "dp3b",
-        "text": "DP3 Option B (summative).",
-        "insightTags": ["EscalationRisk"],
-        "biasTags": ["FramingBias"],
-        "effects": { "intendedEffect": "Physical", "likelyEffect": "Cognitive", "effectDirection": "ambiguous" },
-        "score": 40,
-        "ideal_confidence": 50
-      }
-    ]
-  },
+  "situation": "Full narrative situation text (longer paragraph describing the scenario context, 100-200 words recommended).",
+  "decision_points": [
+    {
+      "dp_index": 1,
+      "narrative": "DP1 narrative (50-65 words recommended).",
+      "prompt": "DP1 stem question.",
+      "options": [
+        {
+          "id": "dp1a",
+          "text": "Option A text (12-22 words recommended).",
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": { "information_advantage": 0.1 }
+          },
+          "score": 75,
+          "ideal_confidence": 70,
+          "bias_tags": ["AnchoringBias"],
+          "insight_tags": ["InformationAdvantage"]
+        },
+        {
+          "id": "dp1b",
+          "text": "Option B text (12-22 words recommended).",
+          "metric_weights": {
+            "overall": 0.4,
+            "cri": 0.25,
+            "bias": 0.1,
+            "confidence_alignment": 0.15,
+            "escalation_tendency": 0.1,
+            "strategic_edge": { "trust": 0.1 }
+          },
+          "score": 55,
+          "ideal_confidence": 60,
+          "bias_tags": ["AuthorityBias"],
+          "insight_tags": ["TrustCalibration"]
+        }
+      ]
+    },
+    {
+      "dp_index": 2,
+      "narrative": "DP2 narrative (locked DP1 context displayed).",
+      "stem": "DP2 stem question.",
+      "options": [
+        {
+          "id": "dp2a",
+          "text": "DP2 Option A (default branch).",
+          "metric_weights": {
+            "overall": 0.6,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.05,
+            "escalation_tendency": 0.05,
+            "strategic_edge": { "cohesion": 0.1 }
+          },
+          "score": 80,
+          "ideal_confidence": 72,
+          "bias_tags": ["OverconfidenceBias"],
+          "insight_tags": ["CoalitionSynchronization"]
+        },
+        {
+          "id": "dp2b",
+          "text": "DP2 Option B (default branch).",
+          "metric_weights": {
+            "overall": 0.45,
+            "cri": 0.25,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": { "narrative": 0.1 }
+          },
+          "score": 60,
+          "ideal_confidence": 60,
+          "bias_tags": ["AnchoringBias"],
+          "insight_tags": ["NarrativeResilience"]
+        }
+      ]
+    },
+    {
+      "dp_index": 3,
+      "narrative": "DP3 narrative (summative).",
+      "prompt": "DP3 stem question.",
+      "options": [
+        {
+          "id": "dp3a",
+          "text": "DP3 Option A (summative).",
+          "metric_weights": {
+            "overall": 0.55,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.05,
+            "strategic_edge": { "adaptability": 0.1 }
+          },
+          "score": 85,
+          "ideal_confidence": 75,
+          "bias_tags": ["AnchoringBias"],
+          "insight_tags": ["CognitiveAdaptability"]
+        },
+        {
+          "id": "dp3b",
+          "text": "DP3 Option B (summative).",
+          "metric_weights": {
+            "overall": 0.35,
+            "cri": 0.3,
+            "bias": 0.1,
+            "confidence_alignment": 0.15,
+            "escalation_tendency": 0.1,
+            "strategic_edge": { "escalation": 0.1 }
+          },
+          "score": 45,
+          "ideal_confidence": 50,
+          "bias_tags": ["AuthorityBias"],
+          "insight_tags": ["EscalationRisk"]
+        }
+      ]
+    }
+  ],
   "reflection1_prompt": "Reflection prompt: At least 50 words. Ask about bias, coalition trust, information integrity, and tempo.",
-  "reflection2_prompt": "",
-  "scenario_LO": "Scenario learning outcome text (repeat or elaborate learningOutcome).",
-  "scenario_LO_tags": {
-    "primaryDomain": "Cognitive",
-    "secondaryDomain": "Affective",
-    "bloomLevel": "Apply",
-    "krathwohlLevel": "Valuing"
-  },
-  "notes": {
-    "authoringGuidance": "Author must ensure DP narratives are 50-65 words; provide insightTags/biasTags for each option; set score and ideal_confidence."
-  }
+  "reflection2_prompt": "Reflection prompt 2: 50–250 words, explicitly referencing the scenario learning outcome to reinforce module alignment.",
+  "source_references": [
+    {
+      "field": "template",
+      "source": "repo:data/scenarios/_SCENARIO_TEMPLATE.json",
+      "author": "content-team",
+      "timestamp": "2025-12-22T00:00:00Z"
+    }
+  ]
 }
