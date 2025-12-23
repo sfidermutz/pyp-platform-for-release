@@ -1,0 +1,311 @@
+{
+  "schema_version": "2.0",
+  "scenario_id": "HYB-01",
+  "module_id": "HYB",
+  "canon_version": "1.0",
+  "title": "Ambiguous Information Probe in Littoral Space",
+  "role": "Tactical Liaison Officer",
+  "year": "2026",
+  "learning_outcome_id": "HYB-01-LO",
+  "scenario_lo": "Calibrate information posture under ambiguity: integrate partner reports and limited ISR to preserve coalition trust and avoid premature escalation.",
+  "metrics": {
+    "core": [
+      "InformationAdvantage",
+      "TrustCalibration",
+      "BiasAwareness",
+      "CognitiveAdaptability",
+      "EscalationRisk"
+    ],
+    "secondary": [
+      "CoalitionSynchronization",
+      "NarrativeResilience",
+      "TempoSensitivity"
+    ]
+  },
+  "metric_weights": {
+    "overall": 0.5,
+    "cri": 0.2,
+    "bias": 0.1,
+    "confidence_alignment": 0.1,
+    "escalation_tendency": 0.1,
+    "strategic_edge": {
+      "default": 0.1
+    }
+  },
+  "bias_catalog": [
+    "AnchoringBias",
+    "AvailabilityBias",
+    "ConfirmationBias",
+    "AuthorityBias",
+    "OverconfidenceBias",
+    "StatusQuoBias",
+    "Groupthink",
+    "FramingBias"
+  ],
+  "effects_model": {
+    "dimensions": [
+      "Physical",
+      "Virtual",
+      "Cognitive"
+    ],
+    "note": "Decisions should be assessed for intended and likely effects across physical, virtual, and cognitive dimensions."
+  },
+  "situation": "A series of unclaimed radio transmissions and small craft activity near a coalition port creates ambiguity about intent and attribution. You must synchronize sensors, coordinate with NGO maritime partners, and calibrate coalition trust while protecting civilian traffic.",
+  "decision_points": [
+    {
+      "dp_index": 1,
+      "narrative": "Baseline contact reports an unmarked vessel loitering 8 nm off the port approaches. Sensor returns are intermittent.",
+      "prompt": "What is your initial information posture?",
+      "stem": "What is your initial information posture?",
+      "options": [
+        {
+          "id": "dp1a",
+          "text": "Request immediate ISR overwatch and attempt electronic emission identification.",
+          "effects": {
+            "intendedEffect": "Virtual",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "stabilizing"
+          },
+          "score": 75,
+          "ideal_confidence": 70,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "OverconfidenceBias"
+          ],
+          "insight_tags": [
+            "InformationAdvantage",
+            "RiskAnticipation"
+          ]
+        },
+        {
+          "id": "dp1b",
+          "text": "Assume merchant traffic is benign and continue routine patrols.",
+          "effects": {
+            "intendedEffect": "Physical",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "ambiguous"
+          },
+          "score": 30,
+          "ideal_confidence": 50,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "AnchoringBias",
+            "AvailabilityBias"
+          ],
+          "insight_tags": [
+            "StatusQuoBias"
+          ]
+        },
+        {
+          "id": "dp1c",
+          "text": "Notify coalition partners and restrict port approaches until clarified.",
+          "effects": {
+            "intendedEffect": "Physical",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "stabilizing"
+          },
+          "score": 60,
+          "ideal_confidence": 65,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "AuthorityBias"
+          ],
+          "insight_tags": [
+            "TrustCalibration",
+            "CoalitionSynchronization"
+          ]
+        }
+      ]
+    },
+    {
+      "dp_index": 2,
+      "narrative": "NGO partner reports a small fast craft approaching fishing boats. Social media claims a 'foreign proxy' is harassing local assets.",
+      "prompt": "How do you calibrate your trust and information collection?",
+      "stem": "How do you calibrate your trust and information collection?",
+      "options": [
+        {
+          "id": "dp2a",
+          "text": "Open liaison channel with NGO and request verified geotagged media.",
+          "effects": {
+            "intendedEffect": "Virtual",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "stabilizing"
+          },
+          "score": 80,
+          "ideal_confidence": 70,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "ConfirmationBias"
+          ],
+          "insight_tags": [
+            "InformationAdvantage",
+            "TrustCalibration"
+          ]
+        },
+        {
+          "id": "dp2b",
+          "text": "Disregard unverified social posts and escalate military patrols aggressively.",
+          "effects": {
+            "intendedEffect": "Physical",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "ambiguous"
+          },
+          "score": 35,
+          "ideal_confidence": 55,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "FramingBias",
+            "OverconfidenceBias"
+          ],
+          "insight_tags": [
+            "EscalationRisk"
+          ]
+        }
+      ]
+    },
+    {
+      "dp_index": 3,
+      "narrative": "A coalition partner requests you share limited ISR to support a boarding. Media sensitivity is high and attribution is uncertain.",
+      "prompt": "What is your recommended course of action?",
+      "stem": "What is your recommended course of action?",
+      "options": [
+        {
+          "id": "dp3a",
+          "text": "Share limited ISR under coalition MOU and advise a phased boarding with NGO observers.",
+          "effects": {
+            "intendedEffect": "Cognitive",
+            "likelyEffect": "Physical",
+            "effectDirection": "stabilizing"
+          },
+          "score": 85,
+          "ideal_confidence": 75,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "AuthorityBias"
+          ],
+          "insight_tags": [
+            "CoalitionSynchronization",
+            "InformationAdvantage"
+          ]
+        },
+        {
+          "id": "dp3b",
+          "text": "Deny ISR sharing until full attribution is established.",
+          "effects": {
+            "intendedEffect": "Cognitive",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "stabilizing"
+          },
+          "score": 40,
+          "ideal_confidence": 50,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "OverconfidenceBias"
+          ],
+          "insight_tags": [
+            "RiskAnticipation"
+          ]
+        },
+        {
+          "id": "dp3c",
+          "text": "Share full ISR widely to enable rapid action.",
+          "effects": {
+            "intendedEffect": "Physical",
+            "likelyEffect": "Cognitive",
+            "effectDirection": "ambiguous"
+          },
+          "score": 35,
+          "ideal_confidence": 45,
+          "metric_weights": {
+            "overall": 0.5,
+            "cri": 0.2,
+            "bias": 0.1,
+            "confidence_alignment": 0.1,
+            "escalation_tendency": 0.1,
+            "strategic_edge": {
+              "default": 0.1
+            }
+          },
+          "bias_tags": [
+            "OptimismBias"
+          ],
+          "insight_tags": [
+            "InformationAdvantage"
+          ]
+        }
+      ]
+    }
+  ],
+  "reflection1_prompt": "Reflect on how you weighed coalition trust, information integrity, and mission tempo. Explain your choice of ISR sharing, how you accounted for NGO reports, and what bias or escalation risks you sought to avoid.",
+  "reflection2_prompt": "",
+  "source_references": [
+    {
+      "field": "migrated",
+      "source": "repo:migrate_scenarios_to_v2.js",
+      "timestamp": "2025-12-22T11:32:44.957Z"
+    }
+  ]
+}

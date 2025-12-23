@@ -19,20 +19,20 @@ export default function Home() {
       const res = await fetch('/api/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: t }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ token: t })
       });
-      const json = await res.json();
+      let json: any = {};
+      try { json = await res.json(); } catch (e) { console.warn('create-session parse error', e); }
       if (!res.ok) {
-        setError(json.error || 'Invalid token or server error');
+        setError(json?.error || 'Invalid token or server error');
         setLoading(false);
         return;
       }
-      // Save session locally (opaque token)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('pyp_session_id', json.session?.id || '');
         localStorage.setItem('pyp_token', t);
+        localStorage.setItem('pyp_session_id', json.session?.id || '');
       }
-      // Redirect to a safe landing, e.g., /coins or modules list
       router.push('/coins');
     } catch (err) {
       console.error('create-session error', err);
