@@ -1,28 +1,36 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// middleware.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Lightweight CORS middleware for API routes.
-// Matches only /api/* and responds to OPTIONS (preflight) requests.
 export function middleware(req: NextRequest) {
-  const origin = req.headers.get('origin') || '*';
+  const pathname = req.nextUrl.pathname;
 
-  // Answer preflight OPTIONS requests early
-  if (req.method === 'OPTIONS') {
-    const res = NextResponse.json(null);
-    res.headers.set('Access-Control-Allow-Origin', origin);
-    res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, x-debug, x-api-key');
-    res.headers.set('Access-Control-Max-Age', '86400');
-    return res;
+  // allow public assets, API, next internals, root login page
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname === "/" ||
+    pathname.startsWith("/favicon")
+  ) {
+    return NextResponse.next();
   }
 
-  // For normal requests: let the request continue, but include CORS headers on the response
-  const res = NextResponse.next();
-  res.headers.set('Access-Control-Allow-Origin', origin);
-  res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, x-debug, x-api-key');
-  return res;
+  // protect these prefixes
+  const protectedPrefixes = ["/modules", "/scenario", "/coins", "/admin"];
+  const needsAuth = protectedPrefixes.some((p) => pathname === p || pathname.startsWith(p));
+  if (!needsAuth) return NextResponse.next();
+
+  const session = req.cookies.get("pyp_session")?.value;
+  if (!session) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
 }
 
-// Limit the middleware to API routes only
-export const config = { matcher: '/api/:path*' };
+export const config = {
+  matcher: ["/modules/:path*", "/scenario/:path*", "/coins/:path*", "/admin/:path*"]
+};

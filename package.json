@@ -19,6 +19,7 @@
     "ajv": "file:tools/vendor/ajv",
     "ajv-formats": "file:tools/vendor/ajv-formats",
     "@supabase/supabase-js": "^2.84.0",
+    "cookie": "file:tools/vendor/cookie",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1",
