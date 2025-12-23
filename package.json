@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "npm run check:markers",
+    "prebuild": "npm run check:markers && node scripts/generate-scenarios-index.js",
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/validate-scenarios.js",
@@ -16,7 +16,10 @@
     "node": ">=18"
   },
   "dependencies": {
+    "ajv": "file:tools/vendor/ajv",
+    "ajv-formats": "file:tools/vendor/ajv-formats",
     "@supabase/supabase-js": "^2.84.0",
+    "cookie": "file:tools/vendor/cookie",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1",
