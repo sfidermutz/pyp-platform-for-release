@@ -1,42 +1,38 @@
+// components/SessionInfo.tsx
 'use client';
-
 import React, { useEffect, useState } from 'react';
 
-type AuthMe = {
-  authenticated?: boolean;
-  session_id?: string | null;
-  token_id?: string | null;
+type AuthResp = {
+  authenticated: boolean;
+  session_id?: string;
+  token_id?: string;
   meta?: any;
 };
 
 export default function SessionInfo() {
-  const [session, setSession] = useState<AuthMe | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<AuthResp | null>(null);
 
   useEffect(() => {
-    let mounted = true;
+    let cancelled = false;
     (async () => {
       try {
         const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
-        const json = await r.json().catch(() => null);
-        if (mounted) setSession(json);
+        const j = await r.json();
+        if (!cancelled) setState(j);
       } catch (e) {
-        if (mounted) setSession(null);
-      } finally {
-        if (mounted) setLoading(false);
+        if (!cancelled) setState({ authenticated: false } as AuthResp);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  if (loading) return null;
-  if (!session || !session.authenticated) return null;
-
+  if (state === null) return <div>Checking session…</div>;
+  if (!state.authenticated) return null;
   return (
-    <div className="session-info" suppressHydrationWarning>
-      <span>Session: {session.session_id ?? '(unknown)'}</span>
+    <div style={{ padding: 8 }}>
+      <strong>Signed in</strong>
+      <div>Session: {state.session_id}</div>
+      <div>Token: {state.token_id}</div>
     </div>
   );
 }

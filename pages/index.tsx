@@ -1,46 +1,11 @@
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
+// pages/index.tsx
+import React from 'react';
+import dynamic from 'next/dynamic';
+
+const TokenForm = dynamic(() => import('../components/TokenForm'), { ssr: false });
+const SessionInfo = dynamic(() => import('../components/SessionInfo'), { ssr: false });
 
 export default function Home() {
-  const router = useRouter();
-  const [token, setToken] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const t = token.trim();
-    if (!t) return setError('Please enter your access token.');
-
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/create-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ token: t })
-      });
-      let json: any = {};
-      try { json = await res.json(); } catch (e) { console.warn('create-session parse error', e); }
-      if (!res.ok) {
-        setError(json?.error || 'Invalid token or server error');
-        setLoading(false);
-        return;
-      }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pyp_token', t);
-        localStorage.setItem('pyp_session_id', json.session?.id || '');
-      }
-      router.push('/coins');
-    } catch (err) {
-      console.error('create-session error', err);
-      setError('Server error - try again');
-      setLoading(false);
-    }
-  }
-
   return (
     <main className="min-h-screen bg-black text-white flex items-start justify-start pt-12 px-6">
       <div className="w-full max-w-6xl">
@@ -55,26 +20,12 @@ export default function Home() {
 
             <div className="w-full md:w-96 bg-[#071820] panel">
               <h2 className="text-lg font-semibold">Enter access token</h2>
-              <form onSubmit={handleSubmit} className="mt-4">
-                <label className="block text-xs font-medium muted mb-2">Access Token</label>
-                <input
-                  type="text"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                  placeholder="Enter token"
-                  autoComplete="off"
-                />
-                {error && <p className="text-sm text-rose-400 mt-2">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-4 w-full rounded-md bg-accent py-2 text-sm font-semibold text-black"
-                >
-                  {loading ? 'Validating…' : 'Enter'}
-                </button>
-                <p className="text-[11px] muted mt-3">TRL-4 Pilot · Token-gated access</p>
-              </form>
+              <div className="mt-4">
+                <TokenForm />
+                <div style={{ marginTop: 12 }}>
+                  <SessionInfo />
+                </div>
+              </div>
             </div>
           </div>
         </header>
