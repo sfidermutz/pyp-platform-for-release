@@ -1,16 +1,28 @@
 // pages/api/auth/me.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const sessionId = req.cookies?.['pyp_session'];
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("/api/auth/me missing Supabase env");
+      return res.status(500).json({ authenticated: false });
+    }
+    const sessionId = req.cookies?.["pyp_session"];
     if (!sessionId) return res.status(200).json({ authenticated: false });
-    const { data, error } = await supabaseAdmin.from('sessions').select('id, token_id, created_at').eq('id', sessionId).maybeSingle();
+    const { data, error } = await supabaseAdmin
+      .from("sessions")
+      .select("id, token_id, created_at, meta")
+      .eq("id", sessionId)
+      .maybeSingle();
     if (error || !data) return res.status(200).json({ authenticated: false });
-    return res.status(200).json({ authenticated: true, session_id: data.id, token_id: data.token_id });
+    return res.status(200).json({ authenticated: true, session_id: data.id, token_id: data.token_id, meta: data.meta });
   } catch (e) {
-    console.error('/api/auth/me error', e);
+    console.error("/api/auth/me error", e);
     return res.status(500).json({ authenticated: false });
   }
 }
