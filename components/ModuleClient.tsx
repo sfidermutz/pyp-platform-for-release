@@ -42,6 +42,29 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     });
   }
 
+  async function fetchWithSession(url: string) {
+    let resp = await fetch(url, { credentials: 'same-origin' });
+    if (resp.status === 403) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
+      if (token) {
+        try {
+          const createRes = await fetch('/api/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ token })
+          });
+          if (createRes.ok) {
+            resp = await fetch(url, { credentials: 'same-origin' });
+          }
+        } catch (e) {
+          console.warn('failed to establish session', e);
+        }
+      }
+    }
+    return resp;
+  }
+
   useEffect(() => {
     let active = true;
     async function loadScenarios() {
@@ -56,26 +79,18 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           return;
         }
 
-        // First try prebuilt scenarios index
         try {
-          const idxResp = await fetch('/data/scenarios_index.json');
+          const idxResp = await fetch('/data/scenarios_index.json', { credentials: 'same-origin' });
           if (idxResp.ok) {
             const idxJson = await idxResp.json();
             const items = Array.isArray(idxJson.items) ? idxJson.items : [];
             const filtered = items.filter((it: any) => (String(it.module ?? '').toLowerCase() === String(moduleCode).toLowerCase()));
-            // For each matched item, fetch full scenario via secure server API.
-            const sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-            const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
-            const headers: any = {};
-            if (sessionId) headers['x-session-id'] = sessionId;
-            if (token) headers['x-pyp-token'] = token;
 
             const detailed: ScenarioMeta[] = [];
             for (const f of filtered) {
               const scenId = f.id ?? (f.filename?.replace('.json',''));
               try {
-                // fetch via secure server route
-                const r = await fetch(`/api/scenario/${encodeURIComponent(scenId)}`, { headers });
+                const r = await fetchWithSession(`/api/scenario/${encodeURIComponent(scenId)}`);
                 if (r.ok) {
                   const parsed = await r.json();
                   detailed.push({
@@ -87,8 +102,8 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
                     narrative: parsed?.situation ?? parsed?.narrative ?? '',
                     shelf_position: parsed?.shelf_position ?? parsed?.scenario_order ?? null,
                   });
-                } else {
-                  console.warn('secure scenario fetch failed', scenId, r.status);
+                } else if (r.status === 403) {
+                  throw new Error('Unauthorized to fetch scenarios');
                 }
               } catch (e) {
                 console.warn('secure scenario fetch exception', e);
@@ -101,13 +116,10 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
               return;
             }
           }
-          // if index fetch failed, fallthrough to GitHub listing fallback (legacy)
         } catch (idxErr) {
           console.warn('scenarios index fetch failed', String(idxErr));
         }
 
-        // Legacy fallback: attempt GitHub listing (kept for safety; still will fetch full scenarios via secure api)
-        // NOTE: the client will not fetch raw JSON from GitHub; it will use the secure API to obtain scenario content.
         const ghResp = await fetch('https://api.github.com/repos/sfidermutz/pyp-platform-for-release/contents/data/scenarios');
         if (!ghResp.ok) {
           throw new Error(`GitHub listing failed ${ghResp.status}`);
@@ -117,7 +129,6 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         const moduleFiles = [];
         for (const item of jsonFiles) {
           try {
-            // fetch metadata (without raw content) via GitHub download (only to discover module field)
             const r = await fetch(item.download_url);
             if (!r.ok) continue;
             const parsed = await r.json();
@@ -130,17 +141,10 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
           }
         }
 
-        // For each moduleFiles item, fetch secure scenario JSON
-        const sessionId2 = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
-        const token2 = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
-        const headers2: any = {};
-        if (sessionId2) headers2['x-session-id'] = sessionId2;
-        if (token2) headers2['x-pyp-token'] = token2;
-
         const results: ScenarioMeta[] = [];
         for (const mf of moduleFiles) {
           try {
-            const r = await fetch(`/api/scenario/${encodeURIComponent(mf.id)}`, { headers: headers2 });
+            const r = await fetchWithSession(`/api/scenario/${encodeURIComponent(mf.id)}`);
             if (!r.ok) continue;
             const parsed = await r.json();
             results.push({
@@ -177,19 +181,12 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     return Array.from(seen.values());
   }
 
-  // prefetch scenario via secure API (requires session or token)
+  // prefetch scenario via secure API (requires cookie-based session)
   function prefetchScenario(scenarioId?: string) {
     if (!scenarioId || typeof window === 'undefined') return;
     (async () => {
       try {
-        const sessionId = localStorage.getItem('pyp_session_id');
-        const token = localStorage.getItem('pyp_token');
-        const headers: any = {};
-        if (sessionId) headers['x-session-id'] = sessionId;
-        if (token) headers['x-pyp-token'] = token;
-        // Only attempt secure fetch if we have a session or token
-        if (!sessionId && !token) return;
-        const r = await fetch(`/api/scenario/${encodeURIComponent(scenarioId)}`, { headers });
+        const r = await fetchWithSession(`/api/scenario/${encodeURIComponent(scenarioId)}`);
         if (!r.ok) return;
         const j = await r.json();
         try { localStorage.setItem(`pyp_scenario_${scenarioId}`, JSON.stringify(j)); } catch (e) {}
@@ -207,7 +204,13 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
     setStarting(true);
 
     try {
-      let sessionId = typeof window !== 'undefined' ? localStorage.getItem('pyp_session_id') : null;
+      let sessionId: string | null = null;
+      try {
+        const meRes = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        const meJson = await meRes.json();
+        if (meJson?.authenticated) sessionId = meJson.session_id || meJson.id;
+      } catch (e) {}
+
       if (!sessionId) {
         const token = typeof window !== 'undefined' ? localStorage.getItem('pyp_token') : null;
         if (!token) {
@@ -217,32 +220,29 @@ export default function ModuleClient({ module }: { module: ModuleType }) {
         const res = await fetch('/api/create-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ token })
         });
 
         if (!res.ok) {
-          window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
+          window.location.href = '/';
           return;
         }
 
         const json = await res.json();
-        sessionId = json?.session?.id || json?.session_id || json?.data?.id;
-        if (sessionId) localStorage.setItem('pyp_session_id', sessionId);
+        sessionId = json?.session_id || json?.session?.id || json?.data?.id || null;
       }
 
       try {
         await fetch('/api/log-event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ session_id: sessionId, event_type: 'enter_scenario', payload: { scenario_id: scenarioId }})
         });
       } catch (logErr) {}
 
-      try {
-        window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
-      } catch (rpErr) {
-        window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
-      }
+      router.push(`/scenario/${encodeURIComponent(scenarioId)}`);
     } catch (e) {
       window.location.href = `/scenario/${encodeURIComponent(scenarioId)}`;
     } finally {

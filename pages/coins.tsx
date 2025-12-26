@@ -1,11 +1,13 @@
 // pages/coins.tsx
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+
+const SessionInfo = dynamic(() => import('../components/SessionInfo'), { ssr: false });
 
 export default function CoinsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     // read session from local storage (the landing page stores this if token validated)
@@ -15,7 +17,6 @@ export default function CoinsPage() {
       router.replace('/');
       return;
     }
-    setSessionId(sid);
     setLoading(false);
   }, [router]);
 
@@ -24,7 +25,9 @@ export default function CoinsPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-semibold">Challenge Coin / Landing</h1>
-      <p className="mt-2 muted">Session: {sessionId}</p>
+      <div className="mt-2 muted">
+        <SessionInfo />
+      </div>
 
       <div className="mt-6 panel">
         <h2 className="text-lg font-semibold">Module Quick Links</h2>
